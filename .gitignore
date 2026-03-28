@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.bun/
+
+# Build
+.next/
+build/
+dist/
+out/
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Turbo
+.turbo/
+
+# Java
+*.class
+*.jar
+*.war
+*.log
+
+# Gradle
+.gradle/
+services/api/build/
+
+# Docker
+docker-compose.override.yml
+
+# Uploads
+uploads/
