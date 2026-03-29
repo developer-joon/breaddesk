@@ -130,6 +130,10 @@
             <span>📚</span>
             <span>지식</span>
           </a>
+          <a href="#" onclick="showPage('mypage'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="mypage">
+            <span>👤</span>
+            <span>My Page</span>
+          </a>
           <a href="#" onclick="showPage('settings'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="settings">
             <span>⚙️</span>
             <span>설정</span>
@@ -150,10 +154,81 @@
         <div class="flex-1"></div>
         
         <div class="flex items-center gap-4">
-          <button class="relative text-gray-600 hover:text-gray-900">
-            <span class="text-2xl">🔔</span>
-            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-          </button>
+          <div class="relative">
+            <button onclick="toggleNotifications()" class="relative text-gray-600 hover:text-gray-900">
+              <span class="text-2xl">🔔</span>
+              <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            
+            <!-- Notification Dropdown -->
+            <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+              <div class="p-4 border-b border-gray-200">
+                <h3 class="font-semibold text-lg mb-3">알림</h3>
+                
+                <!-- Filter Tabs -->
+                <div class="flex gap-2 mb-3">
+                  <button onclick="filterNotifications('all')" class="notification-tab px-3 py-1 text-xs bg-blue-500 text-white rounded-full" data-filter="all">전체</button>
+                  <button onclick="filterNotifications('task')" class="notification-tab px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300" data-filter="task">업무</button>
+                  <button onclick="filterNotifications('inquiry')" class="notification-tab px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300" data-filter="inquiry">문의</button>
+                  <button onclick="filterNotifications('system')" class="notification-tab px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300" data-filter="system">시스템</button>
+                </div>
+                
+                <!-- Unread Toggle -->
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" id="unreadOnlyToggle" onchange="toggleUnreadOnly()" class="w-4 h-4 text-blue-600">
+                  <span class="text-sm text-gray-700">읽지 않은 항목만</span>
+                </label>
+              </div>
+              
+              <div class="max-h-96 overflow-y-auto" id="notificationList">
+                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer" data-type="task" data-unread="true">
+                  <div class="flex gap-3">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
+                    <div class="flex-1">
+                      <div class="text-sm font-medium">업무가 배정되었습니다: VPN 접속 불가 조사</div>
+                      <div class="text-xs text-gray-500 mt-1">5분 전</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer" data-type="inquiry" data-unread="true">
+                  <div class="flex gap-3">
+                    <div class="w-2 h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
+                    <div class="flex-1">
+                      <div class="text-sm font-medium">새 문의가 접수되었습니다</div>
+                      <div class="text-xs text-gray-500 mt-1">15분 전</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer" data-type="system" data-unread="false">
+                  <div class="flex gap-3">
+                    <div class="w-2 h-2 bg-transparent rounded-full mt-1 flex-shrink-0"></div>
+                    <div class="flex-1">
+                      <div class="text-sm text-gray-600">서버 디스크 사용률 80% 초과</div>
+                      <div class="text-xs text-gray-500 mt-1">2시간 전</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer" data-type="task" data-unread="false">
+                  <div class="flex gap-3">
+                    <div class="w-2 h-2 bg-transparent rounded-full mt-1 flex-shrink-0"></div>
+                    <div class="flex-1">
+                      <div class="text-sm text-gray-600">DB 권한 설정 업무가 완료되었습니다</div>
+                      <div class="text-xs text-gray-500 mt-1">3시간 전</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div id="notificationEmpty" class="hidden p-8 text-center text-gray-400">
+                <div class="text-4xl mb-2">🔕</div>
+                <div class="text-sm">알림이 없습니다</div>
+              </div>
+            </div>
+          </div>
+          
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
               김
@@ -334,6 +409,11 @@
               <option value="NORMAL">NORMAL</option>
               <option value="LOW">LOW</option>
             </select>
+
+            <select id="taskStatusFilter" onchange="filterTasks()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">모든 상태</option>
+              <option value="pending">보류만 보기</option>
+            </select>
             
             <input type="text" id="taskSearchInput" oninput="filterTasks()" placeholder="검색..." class="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
@@ -451,6 +531,32 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="task-card bg-white rounded-lg p-4 shadow border-dashed border-2 border-orange-400" data-type="개발" data-priority="HIGH" data-status="pending" data-title="결제 모듈 버그 수정" onclick="openTaskDetailModal('결제 모듈 버그 수정')">
+                  <div class="border-l-4 border-[#F97316] pl-3">
+                    <div class="flex items-center gap-2 mb-2">
+                      <span>⏸️</span>
+                      <h4 class="font-medium">결제 모듈 버그 수정</h4>
+                    </div>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">개발</span>
+                      <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">HIGH</span>
+                      <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">보류 중</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mb-2 line-clamp-1">
+                      고객사 승인 대기 중
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                      <span>#개발</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1">
+                        <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">박</div>
+                      </div>
+                      <span class="text-xs text-gray-500">SLA: 일시정지</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -551,6 +657,7 @@
                     <div class="text-xs text-gray-500 mt-1">슬랙 • 5분 전</div>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded">미해결</span>
+                      <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">AI 82%</span>
                     </div>
                   </div>
                   
@@ -559,6 +666,7 @@
                     <div class="text-xs text-gray-500 mt-1">이메일 • 23분 전</div>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">해결</span>
+                      <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">AI 94%</span>
                     </div>
                   </div>
                   
@@ -567,6 +675,7 @@
                     <div class="text-xs text-gray-500 mt-1">지라 • 1시간 전</div>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded">진행중</span>
+                      <span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">AI 67%</span>
                     </div>
                   </div>
                   
@@ -575,6 +684,7 @@
                     <div class="text-xs text-gray-500 mt-1">모니터링 • 2시간 전</div>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">해결</span>
+                      <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">AI 88%</span>
                     </div>
                   </div>
                   
@@ -583,6 +693,7 @@
                     <div class="text-xs text-gray-500 mt-1">슬랙 • 3시간 전</div>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">해결</span>
+                      <span class="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full">AI 42%</span>
                     </div>
                   </div>
                 </div>
@@ -971,6 +1082,113 @@
         </div>
 
         <!-- Settings Page -->
+        <!-- My Page -->
+        <div id="page-mypage" class="page-content hidden p-6">
+          <h2 class="text-2xl font-bold mb-6">My Page</h2>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- KPI Cards -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold">처리한 업무</h3>
+                <div class="flex gap-2">
+                  <button onclick="toggleKPIPeriod('week')" class="kpi-period-btn px-2 py-1 text-xs bg-blue-500 text-white rounded" data-period="week">주간</button>
+                  <button onclick="toggleKPIPeriod('month')" class="kpi-period-btn px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300" data-period="month">월간</button>
+                </div>
+              </div>
+              <div class="text-3xl font-bold text-blue-600" id="kpiTaskCount">24</div>
+              <div class="text-xs text-gray-500 mt-1">지난 주</div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold">응답한 문의</h3>
+                <div class="flex gap-2">
+                  <button onclick="toggleKPIPeriod('week')" class="kpi-period-btn px-2 py-1 text-xs bg-blue-500 text-white rounded" data-period="week">주간</button>
+                  <button onclick="toggleKPIPeriod('month')" class="kpi-period-btn px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300" data-period="month">월간</button>
+                </div>
+              </div>
+              <div class="text-3xl font-bold text-green-600" id="kpiInquiryCount">42</div>
+              <div class="text-xs text-gray-500 mt-1">지난 주</div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold">평균 응답 시간</h3>
+                <div class="flex gap-2">
+                  <button onclick="toggleKPIPeriod('week')" class="kpi-period-btn px-2 py-1 text-xs bg-blue-500 text-white rounded" data-period="week">주간</button>
+                  <button onclick="toggleKPIPeriod('month')" class="kpi-period-btn px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300" data-period="month">월간</button>
+                </div>
+              </div>
+              <div class="text-3xl font-bold text-orange-600" id="kpiResponseTime">18분</div>
+              <div class="text-xs text-gray-500 mt-1">지난 주</div>
+            </div>
+          </div>
+          
+          <!-- 나에게 전달된 업무 -->
+          <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 class="text-lg font-semibold mb-4">나에게 전달된 업무</h3>
+            <div class="space-y-3">
+              <div class="border-l-4 border-blue-500 pl-4 py-3 bg-blue-50 rounded hover:bg-blue-100 cursor-pointer">
+                <div class="font-medium">사용자 계정 생성 요청</div>
+                <div class="flex items-center gap-2 mt-2">
+                  <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+                  <span class="text-xs text-gray-500">이영희님이 전달함</span>
+                  <span class="text-xs text-gray-500">• 10분 전</span>
+                </div>
+              </div>
+              
+              <div class="border-l-4 border-orange-500 pl-4 py-3 bg-orange-50 rounded hover:bg-orange-100 cursor-pointer">
+                <div class="font-medium">API 연동 이슈 확인</div>
+                <div class="flex items-center gap-2 mt-2">
+                  <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">개발</span>
+                  <span class="text-xs text-gray-500">박민수님이 전달함</span>
+                  <span class="text-xs text-gray-500">• 1시간 전</span>
+                </div>
+              </div>
+              
+              <div class="border-l-4 border-purple-500 pl-4 py-3 bg-purple-50 rounded hover:bg-purple-100 cursor-pointer">
+                <div class="font-medium">서버 모니터링 설정</div>
+                <div class="flex items-center gap-2 mt-2">
+                  <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">인프라</span>
+                  <span class="text-xs text-gray-500">김준우님이 전달함</span>
+                  <span class="text-xs text-gray-500">• 3시간 전</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 보류 중인 내 업무 -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">보류 중인 내 업무</h3>
+            <div class="space-y-3">
+              <div class="border-l-4 border-orange-400 border-dashed pl-4 py-3 bg-orange-50 rounded hover:bg-orange-100 cursor-pointer">
+                <div class="flex items-center gap-2 mb-2">
+                  <span>⏸️</span>
+                  <div class="font-medium">결제 모듈 버그 수정</div>
+                </div>
+                <div class="text-sm text-gray-600 mb-2">고객사 승인 대기 중</div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">보류 중</span>
+                  <span class="text-xs text-gray-500">SLA: 일시정지</span>
+                </div>
+              </div>
+              
+              <div class="border-l-4 border-orange-400 border-dashed pl-4 py-3 bg-orange-50 rounded hover:bg-orange-100 cursor-pointer">
+                <div class="flex items-center gap-2 mb-2">
+                  <span>⏸️</span>
+                  <div class="font-medium">데이터베이스 마이그레이션</div>
+                </div>
+                <div class="text-sm text-gray-600 mb-2">외부 업체 작업 완료 대기</div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">보류 중</span>
+                  <span class="text-xs text-gray-500">SLA: 일시정지</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div id="page-settings" class="page-content hidden p-6">
           <h2 class="text-2xl font-bold mb-6">설정</h2>
           
@@ -1239,6 +1457,15 @@
               </div>
               <button class="text-sm text-blue-600 hover:text-blue-700">+ 태그 추가</button>
             </div>
+
+            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-gray-700">Jira 이슈</label>
+                <button onclick="alert('Jira 이슈 변경 기능')" class="text-xs text-blue-600 hover:text-blue-700 font-medium">이슈 변경</button>
+              </div>
+              <a href="#" class="text-sm text-blue-600 hover:underline">DESK-123</a>
+              <div class="text-xs text-gray-500 mt-1">VPN 접속 장애 조사</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1334,7 +1561,36 @@
     <div class="bg-white rounded-lg max-w-md w-full" onclick="event.stopPropagation()">
       <div class="p-6">
         <h3 class="text-lg font-semibold mb-4">문의를 업무로 전환하시겠습니까?</h3>
-        <p class="text-sm text-gray-600 mb-6">이 문의 내용을 기반으로 새로운 업무가 생성됩니다.</p>
+        <p class="text-sm text-gray-600 mb-4">이 문의 내용을 기반으로 새로운 업무가 생성됩니다.</p>
+        
+        <div class="border border-blue-100 rounded-lg p-4 bg-blue-50 mb-4">
+          <div class="text-sm font-semibold text-blue-900 mb-3">Jira 연동</div>
+          <div class="space-y-2">
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="radio" name="jiraOption" value="new" class="mt-1" checked>
+              <div>
+                <div class="text-sm font-medium text-gray-900">새 Jira 이슈 생성</div>
+                <div class="text-xs text-gray-600">전환과 함께 새 Jira 티켓을 자동 생성합니다.</div>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="radio" name="jiraOption" value="existing" class="mt-1" onchange="document.getElementById('existingJiraKey').disabled = !this.checked">
+              <div class="w-full">
+                <div class="text-sm font-medium text-gray-900">기존 이슈 연결</div>
+                <div class="text-xs text-gray-600 mb-2">이미 존재하는 Jira 이슈와 연결합니다.</div>
+                <input type="text" id="existingJiraKey" placeholder="예: DESK-42" class="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500" disabled>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 cursor-pointer">
+              <input type="radio" name="jiraOption" value="none" class="mt-1" onchange="document.getElementById('existingJiraKey').disabled = true">
+              <div>
+                <div class="text-sm font-medium text-gray-900">Jira 연동 안 함</div>
+                <div class="text-xs text-gray-600">업무만 생성하고 Jira 이슈는 나중에 연결합니다.</div>
+              </div>
+            </label>
+          </div>
+        </div>
+        
         <div class="flex justify-end gap-3">
           <button onclick="closeModal('convertToTaskModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
             취소
@@ -1878,24 +2134,89 @@
     function filterTasks() {
       const typeFilter = document.getElementById('taskTypeFilter').value;
       const priorityFilter = document.getElementById('taskPriorityFilter').value;
+      const statusFilter = document.getElementById('taskStatusFilter').value;
       const searchQuery = document.getElementById('taskSearchInput').value.toLowerCase();
       
       document.querySelectorAll('.task-card').forEach(card => {
         const type = card.dataset.type || '';
         const priority = card.dataset.priority || '';
+        const status = card.dataset.status || '';
         const title = (card.dataset.title || '').toLowerCase();
         
         const typeMatch = !typeFilter || type === typeFilter;
         const priorityMatch = !priorityFilter || priority === priorityFilter;
+        const statusMatch = !statusFilter || status === statusFilter;
         const searchMatch = !searchQuery || title.includes(searchQuery);
         
-        if (typeMatch && priorityMatch && searchMatch) {
+        if (typeMatch && priorityMatch && statusMatch && searchMatch) {
           card.style.display = '';
         } else {
           card.style.display = 'none';
         }
       });
     }
+
+    function toggleNotifications() {
+      const dropdown = document.getElementById('notificationDropdown');
+      dropdown.classList.toggle('hidden');
+    }
+
+    let currentNotificationFilter = 'all';
+    let showUnreadOnly = false;
+
+    function filterNotifications(type) {
+      currentNotificationFilter = type;
+      
+      document.querySelectorAll('.notification-tab').forEach(btn => {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-700');
+      });
+      event.target.classList.remove('bg-gray-200', 'text-gray-700');
+      event.target.classList.add('bg-blue-500', 'text-white');
+      
+      applyNotificationFilters();
+    }
+
+    function toggleUnreadOnly() {
+      showUnreadOnly = document.getElementById('unreadOnlyToggle').checked;
+      applyNotificationFilters();
+    }
+
+    function applyNotificationFilters() {
+      let visibleCount = 0;
+      
+      document.querySelectorAll('.notification-item').forEach(item => {
+        const itemType = item.dataset.type;
+        const isUnread = item.dataset.unread === 'true';
+        
+        const typeMatch = currentNotificationFilter === 'all' || itemType === currentNotificationFilter;
+        const unreadMatch = !showUnreadOnly || isUnread;
+        
+        if (typeMatch && unreadMatch) {
+          item.style.display = '';
+          visibleCount++;
+        } else {
+          item.style.display = 'none';
+        }
+      });
+      
+      const emptyState = document.getElementById('notificationEmpty');
+      const notificationList = document.getElementById('notificationList');
+      if (visibleCount === 0) {
+        notificationList.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+      } else {
+        notificationList.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+      }
+    }
+
+    document.addEventListener('click', function(e) {
+      const notificationDropdown = document.getElementById('notificationDropdown');
+      if (notificationDropdown && !notificationDropdown.contains(e.target) && !e.target.closest('button[onclick="toggleNotifications()"]')) {
+        notificationDropdown.classList.add('hidden');
+      }
+    });
 
     function filterInquiries(status) {
       document.querySelectorAll('.inquiry-filter').forEach(btn => {
@@ -1960,6 +2281,40 @@
     document.getElementById('sidebarToggle').addEventListener('click', function() {
       toggleSidebar();
     });
+
+    // ==================== My Page KPI Toggle ====================
+    let currentKPIPeriod = 'week';
+    
+    function toggleKPIPeriod(period) {
+      currentKPIPeriod = period;
+      
+      document.querySelectorAll('.kpi-period-btn').forEach(btn => {
+        if (btn.dataset.period === period) {
+          btn.classList.remove('bg-gray-200', 'text-gray-700');
+          btn.classList.add('bg-blue-500', 'text-white');
+        } else {
+          btn.classList.remove('bg-blue-500', 'text-white');
+          btn.classList.add('bg-gray-200', 'text-gray-700');
+        }
+      });
+      
+      // Update KPI values based on period
+      if (period === 'week') {
+        document.getElementById('kpiTaskCount').textContent = '24';
+        document.getElementById('kpiInquiryCount').textContent = '42';
+        document.getElementById('kpiResponseTime').textContent = '18분';
+        document.querySelectorAll('.text-xs.text-gray-500.mt-1').forEach(el => {
+          if (el.textContent.includes('지난')) el.textContent = '지난 주';
+        });
+      } else {
+        document.getElementById('kpiTaskCount').textContent = '108';
+        document.getElementById('kpiInquiryCount').textContent = '187';
+        document.getElementById('kpiResponseTime').textContent = '22분';
+        document.querySelectorAll('.text-xs.text-gray-500.mt-1').forEach(el => {
+          if (el.textContent.includes('지난')) el.textContent = '지난 달';
+        });
+      }
+    }
 
     // ==================== Initialize ====================
     showPage('dashboard');
