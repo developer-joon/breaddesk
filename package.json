@@ -12,7 +12,10 @@
     "clean": "turbo clean"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
     "turbo": "^2"
   },
-  "packageManager": "bun@1.2.6"
+  "packageManager": "npm@10.9.0"
 }
