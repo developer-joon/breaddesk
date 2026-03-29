@@ -7,7 +7,7 @@ import com.breadlab.breaddesk.member.entity.Member;
 import com.breadlab.breaddesk.member.entity.MemberRole;
 import com.breadlab.breaddesk.member.repository.MemberRepository;
 import com.breadlab.breaddesk.notification.service.NotificationService;
-import com.breadlab.breaddesk.sla.service.SlaService;
+import com.breadlab.breaddesk.sla.service.SlaTimerService;
 import com.breadlab.breaddesk.task.entity.Task;
 import com.breadlab.breaddesk.task.entity.TaskStatus;
 import com.breadlab.breaddesk.task.entity.TaskUrgency;
@@ -31,7 +31,7 @@ public class EscalationService {
     private final InquiryRepository inquiryRepository;
     private final TaskRepository taskRepository;
     private final MemberRepository memberRepository;
-    private final SlaService slaService;
+    private final SlaTimerService slaTimerService;
     private final NotificationService notificationService;
 
     /**
@@ -58,10 +58,11 @@ public class EscalationService {
                 .slaResolveBreached(false)
                 .build();
 
-        // SLA 데드라인 계산
-        slaService.calculateSlaDeadlines(task);
-
         Task savedTask = taskRepository.save(task);
+
+        // SLA 데드라인 계산
+        slaTimerService.startSla(savedTask);
+        savedTask = taskRepository.save(savedTask);
 
         // 문의 상태 업데이트
         inquiry.setTask(savedTask);

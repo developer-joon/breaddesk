@@ -3,7 +3,9 @@ package com.breadlab.breaddesk.inquiry.controller;
 import com.breadlab.breaddesk.common.dto.ApiResponse;
 import com.breadlab.breaddesk.inquiry.dto.*;
 import com.breadlab.breaddesk.inquiry.service.InquiryService;
+import com.breadlab.breaddesk.inquiry.service.SimilarInquiryService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 public class InquiryController {
 
     private final InquiryService inquiryService;
+    private final SimilarInquiryService similarInquiryService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<InquiryResponse>> createInquiry(@Valid @RequestBody InquiryRequest request) {
@@ -60,6 +63,14 @@ public class InquiryController {
             @Valid @RequestBody ConvertToTaskRequest request) {
         InquiryResponse response = inquiryService.convertToTask(id, request);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/{id}/similar")
+    public ResponseEntity<ApiResponse<List<SimilarInquiryService.SimilarInquiry>>> getSimilarInquiries(
+            @PathVariable Long id) {
+        InquiryResponse inquiry = inquiryService.getInquiryById(id);
+        var similar = similarInquiryService.findSimilar(inquiry.getMessage(), id);
+        return ResponseEntity.ok(ApiResponse.success(similar));
     }
 
     @DeleteMapping("/{id}")

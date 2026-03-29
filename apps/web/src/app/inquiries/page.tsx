@@ -11,8 +11,9 @@ import {
   getInquiryById,
   addInquiryMessage,
   updateInquiryStatus,
+  getSimilarInquiries,
 } from '@/services/inquiries';
-import type { InquiryResponse, InquiryMessageResponse, InquiryStatus } from '@/types';
+import type { InquiryResponse, InquiryMessageResponse, InquiryStatus, SimilarInquiryResponse } from '@/types';
 import toast from 'react-hot-toast';
 
 export default function InquiriesPage() {
@@ -24,6 +25,8 @@ export default function InquiriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [similarInquiries, setSimilarInquiries] = useState<SimilarInquiryResponse[]>([]);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
 
   const fetchInquiries = useCallback(async () => {
     setIsLoading(true);
@@ -45,12 +48,22 @@ export default function InquiriesPage() {
   }, [fetchInquiries]);
 
   const handleSelectInquiry = async (inquiry: InquiryResponse) => {
+    setSimilarInquiries([]);
     try {
       const detail = await getInquiryById(inquiry.id);
       setSelectedInquiry(detail);
     } catch {
-      // Fallback to list data
       setSelectedInquiry(inquiry);
+    }
+    // Load similar inquiries in background
+    setIsLoadingSimilar(true);
+    try {
+      const similar = await getSimilarInquiries(inquiry.id, 5);
+      setSimilarInquiries(similar);
+    } catch {
+      // Non-critical
+    } finally {
+      setIsLoadingSimilar(false);
     }
   };
 
@@ -309,6 +322,42 @@ export default function InquiriesPage() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Similar Inquiries */}
+                  {(similarInquiries.length > 0 || isLoadingSimilar) && (
+                    <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-sm">🔗</span>
+                        <h4 className="text-sm font-semibold text-gray-700">유사 문의</h4>
+                      </div>
+                      {isLoadingSimilar ? (
+                        <p className="text-xs text-gray-400">유사 문의를 검색하는 중...</p>
+                      ) : (
+                        <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                          {similarInquiries.map((sim) => (
+                            <div
+                              key={sim.inquiryId}
+                              className="flex items-center justify-between bg-white rounded px-3 py-2 border border-gray-200 cursor-pointer hover:bg-blue-50"
+                              onClick={() => {
+                                const target = inquiries.find((i) => i.id === sim.inquiryId);
+                                if (target) handleSelectInquiry(target);
+                              }}
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-900 truncate">{sim.senderName}: {sim.message}</p>
+                                <p className="text-xs text-gray-400">{new Date(sim.createdAt).toLocaleDateString('ko-KR')}</p>
+                              </div>
+                              <span className={`ml-2 text-xs font-bold flex-shrink-0 ${
+                                sim.score >= 0.8 ? 'text-green-600' : sim.score >= 0.6 ? 'text-yellow-600' : 'text-gray-500'
+                              }`}>
+                                {(sim.score * 100).toFixed(0)}%
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Input */}
                   <div className="p-4 border-t border-gray-200">

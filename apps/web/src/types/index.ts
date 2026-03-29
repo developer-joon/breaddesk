@@ -376,3 +376,87 @@ export interface SLARule {
   resolutionTimeHours: number;
   enabled: boolean;
 }
+
+// ─── Knowledge (Phase 2) ──────────────────────────────────
+export type ConnectorType = 'NOTION' | 'CONFLUENCE' | 'GOOGLE_DRIVE' | 'WEB_CRAWL' | 'LOCAL';
+export type ConnectorStatus = 'CONNECTED' | 'DISCONNECTED' | 'SYNCING' | 'ERROR';
+
+export interface KnowledgeConnectorResponse {
+  id: number;
+  name: string;
+  type: ConnectorType;
+  config?: Record<string, string>;
+  status: ConnectorStatus;
+  lastSyncAt?: string;
+  documentCount: number;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KnowledgeConnectorRequest {
+  name: string;
+  type: ConnectorType;
+  config?: Record<string, string>;
+}
+
+export interface KnowledgeDocumentResponse {
+  id: number;
+  connectorId: number;
+  connectorName?: string;
+  title: string;
+  content?: string;
+  sourceUrl?: string;
+  tags?: string[];
+  metadata?: Record<string, string>;
+  lastSyncAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface VectorSearchResult {
+  documentId: number;
+  title: string;
+  content: string;
+  sourceUrl?: string;
+  score: number;
+  connectorName?: string;
+  tags?: string[];
+}
+
+export interface SimilarInquiryResponse {
+  inquiryId: number;
+  senderName: string;
+  message: string;
+  status: InquiryStatus;
+  score: number;
+  createdAt: string;
+}
+
+// ─── SLA (Phase 2) ────────────────────────────────────────
+export interface SlaRuleResponse {
+  id: number;
+  urgency: TaskUrgency;
+  responseTimeHours: number;
+  resolveTimeHours: number;
+  enabled: boolean;
+}
+
+export interface SlaRuleUpdateRequest {
+  responseTimeHours: number;
+  resolveTimeHours: number;
+  enabled: boolean;
+}
+
+export interface SlaStatsResponse {
+  totalTasks: number;
+  responseComplianceRate: number;
+  resolveComplianceRate: number;
+  overallComplianceRate: number;
+  responseBreachedCount: number;
+  resolveBreachedCount: number;
+  averageResponseTimeHours: number;
+  averageResolveTimeHours: number;
+  weeklyComplianceRate?: number;
+  weeklyBreachedCount?: number;
+}

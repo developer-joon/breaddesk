@@ -2,6 +2,7 @@ package com.breadlab.breaddesk.task.service;
 
 import com.breadlab.breaddesk.common.exception.ResourceNotFoundException;
 import com.breadlab.breaddesk.member.repository.MemberRepository;
+import com.breadlab.breaddesk.sla.service.SlaTimerService;
 import com.breadlab.breaddesk.task.dto.*;
 import com.breadlab.breaddesk.task.entity.*;
 import com.breadlab.breaddesk.task.repository.*;
@@ -28,6 +29,7 @@ public class TaskService {
     private final TaskHoldRepository taskHoldRepository;
     private final TaskTransferRepository taskTransferRepository;
     private final MemberRepository memberRepository;
+    private final SlaTimerService slaTimerService;
 
     @Transactional
     public TaskResponse createTask(TaskRequest request) {
@@ -53,6 +55,8 @@ public class TaskService {
         }
 
         Task saved = taskRepository.save(task);
+        slaTimerService.startSla(saved);
+        saved = taskRepository.save(saved);
         logAction(saved.getId(), "CREATED", null, null);
         return toResponse(saved);
     }
@@ -91,18 +95,32 @@ public class TaskService {
     public TaskResponse updateTaskStatus(Long id, TaskStatusUpdateRequest request) {
         Task task = findTaskOrThrow(id);
         TaskStatus oldStatus = task.getStatus();
-        task.setStatus(request.getStatus());
+        TaskStatus newStatus = request.getStatus();
+        task.setStatus(newStatus);
 
-        if (request.getStatus() == TaskStatus.IN_PROGRESS && task.getStartedAt() == null) {
+        // SLA: IN_PROGRESS 전환 시 첫 응답 기록
+        if (newStatus == TaskStatus.IN_PROGRESS && task.getStartedAt() == null) {
             task.setStartedAt(LocalDateTime.now());
+            slaTimerService.recordResponse(task);
         }
 
-        if (request.getStatus() == TaskStatus.DONE) {
+        // SLA: PENDING 전환 시 일시정지
+        if (newStatus == TaskStatus.PENDING && oldStatus != TaskStatus.PENDING) {
+            slaTimerService.pauseSla(task, "Status changed to PENDING");
+        }
+
+        // SLA: PENDING에서 다른 상태로 복귀 시 재개
+        if (oldStatus == TaskStatus.PENDING && newStatus != TaskStatus.PENDING) {
+            slaTimerService.resumeSla(task);
+        }
+
+        // 완료 처리
+        if (newStatus == TaskStatus.DONE) {
             task.setCompletedAt(LocalDateTime.now());
         }
 
         Task saved = taskRepository.save(task);
-        logAction(id, "STATUS_CHANGED", null, Map.of("from", oldStatus.name(), "to", request.getStatus().name()));
+        logAction(id, "STATUS_CHANGED", null, Map.of("from", oldStatus.name(), "to", newStatus.name()));
         return toResponse(saved);
     }
 
@@ -192,6 +210,10 @@ public class TaskService {
                 .build();
 
         TaskComment saved = taskCommentRepository.save(comment);
+
+        // 첫 번째 코멘트 시 SLA 응답 시점 기록
+        slaTimerService.recordResponse(task);
+
         logAction(taskId, "COMMENT_ADDED", authorId, null);
         return toCommentResponse(saved);
     }
@@ -211,29 +233,23 @@ public class TaskService {
     @Transactional
     public void holdTask(Long taskId, TaskHoldRequest request) {
         Task task = findTaskOrThrow(taskId);
-        
-        TaskHold hold = TaskHold.builder()
-                .task(task)
-                .reason(request.getReason())
-                .startedAt(LocalDateTime.now())
-                .build();
 
-        taskHoldRepository.save(hold);
         task.setStatus(TaskStatus.PENDING);
         taskRepository.save(task);
+
+        // SLA 일시정지 (hold 레코드도 생성됨)
+        slaTimerService.pauseSla(task, request.getReason());
+
         logAction(taskId, "HELD", null, Map.of("reason", request.getReason()));
     }
 
     @Transactional
     public void resumeTask(Long taskId) {
         Task task = findTaskOrThrow(taskId);
-        
-        TaskHold activeHold = taskHoldRepository.findActiveHoldByTaskId(taskId)
-                .orElseThrow(() -> new ResourceNotFoundException("No active hold found"));
 
-        activeHold.setEndedAt(LocalDateTime.now());
-        taskHoldRepository.save(activeHold);
-        
+        // SLA 재개 (hold 종료 + 데드라인 연장)
+        slaTimerService.resumeSla(task);
+
         task.setStatus(TaskStatus.IN_PROGRESS);
         taskRepository.save(task);
         logAction(taskId, "RESUMED", null, null);

@@ -26,4 +26,11 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("urgency") TaskUrgency urgency,
             @Param("assigneeId") Long assigneeId,
             Pageable pageable);
+
+    @Query("SELECT t FROM Task t WHERE t.status <> 'DONE' "
+            + "AND (t.slaResponseDeadline IS NOT NULL OR t.slaResolveDeadline IS NOT NULL)")
+    java.util.List<Task> findActiveSlaTargets();
+
+    @Query("SELECT t FROM Task t WHERE t.slaResponseDeadline IS NOT NULL OR t.slaResolveDeadline IS NOT NULL")
+    java.util.List<Task> findAllWithSlaDeadlines();
 }
