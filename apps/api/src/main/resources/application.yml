@@ -2,6 +2,11 @@ spring:
   application:
     name: breaddesk-api
 
+  docker:
+    compose:
+      file: ../../docker-compose.yml
+      lifecycle-management: start-and-stop   # 앱 종료 시 컨테이너도 정지
+
   datasource:
     url: jdbc:mysql://localhost:3306/breaddesk?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
     username: ${DB_USERNAME:breaddesk}

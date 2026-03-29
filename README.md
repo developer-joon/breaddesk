@@ -31,21 +31,22 @@ breaddesk/
 
 ## 로컬 개발
 
-### 인프라 실행
-```bash
-docker compose up -d
-```
+### 준비물
+- JDK 25+
+- Docker Desktop
+- Bun
+
+### 백엔드 (IntelliJ)
+1. IntelliJ → `Open` → `breaddesk/` 루트 선택
+2. `BreadDeskApplication.java` → ▶️ Run
+3. MySQL, Redis, Ollama가 **자동으로 기동됨** (spring-boot-docker-compose)
+4. 앱 종료 시 컨테이너도 **자동 정지**
 
 ### 프론트엔드
 ```bash
+cd apps/web
 bun install
 bun run dev
-```
-
-### 백엔드
-```bash
-cd services/api
-./gradlew bootRun
 ```
 
 ## 설계 원칙

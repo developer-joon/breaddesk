@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   mysql:
     image: mysql:8.4
@@ -29,7 +27,8 @@ services:
       - "11434:11434"
     volumes:
       - ollama-data:/root/.ollama
-    # GPU 사용 시 아래 주석 해제
+    # Apple Silicon GPU는 자동 지원 (Docker Desktop)
+    # NVIDIA GPU 시 아래 주석 해제
     # deploy:
     #   resources:
     #     reservations:
@@ -37,16 +36,6 @@ services:
     #         - driver: nvidia
     #           count: 1
     #           capabilities: [gpu]
-
-  # OpenClaw 노드 (브래드 연동)
-  openclaw:
-    image: ghcr.io/openclaw/openclaw:latest
-    container_name: breaddesk-openclaw
-    volumes:
-      - ./:/workspace    # 프로젝트 루트 마운트
-    ports:
-      - "3001:3000"       # OpenClaw 웹 (프론트와 충돌 방지)
-    restart: unless-stopped
 
 volumes:
   mysql-data:
