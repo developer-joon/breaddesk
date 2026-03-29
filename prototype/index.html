@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>🍞 BreadDesk - 통합 데스크</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -102,7 +102,7 @@
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
     
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-60 bg-[#1E293B] text-white flex-shrink-0 transition-transform duration-300 fixed lg:static inset-y-0 left-0 z-50 -translate-x-full lg:translate-x-0 overflow-y-auto">
+    <aside id="sidebar" class="w-60 bg-[#1E293B] text-white flex-shrink-0 transition-transform duration-300 fixed lg:static inset-y-0 left-0 z-50 -translate-x-full lg:translate-x-0 overflow-y-auto" style="padding-top: env(safe-area-inset-top, 0px);">
       <div class="p-4">
         <div class="flex items-center gap-2 mb-8">
           <span class="text-3xl">🍞</span>
@@ -146,7 +146,7 @@
     <div class="flex-1 flex flex-col overflow-hidden">
       
       <!-- Header -->
-      <header class="h-14 sm:h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-4 lg:px-6">
+      <header class="bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-4 lg:px-6" style="min-height: 56px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px); padding-bottom: 8px;">
         <div class="flex items-center gap-2 sm:gap-3">
           <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-gray-900 p-2 -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
             <span class="text-xl sm:text-2xl">☰</span>
@@ -171,7 +171,7 @@
             </button>
             
             <!-- Notification Dropdown -->
-            <div id="notificationDropdown" class="hidden fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-14 sm:top-auto sm:mt-2 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+            <div id="notificationDropdown" class="hidden fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50" style="top: calc(env(safe-area-inset-top, 0px) + 60px);">
               <div class="p-4 border-b border-gray-200">
                 <div class="flex items-center justify-between mb-3">
                   <h3 class="font-semibold text-lg">알림</h3>
