@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Frontend" type="js.build_tools.npm" factoryName="npm">
+    <package-json value="$PROJECT_DIR$/apps/web/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="dev" />
+    </scripts>
+    <node-interpreter value="bun" />
+    <package-manager value="bun" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>
