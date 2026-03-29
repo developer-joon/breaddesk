@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
+import { useAuthStore } from '@/stores/auth';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ const navItems = [
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { user } = useAuthStore();
 
   return (
     <>
@@ -70,11 +72,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 safe-bottom">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-medium">
-              U
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1">
-              <div className="text-sm font-medium">사용자</div>
-              <div className="text-xs text-gray-400">user@example.com</div>
+              <div className="text-sm font-medium">{user?.name || '사용자'}</div>
+              <div className="text-xs text-gray-400">{user?.email || 'user@example.com'}</div>
             </div>
           </div>
         </div>

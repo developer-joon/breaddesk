@@ -28,4 +28,7 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
 
     @Query("SELECT COUNT(i) FROM Inquiry i WHERE i.status = :status")
     long countByStatus(@Param("status") InquiryStatus status);
+
+    @Query("SELECT i FROM Inquiry i WHERE i.message LIKE %:keyword% OR i.senderName LIKE %:keyword%")
+    List<Inquiry> searchByKeyword(@Param("keyword") String keyword);
 }

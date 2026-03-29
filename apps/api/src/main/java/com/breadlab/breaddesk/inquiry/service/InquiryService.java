@@ -1,5 +1,7 @@
 package com.breadlab.breaddesk.inquiry.service;
 
+import com.breadlab.breaddesk.ai.AIAnswerService;
+import com.breadlab.breaddesk.ai.EscalationService;
 import com.breadlab.breaddesk.common.exception.ResourceNotFoundException;
 import com.breadlab.breaddesk.inquiry.dto.*;
 import com.breadlab.breaddesk.inquiry.entity.Inquiry;
@@ -12,12 +14,14 @@ import com.breadlab.breaddesk.task.entity.TaskStatus;
 import com.breadlab.breaddesk.task.repository.TaskRepository;
 import com.breadlab.breaddesk.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -27,6 +31,8 @@ public class InquiryService {
     private final InquiryMessageRepository inquiryMessageRepository;
     private final TaskRepository taskRepository;
     private final MemberRepository memberRepository;
+    private final AIAnswerService aiAnswerService;
+    private final EscalationService escalationService;
 
     @Transactional
     public InquiryResponse createInquiry(InquiryRequest request) {
@@ -41,6 +47,21 @@ public class InquiryService {
                 .build();
 
         Inquiry saved = inquiryRepository.save(inquiry);
+
+        // AI 자동 답변 시도
+        try {
+            boolean aiResolved = aiAnswerService.tryAutoAnswer(saved);
+            if (!aiResolved) {
+                // AI confidence 부족 → 자동 에스컬레이션
+                escalationService.escalateFromAI(saved);
+            }
+            // 최신 상태 다시 로드
+            saved = inquiryRepository.findById(saved.getId()).orElse(saved);
+        } catch (Exception e) {
+            log.error("AI 답변/에스컬레이션 처리 중 오류 (문의 #{}): {}", saved.getId(), e.getMessage(), e);
+            // AI 실패해도 문의 자체는 정상 생성
+        }
+
         return toResponse(saved);
     }
 

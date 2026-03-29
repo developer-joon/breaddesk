@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { KnowledgeConnector, KnowledgeDocument } from '@/types';
 
 export default function KnowledgePage() {
