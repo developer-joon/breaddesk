@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 public class TaskCommentResponse {
     private final Long id;
+    private final Long taskId;
     private final Long authorId;
     private final String content;
     private final boolean internal;

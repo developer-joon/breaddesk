@@ -27,8 +27,6 @@ public class PersonalNoteService {
                 .member(memberRepository.findById(memberId)
                         .orElseThrow(() -> new ResourceNotFoundException("Member not found")))
                 .content(request.getContent())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         return toResponse(personalNoteRepository.save(note));

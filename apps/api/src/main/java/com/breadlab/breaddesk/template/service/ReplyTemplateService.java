@@ -30,8 +30,6 @@ public class ReplyTemplateService {
                 .content(request.getContent())
                 .usageCount(0)
                 .createdBy(memberRepository.findById(createdBy).orElse(null))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         return toResponse(replyTemplateRepository.save(template));

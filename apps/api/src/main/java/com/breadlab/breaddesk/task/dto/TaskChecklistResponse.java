@@ -7,6 +7,7 @@ import lombok.Getter;
 @Builder
 public class TaskChecklistResponse {
     private final Long id;
+    private final Long taskId;
     private final String itemText;
     private final boolean done;
     private final int sortOrder;

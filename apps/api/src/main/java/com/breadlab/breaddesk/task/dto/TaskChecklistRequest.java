@@ -15,5 +15,5 @@ public class TaskChecklistRequest {
 
     private boolean done;
 
-    private int sortOrder;
+    private Integer sortOrder;
 }

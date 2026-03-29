@@ -8,6 +8,7 @@ import lombok.Getter;
 @Builder
 public class TaskLogResponse {
     private final Long id;
+    private final Long taskId;
     private final String action;
     private final Long actorId;
     private final String details;

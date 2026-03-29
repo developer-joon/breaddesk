@@ -1,76 +1,112 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
-import { ReplyTemplate } from '@/types';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { EmptyState } from '@/components/ui/EmptyState';
+import {
+  getTemplates,
+  createTemplate,
+  deleteTemplate,
+  applyTemplate,
+} from '@/services/templates';
+import type { ReplyTemplateResponse } from '@/types';
 import toast from 'react-hot-toast';
 
 export default function TemplatesPage() {
-  const [templates, setTemplates] = useState<ReplyTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<ReplyTemplate | null>(null);
+  const [templates, setTemplates] = useState<ReplyTemplateResponse[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<ReplyTemplateResponse | null>(null);
+  const [appliedContent, setAppliedContent] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [filter, setFilter] = useState('ALL');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string | undefined>(undefined);
+
+  // Create form
+  const [newTitle, setNewTitle] = useState('');
+  const [newCategory, setNewCategory] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+
+  const fetchTemplateList = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await getTemplates(0, 50, filterCategory);
+      setTemplates(result.content);
+    } catch (err) {
+      console.error('Failed to fetch templates:', err);
+      setError('템플릿 목록을 불러오지 못했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filterCategory]);
 
   useEffect(() => {
-    fetchTemplates();
-  }, []);
+    fetchTemplateList();
+  }, [fetchTemplateList]);
 
-  const fetchTemplates = async () => {
-    // Mock data
-    const mockTemplates: ReplyTemplate[] = [
-      {
-        id: '1',
-        title: '회원가입 완료 안내',
-        category: '회원가입',
-        content: '안녕하세요 {{customerName}}님,\n\n회원가입이 완료되었습니다.\n\n감사합니다.',
-        variables: ['customerName'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: '2',
-        title: '결제 오류 안내',
-        category: '결제',
-        content: '{{customerName}}님의 결제 건에 대해 확인 중입니다.\n\n결제 금액: {{amount}}원\n\n빠른 시일 내에 처리하겠습니다.',
-        variables: ['customerName', 'amount'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-      {
-        id: '3',
-        title: '배송 지연 안내',
-        category: '배송',
-        content: '주문하신 상품의 배송이 {{reason}} 사유로 지연되고 있습니다.\n\n예상 배송일: {{expectedDate}}\n\n불편을 드려 죄송합니다.',
-        variables: ['reason', 'expectedDate'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-    setTemplates(mockTemplates);
+  const categories = Array.from(new Set(templates.map((t) => t.category).filter(Boolean)));
+
+  const handleCreateTemplate = async () => {
+    if (!newTitle.trim() || !newContent.trim()) {
+      toast.error('제목과 내용을 입력해주세요.');
+      return;
+    }
+    setIsCreating(true);
+    try {
+      await createTemplate({
+        title: newTitle,
+        category: newCategory || undefined,
+        content: newContent,
+      });
+      toast.success('템플릿이 생성되었습니다');
+      setIsCreateModalOpen(false);
+      setNewTitle('');
+      setNewCategory('');
+      setNewContent('');
+      await fetchTemplateList();
+    } catch {
+      toast.error('템플릿 생성에 실패했습니다.');
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const categories = Array.from(new Set(templates.map((t) => t.category)));
-  const filteredTemplates =
-    filter === 'ALL' ? templates : templates.filter((t) => t.category === filter);
-
-  const handleCreateTemplate = () => {
-    toast.success('템플릿이 생성되었습니다');
-    setIsCreateModalOpen(false);
-  };
-
-  const handleDeleteTemplate = (id: string) => {
-    if (confirm('정말 삭제하시겠습니까?')) {
+  const handleDeleteTemplate = async (id: number) => {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    try {
+      await deleteTemplate(id);
       setTemplates(templates.filter((t) => t.id !== id));
       toast.success('템플릿이 삭제되었습니다');
+    } catch {
+      toast.error('템플릿 삭제에 실패했습니다.');
     }
+  };
+
+  const handleApplyTemplate = async (id: number, variables?: Record<string, string>) => {
+    try {
+      const content = await applyTemplate(id, variables);
+      setAppliedContent(content);
+      toast.success('템플릿이 적용되었습니다');
+    } catch {
+      toast.error('템플릿 적용에 실패했습니다.');
+    }
+  };
+
+  // Extract variables from template content ({{varName}} pattern)
+  const extractVariables = (content: string): string[] => {
+    const matches = content.match(/\{\{(\w+)\}\}/g);
+    if (!matches) return [];
+    return [...new Set(matches.map((m) => m.replace(/\{\{|\}\}/g, '')))];
   };
 
   return (
     <AppLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">답변 템플릿</h1>
@@ -88,9 +124,9 @@ export default function TemplatesPage() {
         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setFilter('ALL')}
+              onClick={() => setFilterCategory(undefined)}
               className={`px-4 py-2 rounded-lg transition-colors ${
-                filter === 'ALL'
+                !filterCategory
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -100,9 +136,9 @@ export default function TemplatesPage() {
             {categories.map((category) => (
               <button
                 key={category}
-                onClick={() => setFilter(category)}
+                onClick={() => setFilterCategory(category!)}
                 className={`px-4 py-2 rounded-lg transition-colors ${
-                  filter === category
+                  filterCategory === category
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
@@ -113,108 +149,125 @@ export default function TemplatesPage() {
           </div>
         </div>
 
-        {/* Templates Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTemplates.map((template) => (
-            <div
-              key={template.id}
-              className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover-lift"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="font-semibold text-gray-900">{template.title}</h3>
-                <Badge>{template.category}</Badge>
+        {isLoading && <LoadingSpinner text="템플릿을 불러오는 중..." />}
+        {error && <ErrorMessage message={error} onRetry={fetchTemplateList} />}
+
+        {!isLoading && !error && (
+          <>
+            {templates.length === 0 ? (
+              <EmptyState
+                icon="📝"
+                title="템플릿이 없습니다"
+                description="자주 사용하는 답변을 템플릿으로 만들어보세요."
+                action={{ label: '새 템플릿 만들기', onClick: () => setIsCreateModalOpen(true) }}
+              />
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {templates.map((template) => {
+                  const variables = extractVariables(template.content);
+                  return (
+                    <div
+                      key={template.id}
+                      className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900">{template.title}</h3>
+                        {template.category && <Badge>{template.category}</Badge>}
+                      </div>
+
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-3">{template.content}</p>
+
+                      {variables.length > 0 && (
+                        <div className="mb-4">
+                          <p className="text-xs text-gray-500 mb-2">변수:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {variables.map((v) => (
+                              <span
+                                key={v}
+                                className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded"
+                              >
+                                {`{{${v}}}`}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-400">사용 {template.usageCount}회</span>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setSelectedTemplate(template)}
+                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                          >
+                            사용
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTemplate(template.id)}
+                            className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              <p className="text-sm text-gray-600 mb-4 line-clamp-3">{template.content}</p>
-
-              {/* Variables */}
-              {template.variables.length > 0 && (
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 mb-2">변수:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {template.variables.map((variable) => (
-                      <span
-                        key={variable}
-                        className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded"
-                      >
-                        {`{{${variable}}}`}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setSelectedTemplate(template)}
-                  className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-                >
-                  사용
-                </button>
-                <button
-                  onClick={() => handleDeleteTemplate(template.id)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
-                >
-                  삭제
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filteredTemplates.length === 0 && (
-          <div className="empty-state bg-white rounded-lg shadow-sm border border-gray-200">
-            템플릿이 없습니다
-          </div>
+            )}
+          </>
         )}
 
-        {/* Template Preview Modal */}
+        {/* Template Preview/Apply Modal */}
         {selectedTemplate && (
           <Modal
             isOpen={!!selectedTemplate}
-            onClose={() => setSelectedTemplate(null)}
+            onClose={() => {
+              setSelectedTemplate(null);
+              setAppliedContent(null);
+            }}
             title="템플릿 미리보기"
             size="md"
           >
             <div className="p-6 space-y-4">
               <div>
                 <h3 className="font-semibold mb-2">{selectedTemplate.title}</h3>
-                <Badge>{selectedTemplate.category}</Badge>
+                {selectedTemplate.category && <Badge>{selectedTemplate.category}</Badge>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">내용</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {appliedContent ? '적용된 내용' : '원본 내용'}
+                </label>
                 <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap text-sm">
-                  {selectedTemplate.content}
+                  {appliedContent || selectedTemplate.content}
                 </div>
               </div>
 
-              {/* Variable Inputs */}
-              {selectedTemplate.variables.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">변수 입력</label>
-                  <div className="space-y-2">
-                    {selectedTemplate.variables.map((variable) => (
-                      <div key={variable}>
-                        <label className="block text-xs text-gray-600 mb-1">{variable}</label>
-                        <input
-                          type="text"
-                          placeholder={`{{${variable}}}`}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {appliedContent && (
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(appliedContent);
+                    toast.success('클립보드에 복사되었습니다');
+                  }}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  📋 복사하기
+                </button>
               )}
 
               <div className="flex gap-2">
-                <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <button
+                  onClick={() => handleApplyTemplate(selectedTemplate.id)}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
                   적용
                 </button>
                 <button
-                  onClick={() => setSelectedTemplate(null)}
+                  onClick={() => {
+                    setSelectedTemplate(null);
+                    setAppliedContent(null);
+                  }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   닫기
@@ -233,9 +286,11 @@ export default function TemplatesPage() {
         >
           <div className="p-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">제목</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">제목 *</label>
               <input
                 type="text"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="템플릿 제목을 입력하세요"
               />
@@ -245,29 +300,31 @@ export default function TemplatesPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">카테고리</label>
               <input
                 type="text"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="예: 회원가입, 결제, 배송 등"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">내용</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">내용 *</label>
               <textarea
                 rows={6}
+                value={newContent}
+                onChange={(e) => setNewContent(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="템플릿 내용을 입력하세요. 변수는 {{변수명}} 형식으로 입력합니다."
               />
-              <p className="text-xs text-gray-500 mt-1">
-                예: 안녕하세요 {`{{customerName}}`}님, {`{{orderId}}`} 주문이 접수되었습니다.
-              </p>
             </div>
 
             <div className="flex gap-2">
               <button
                 onClick={handleCreateTemplate}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={isCreating}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
               >
-                생성
+                {isCreating ? '생성 중...' : '생성'}
               </button>
               <button
                 onClick={() => setIsCreateModalOpen(false)}

@@ -7,5 +7,6 @@ import lombok.Getter;
 @Builder
 public class TaskTagResponse {
     private final Long id;
+    private final Long taskId;
     private final String tag;
 }

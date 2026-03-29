@@ -1,27 +1,42 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth';
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const { login, isAuthenticated, checkAuth } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
     try {
       await login({ email, password });
       toast.success('로그인 성공!');
       router.push('/dashboard');
-    } catch (error) {
-      toast.error('로그인 실패. 이메일과 비밀번호를 확인해주세요.');
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : '로그인 실패. 이메일과 비밀번호를 확인해주세요.';
+      setError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -36,6 +51,13 @@ export default function LoginPage() {
           <h1 className="text-2xl font-bold mt-4">BreadDesk</h1>
           <p className="text-gray-600 mt-2">통합 고객지원 플랫폼</p>
         </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            {error}
+          </div>
+        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -76,7 +98,7 @@ export default function LoginPage() {
           >
             {isLoading ? (
               <>
-                <div className="spinner mr-2" />
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                 로그인 중...
               </>
             ) : (
@@ -91,6 +113,7 @@ export default function LoginPage() {
           <p className="mt-1 text-xs text-gray-500">demo@breaddesk.com / demo1234</p>
         </div>
       </div>
+      <Toaster position="top-right" />
     </div>
   );
 }

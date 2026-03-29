@@ -1,6 +1,5 @@
 package com.breadlab.breaddesk.task.dto;
 
-import com.breadlab.breaddesk.task.entity.TaskStatus;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
@@ -8,6 +7,9 @@ import lombok.Getter;
 @Getter
 @Builder
 public class TaskKanbanResponse {
-    private final TaskStatus status;
-    private final List<TaskResponse> tasks;
+    private final List<TaskResponse> waiting;
+    private final List<TaskResponse> inProgress;
+    private final List<TaskResponse> pending;
+    private final List<TaskResponse> review;
+    private final List<TaskResponse> done;
 }
