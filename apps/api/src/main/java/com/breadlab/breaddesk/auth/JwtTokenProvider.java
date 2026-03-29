@@ -4,7 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.time.Duration;
 import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +22,7 @@ public class JwtTokenProvider {
     @Value("${security.jwt.refresh-token-expiration-days}")
     private long refreshTokenDays;
 
-    private Key key;
+    private SecretKey key;
 
     @PostConstruct
     void init() {

@@ -21,4 +21,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("urgency") TaskUrgency urgency,
             @Param("assigneeId") Long assigneeId,
             Pageable pageable);
+
+    long countByStatus(TaskStatus status);
 }
