@@ -22,6 +22,33 @@ import type {
 } from '@/types';
 import toast from 'react-hot-toast';
 
+function SlaCountdown({ deadline, isPaused }: { deadline: string; isPaused?: boolean }) {
+  const [remaining, setRemaining] = useState('');
+
+  useEffect(() => {
+    if (isPaused) { setRemaining('일시정지'); return; }
+    const update = () => {
+      const diff = new Date(deadline).getTime() - Date.now();
+      if (diff <= 0) { setRemaining('만료됨'); return; }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      setRemaining(`${hours}시간 ${mins}분 남음`);
+    };
+    update();
+    const timer = setInterval(update, 60_000);
+    return () => clearInterval(timer);
+  }, [deadline, isPaused]);
+
+  const diff = new Date(deadline).getTime() - Date.now();
+  const isUrgent = diff > 0 && diff < 2 * 60 * 60 * 1000;
+
+  return (
+    <span className={`text-xs font-medium ${isPaused ? 'text-yellow-600' : isUrgent ? 'text-red-600' : 'text-green-600'}`}>
+      ⏱ {remaining}
+    </span>
+  );
+}
+
 const COLUMNS: { status: TaskStatus; label: string }[] = [
   { status: 'WAITING', label: '대기' },
   { status: 'IN_PROGRESS', label: '진행중' },
@@ -272,6 +299,43 @@ export default function TasksPage() {
                   <p className="text-gray-700 whitespace-pre-wrap">
                     {selectedTask.description}
                   </p>
+                </div>
+              )}
+
+              {/* SLA Information */}
+              {(selectedTask.slaResponseDeadline || selectedTask.slaResolveDeadline) && (
+                <div className={`p-4 rounded-lg border ${
+                  selectedTask.slaResponseBreached || selectedTask.slaResolveBreached
+                    ? 'bg-red-50 border-red-200'
+                    : selectedTask.status === 'PENDING'
+                      ? 'bg-yellow-50 border-yellow-200'
+                      : 'bg-green-50 border-green-200'
+                }`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">📋</span>
+                    <h3 className="font-semibold">SLA 정보</h3>
+                    {selectedTask.status === 'PENDING' && <Badge variant="warning">SLA 일시정지됨</Badge>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {selectedTask.slaResponseDeadline && (
+                      <div>
+                        <p className="text-gray-500 mb-1">응답 데드라인</p>
+                        <p className="font-medium">{new Date(selectedTask.slaResponseDeadline).toLocaleString('ko-KR')}</p>
+                        {selectedTask.slaResponseBreached
+                          ? <Badge variant="danger">위반</Badge>
+                          : <SlaCountdown deadline={selectedTask.slaResponseDeadline} isPaused={selectedTask.status === 'PENDING'} />}
+                      </div>
+                    )}
+                    {selectedTask.slaResolveDeadline && (
+                      <div>
+                        <p className="text-gray-500 mb-1">해결 데드라인</p>
+                        <p className="font-medium">{new Date(selectedTask.slaResolveDeadline).toLocaleString('ko-KR')}</p>
+                        {selectedTask.slaResolveBreached
+                          ? <Badge variant="danger">위반</Badge>
+                          : <SlaCountdown deadline={selectedTask.slaResolveDeadline} isPaused={selectedTask.status === 'PENDING'} />}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

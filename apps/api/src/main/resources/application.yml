@@ -38,6 +38,10 @@ server:
 
 # BreadDesk custom config
 breaddesk:
+  sla:
+    scheduler:
+      enabled: true
+      interval-ms: 60000
   llm:
     provider: ${LLM_PROVIDER:ollama}
     ollama:

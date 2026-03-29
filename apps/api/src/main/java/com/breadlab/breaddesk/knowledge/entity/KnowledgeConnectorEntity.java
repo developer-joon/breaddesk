@@ -26,6 +26,9 @@ public class KnowledgeConnectorEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 200)
+    private String name;
+
     @Column(name = "source_type", nullable = false, length = 50)
     private String sourceType;
 
@@ -33,13 +36,15 @@ public class KnowledgeConnectorEntity {
     private String config;
 
     @Column(name = "sync_interval_min", nullable = false)
-    private Integer syncIntervalMin;
+    @Builder.Default
+    private Integer syncIntervalMin = 60;
 
     @Column(name = "last_synced_at")
     private LocalDateTime lastSyncedAt;
 
     @Column(name = "is_active", nullable = false)
-    private boolean active;
+    @Builder.Default
+    private boolean active = true;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
