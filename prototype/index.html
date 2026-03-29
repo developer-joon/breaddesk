@@ -146,33 +146,32 @@
     <div class="flex-1 flex flex-col overflow-hidden">
       
       <!-- Header -->
-      <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-6">
-        <div class="flex items-center gap-3">
-          <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-gray-900">
-            <span class="text-2xl">☰</span>
+      <header class="h-14 sm:h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-4 lg:px-6">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-gray-900 p-2 -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
+            <span class="text-xl sm:text-2xl">☰</span>
           </button>
-          <span class="text-xl lg:hidden">🍞</span>
+          <span class="text-lg sm:text-xl lg:hidden">🍞</span>
         </div>
         
         <!-- 글로벌 검색 -->
-        <div class="hidden sm:flex flex-1 max-w-md mx-4">
-          <button onclick="openSearchOverlay()" class="w-full flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-gray-400 hover:bg-gray-200 transition-colors text-sm">
+        <div class="flex flex-1 max-w-md mx-2 sm:mx-4">
+          <button onclick="openSearchOverlay()" class="w-full flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 rounded-lg text-gray-400 hover:bg-gray-200 transition-colors text-xs sm:text-sm">
             <span>🔍</span>
-            <span>검색... (⌘K)</span>
+            <span class="hidden sm:inline">검색... (⌘K)</span>
+            <span class="sm:hidden">검색</span>
           </button>
         </div>
         
-        <div class="flex-1 sm:hidden"></div>
-        
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-1 sm:gap-4">
           <div class="relative">
-            <button onclick="toggleNotifications()" class="relative text-gray-600 hover:text-gray-900">
-              <span class="text-2xl">🔔</span>
-              <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+            <button onclick="toggleNotifications()" class="relative text-gray-600 hover:text-gray-900 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
+              <span class="text-xl sm:text-2xl">🔔</span>
+              <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
             </button>
             
             <!-- Notification Dropdown -->
-            <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+            <div id="notificationDropdown" class="hidden fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-14 sm:top-auto sm:mt-2 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
               <div class="p-4 border-b border-gray-200">
                 <div class="flex items-center justify-between mb-3">
                   <h3 class="font-semibold text-lg">알림</h3>
@@ -247,11 +246,11 @@
             </div>
           </div>
           
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+          <div class="flex items-center gap-1 sm:gap-2">
+            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
               김
             </div>
-            <span class="font-medium">김준우</span>
+            <span class="font-medium hidden md:inline">김준우</span>
           </div>
         </div>
       </header>
