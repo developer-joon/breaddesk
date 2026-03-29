@@ -11,8 +11,7 @@
 | Monorepo | Turborepo + Bun |
 | Frontend | Next.js + TypeScript |
 | Backend | Java 25 + Spring Boot 3.x |
-| Database | MySQL + pgvector |
-| Cache | Redis |
+| Database | PostgreSQL + pgvector |
 | AI | LLM 추상화 (Ollama, OpenAI, Claude 교체 가능) |
 | Automation | n8n (멀티채널 통합) |
 

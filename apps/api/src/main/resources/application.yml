@@ -8,17 +8,17 @@ spring:
       lifecycle-management: start-and-stop   # 앱 종료 시 컨테이너도 정지
 
   datasource:
-    url: jdbc:mysql://localhost:3306/breaddesk?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    url: jdbc:postgresql://localhost:5432/breaddesk
     username: ${DB_USERNAME:breaddesk}
     password: ${DB_PASSWORD:breaddesk}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
 
@@ -26,11 +26,6 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
 
   servlet:
     multipart:

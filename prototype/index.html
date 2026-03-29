@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🍞 BreadDesk - 통합 데스크</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    [x-cloak] { display: none; }
+    
+    /* Task Card Hover */
+    .task-card { 
+      transition: transform 0.2s, box-shadow 0.2s; 
+      cursor: pointer;
+    }
+    .task-card:hover { 
+      transform: translateY(-4px); 
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+    
+    /* Modal Animations */
+    .modal {
+      display: none;
+      opacity: 0;
+      transform: scale(0.95);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .modal.show {
+      display: flex;
+      opacity: 1;
+      transform: scale(1);
+    }
+    
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      color: white;
+      font-weight: 500;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      z-index: 9999;
+      animation: slideIn 0.3s, slideOut 0.3s 2.7s;
+    }
+    
+    @keyframes slideIn {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(400px); opacity: 0; }
+    }
+    
+    /* Loading Spinner */
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 0.6s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Focus Rings */
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      ring: 2px;
+      ring-color: #3B82F6;
+    }
+    
+    /* Hover Effects */
+    .hover-lift {
+      transition: all 0.2s;
+    }
+    .hover-lift:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    
+    /* Empty State */
+    .empty-state {
+      padding: 3rem;
+      text-align: center;
+      color: #9CA3AF;
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] overflow-hidden">
+  
+  <!-- Main Container -->
+  <div class="flex h-screen">
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-60 bg-[#1E293B] text-white flex-shrink-0 transition-transform duration-300">
+      <div class="p-4">
+        <div class="flex items-center gap-2 mb-8">
+          <span class="text-3xl">🍞</span>
+          <h1 class="text-xl font-bold">BreadDesk</h1>
+        </div>
+        
+        <nav class="space-y-1">
+          <a href="#" onclick="showPage('dashboard'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors active" data-page="dashboard">
+            <span>📊</span>
+            <span>대시보드</span>
+          </a>
+          <a href="#" onclick="showPage('inquiries'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="inquiries">
+            <span>💬</span>
+            <span>문의</span>
+          </a>
+          <a href="#" onclick="showPage('tasks'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="tasks">
+            <span>✅</span>
+            <span>업무</span>
+          </a>
+          <a href="#" onclick="showPage('templates'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="templates">
+            <span>📝</span>
+            <span>템플릿</span>
+          </a>
+          <a href="#" onclick="showPage('knowledge'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="knowledge">
+            <span>📚</span>
+            <span>지식</span>
+          </a>
+          <a href="#" onclick="showPage('settings'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="settings">
+            <span>⚙️</span>
+            <span>설정</span>
+          </a>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      
+      <!-- Header -->
+      <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+        <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-gray-900">
+          <span class="text-2xl">☰</span>
+        </button>
+        
+        <div class="flex-1"></div>
+        
+        <div class="flex items-center gap-4">
+          <button class="relative text-gray-600 hover:text-gray-900">
+            <span class="text-2xl">🔔</span>
+            <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+              김
+            </div>
+            <span class="font-medium">김준우</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Pages -->
+      <main class="flex-1 overflow-y-auto">
+        
+        <!-- Dashboard Page -->
+        <div id="page-dashboard" class="page-content p-6">
+          <h2 class="text-2xl font-bold mb-6">대시보드</h2>
+          
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-6 cursor-pointer hover-lift" onclick="showPage('inquiries')">
+              <div class="text-gray-500 text-sm mb-1">총 문의</div>
+              <div class="text-3xl font-bold text-gray-900">127</div>
+              <div class="text-xs text-gray-400 mt-1">전체 누적</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 cursor-pointer hover-lift" onclick="showPage('inquiries')">
+              <div class="text-gray-500 text-sm mb-1">미해결</div>
+              <div class="text-3xl font-bold text-orange-500">12</div>
+              <div class="text-xs text-gray-400 mt-1">대응 필요</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 cursor-pointer hover-lift" onclick="showPage('inquiries')">
+              <div class="text-gray-500 text-sm mb-1">오늘 접수</div>
+              <div class="text-3xl font-bold text-blue-500">8</div>
+              <div class="text-xs text-gray-400 mt-1">신규 문의</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 cursor-pointer hover-lift">
+              <div class="text-gray-500 text-sm mb-1">AI 해결률</div>
+              <div class="text-3xl font-bold text-green-500">73%</div>
+              <div class="text-xs text-gray-400 mt-1">지난 7일 평균</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Recent Inquiries -->
+            <div class="lg:col-span-2 bg-white rounded-lg shadow p-6">
+              <h3 class="text-lg font-semibold mb-4">최근 문의</h3>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer" onclick="showInquiry('VPN 접속 불가')">
+                  <div class="flex-1">
+                    <div class="font-medium">VPN 접속 불가</div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">슬랙</span>
+                      <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded">미해결</span>
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-500">5분 전</div>
+                </div>
+                
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer" onclick="showInquiry('DB 권한 요청')">
+                  <div class="flex-1">
+                    <div class="font-medium">DB 권한 요청</div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">이메일</span>
+                      <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">해결</span>
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-500">23분 전</div>
+                </div>
+                
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer" onclick="showInquiry('배포 요청')">
+                  <div class="flex-1">
+                    <div class="font-medium">배포 요청 - 프론트엔드</div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">지라</span>
+                      <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">진행중</span>
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-500">1시간 전</div>
+                </div>
+                
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer" onclick="showInquiry('서버 디스크 부족')">
+                  <div class="flex-1">
+                    <div class="font-medium">서버 디스크 부족 알림</div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">모니터링</span>
+                      <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">해결</span>
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-500">2시간 전</div>
+                </div>
+                
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer" onclick="showInquiry('API 키 발급')">
+                  <div class="flex-1">
+                    <div class="font-medium">API 키 발급 문의</div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">슬랙</span>
+                      <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">해결</span>
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-500">3시간 전</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Task Status -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-lg font-semibold mb-4">업무 현황</h3>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium">대기</span>
+                    <span class="text-sm font-bold">8</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-gray-400 h-2 rounded-full" style="width: 40%"></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium">진행중</span>
+                    <span class="text-sm font-bold">12</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium">리뷰</span>
+                    <span class="text-sm font-bold">5</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 25%"></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium">완료</span>
+                    <span class="text-sm font-bold">18</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-500 h-2 rounded-full" style="width: 90%"></div>
+                  </div>
+                </div>
+              </div>
+              
+              <button onclick="showPage('tasks')" class="w-full mt-6 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                업무 칸반 보기
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasks Kanban Page -->
+        <div id="page-tasks" class="page-content hidden p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold">업무 칸반</h2>
+            <button onclick="openCreateTaskModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+              + 새 업무
+            </button>
+          </div>
+
+          <!-- Filters -->
+          <div class="bg-white rounded-lg shadow p-4 mb-6 flex gap-4 flex-wrap">
+            <select id="taskTypeFilter" onchange="filterTasks()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">모든 유형</option>
+              <option value="인프라">인프라</option>
+              <option value="개발">개발</option>
+              <option value="권한">권한</option>
+              <option value="배포">배포</option>
+            </select>
+            
+            <select id="taskPriorityFilter" onchange="filterTasks()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">모든 긴급도</option>
+              <option value="CRITICAL">CRITICAL</option>
+              <option value="HIGH">HIGH</option>
+              <option value="NORMAL">NORMAL</option>
+              <option value="LOW">LOW</option>
+            </select>
+            
+            <input type="text" id="taskSearchInput" oninput="filterTasks()" placeholder="검색..." class="flex-1 min-w-[200px] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+
+          <!-- Kanban Board -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Backlog Column -->
+            <div class="bg-gray-100 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold">대기 <span class="text-gray-500">(8)</span></h3>
+              </div>
+              <div class="space-y-3" id="kanban-backlog">
+                <div class="task-card bg-white rounded-lg p-4 shadow" data-type="인프라" data-priority="CRITICAL" data-title="VPN 접속 불가 조사" onclick="openTaskDetailModal('VPN 접속 불가 조사')">
+                  <div class="border-l-4 border-[#EF4444] pl-3">
+                    <h4 class="font-medium mb-2">VPN 접속 불가 조사</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">인프라</span>
+                      <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded font-semibold">CRITICAL</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                      <span>#긴급</span>
+                      <span>#인프라</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1">
+                        <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">김</div>
+                      </div>
+                      <span class="text-xs text-[#EF4444] font-semibold">SLA: 2시간</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="task-card bg-white rounded-lg p-4 shadow" data-type="인프라" data-priority="HIGH" data-title="서버 디스크 확장" onclick="openTaskDetailModal('서버 디스크 확장')">
+                  <div class="border-l-4 border-[#F97316] pl-3">
+                    <h4 class="font-medium mb-2">서버 디스크 확장</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">인프라</span>
+                      <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">HIGH</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                      <span>#인프라</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1">
+                        <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">이</div>
+                      </div>
+                      <span class="text-xs text-[#EAB308] font-semibold">SLA: 4시간</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- In Progress Column -->
+            <div class="bg-gray-100 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold">진행중 <span class="text-gray-500">(12)</span></h3>
+              </div>
+              <div class="space-y-3" id="kanban-progress">
+                <div class="task-card bg-white rounded-lg p-4 shadow" data-type="권한" data-priority="NORMAL" data-title="DB 권한 설정" onclick="openTaskDetailModal('DB 권한 설정')">
+                  <div class="border-l-4 border-[#EAB308] pl-3">
+                    <h4 class="font-medium mb-2">DB 권한 설정</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+                      <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded font-semibold">NORMAL</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                      <span>#권한</span>
+                      <span>#개발</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1">
+                        <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">김</div>
+                      </div>
+                      <span class="text-xs text-[#22C55E] font-semibold">SLA: 6시간</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="task-card bg-white rounded-lg p-4 shadow" data-type="배포" data-priority="HIGH" data-title="프론트엔드 배포" onclick="openTaskDetailModal('프론트엔드 배포')">
+                  <div class="border-l-4 border-[#F97316] pl-3">
+                    <h4 class="font-medium mb-2">프론트엔드 배포</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">배포</span>
+                      <span class="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded font-semibold">HIGH</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                      <span>#배포</span>
+                      <span>#개발</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1">
+                        <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">박</div>
+                      </div>
+                      <span class="text-xs text-[#EAB308] font-semibold">SLA: 2시간</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="task-card bg-white rounded-lg p-4 shadow" data-type="권한" data-priority="LOW" data-title="API 키 발급" onclick="openTaskDetailModal('API 키 발급')">
+                  <div class="border-l-4 border-[#3B82F6] pl-3">
+                    <h4 class="font-medium mb-2">API 키 발급</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+                      <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded font-semibold">LOW</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                      <span>#권한</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1">
+                        <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">이</div>
+                      </div>
+                      <span class="text-xs text-[#22C55E] font-semibold">SLA: 12시간</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review Column -->
+            <div class="bg-gray-100 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold">리뷰 <span class="text-gray-500">(5)</span></h3>
+              </div>
+              <div class="space-y-3" id="kanban-review">
+                <div class="task-card bg-white rounded-lg p-4 shadow" data-type="인프라" data-priority="NORMAL" data-title="모니터링 알림 설정" onclick="openTaskDetailModal('모니터링 알림 설정')">
+                  <div class="border-l-4 border-[#EAB308] pl-3">
+                    <h4 class="font-medium mb-2">모니터링 알림 설정</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">인프라</span>
+                      <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded font-semibold">NORMAL</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                      <span>#인프라</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1">
+                        <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">김</div>
+                      </div>
+                      <span class="text-xs text-[#22C55E] font-semibold">SLA: 5시간</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Done Column -->
+            <div class="bg-gray-100 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold">완료 <span class="text-gray-500">(18)</span></h3>
+              </div>
+              <div class="space-y-3" id="kanban-done">
+                <div class="task-card bg-white rounded-lg p-4 shadow opacity-75" data-type="인프라" data-priority="NORMAL" data-title="SSL 인증서 갱신" onclick="openTaskDetailModal('SSL 인증서 갱신')">
+                  <div class="border-l-4 border-[#22C55E] pl-3">
+                    <h4 class="font-medium mb-2">SSL 인증서 갱신</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">인프라</span>
+                      <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded font-semibold">NORMAL</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                      <span>#인프라</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1">
+                        <div class="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs">박</div>
+                      </div>
+                      <span class="text-xs text-green-600 font-semibold">✓ 완료</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="task-card bg-white rounded-lg p-4 shadow opacity-75" data-type="개발" data-priority="LOW" data-title="로그 백업 스크립트" onclick="openTaskDetailModal('로그 백업 스크립트')">
+                  <div class="border-l-4 border-[#22C55E] pl-3">
+                    <h4 class="font-medium mb-2">로그 백업 스크립트</h4>
+                    <div class="flex items-center gap-2 mb-2">
+                      <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">개발</span>
+                      <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded font-semibold">LOW</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                      <span>#개발</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-1">
+                        <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">이</div>
+                      </div>
+                      <span class="text-xs text-green-600 font-semibold">✓ 완료</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inquiries Page -->
+        <div id="page-inquiries" class="page-content hidden h-full">
+          <div class="flex h-full">
+            <!-- Inquiry List -->
+            <div class="w-80 bg-white border-r border-gray-200 flex flex-col">
+              <div class="p-4 border-b border-gray-200">
+                <h2 class="text-xl font-bold mb-3">문의</h2>
+                <input type="text" placeholder="검색..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <div class="flex gap-2 mt-2" id="inquiryStatusFilters">
+                  <button onclick="filterInquiries('all')" class="inquiry-filter px-3 py-1 text-xs bg-blue-500 text-white rounded-full active" data-status="all">전체</button>
+                  <button onclick="filterInquiries('unsolved')" class="inquiry-filter px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300" data-status="unsolved">미해결</button>
+                  <button onclick="filterInquiries('progress')" class="inquiry-filter px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300" data-status="progress">진행중</button>
+                  <button onclick="filterInquiries('solved')" class="inquiry-filter px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300" data-status="solved">해결</button>
+                </div>
+              </div>
+              <div class="flex-1 overflow-y-auto">
+                <div class="p-2 space-y-1" id="inquiryList">
+                  <div class="inquiry-item p-3 hover:bg-gray-50 rounded-lg cursor-pointer bg-blue-50 border-l-4 border-blue-500" data-status="unsolved" data-id="1" onclick="selectInquiry(1)">
+                    <div class="font-medium text-sm">VPN 접속 불가</div>
+                    <div class="text-xs text-gray-500 mt-1">슬랙 • 5분 전</div>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span class="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded">미해결</span>
+                    </div>
+                  </div>
+                  
+                  <div class="inquiry-item p-3 hover:bg-gray-50 rounded-lg cursor-pointer" data-status="solved" data-id="2" onclick="selectInquiry(2)">
+                    <div class="font-medium text-sm">DB 권한 요청</div>
+                    <div class="text-xs text-gray-500 mt-1">이메일 • 23분 전</div>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">해결</span>
+                    </div>
+                  </div>
+                  
+                  <div class="inquiry-item p-3 hover:bg-gray-50 rounded-lg cursor-pointer" data-status="progress" data-id="3" onclick="selectInquiry(3)">
+                    <div class="font-medium text-sm">배포 요청 - 프론트엔드</div>
+                    <div class="text-xs text-gray-500 mt-1">지라 • 1시간 전</div>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span class="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded">진행중</span>
+                    </div>
+                  </div>
+                  
+                  <div class="inquiry-item p-3 hover:bg-gray-50 rounded-lg cursor-pointer" data-status="solved" data-id="4" onclick="selectInquiry(4)">
+                    <div class="font-medium text-sm">서버 디스크 부족 알림</div>
+                    <div class="text-xs text-gray-500 mt-1">모니터링 • 2시간 전</div>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">해결</span>
+                    </div>
+                  </div>
+                  
+                  <div class="inquiry-item p-3 hover:bg-gray-50 rounded-lg cursor-pointer" data-status="solved" data-id="5" onclick="selectInquiry(5)">
+                    <div class="font-medium text-sm">API 키 발급 문의</div>
+                    <div class="text-xs text-gray-500 mt-1">슬랙 • 3시간 전</div>
+                    <div class="flex items-center gap-2 mt-2">
+                      <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">해결</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="flex-1 flex flex-col" id="inquiryChatArea">
+              <!-- Chat Header -->
+              <div class="p-4 border-b border-gray-200 bg-white">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="font-semibold">VPN 접속 불가</h3>
+                    <div class="text-xs text-gray-500 mt-1">슬랙 • 이민호 • 5분 전</div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button onclick="openResolveModal()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
+                      ✅ 해결됨
+                    </button>
+                    <button onclick="openConvertToTaskModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                      📋 업무로 전환
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Messages -->
+              <div class="flex-1 overflow-y-auto p-4 space-y-4" id="inquiryMessages">
+                <!-- User Message -->
+                <div class="flex justify-start">
+                  <div class="max-w-[70%]">
+                    <div class="flex items-center gap-2 mb-1">
+                      <div class="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs">이</div>
+                      <span class="text-xs text-gray-500">이민호 • 5분 전</span>
+                    </div>
+                    <div class="bg-[#F3F4F6] rounded-lg p-3">
+                      <p class="text-sm">안녕하세요, VPN 접속이 갑자기 안 됩니다. 어제까지는 잘 되었는데 오늘 아침부터 계속 연결 실패 에러가 나네요. 확인 부탁드립니다.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- AI Message -->
+                <div class="flex justify-end">
+                  <div class="max-w-[70%]">
+                    <div class="flex items-center gap-2 mb-1 justify-end">
+                      <span class="text-xs text-gray-500">AI 자동 답변 • 4분 전</span>
+                      <span class="text-base">🤖</span>
+                    </div>
+                    <div class="bg-[#EFF6FF] rounded-lg p-3 border border-blue-200">
+                      <p class="text-sm mb-2">안녕하세요! VPN 접속 불가 문제를 확인했습니다.</p>
+                      <p class="text-sm mb-2"><strong>일반적인 해결 방법:</strong></p>
+                      <ol class="text-sm list-decimal list-inside space-y-1 mb-2">
+                        <li>VPN 클라이언트를 재시작해 주세요</li>
+                        <li>네트워크 연결을 확인해 주세요</li>
+                        <li>방화벽 설정을 확인해 주세요</li>
+                      </ol>
+                      <p class="text-sm">위 방법으로 해결되지 않으면 담당자가 곧 연락드리겠습니다.</p>
+                      <div class="mt-2 pt-2 border-t border-blue-200 text-xs text-gray-500">
+                        신뢰도: <span class="font-semibold text-blue-600">87%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- User Response -->
+                <div class="flex justify-start">
+                  <div class="max-w-[70%]">
+                    <div class="flex items-center gap-2 mb-1">
+                      <div class="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center text-white text-xs">이</div>
+                      <span class="text-xs text-gray-500">이민호 • 3분 전</span>
+                    </div>
+                    <div class="bg-[#F3F4F6] rounded-lg p-3">
+                      <p class="text-sm">말씀해주신 방법 모두 시도했는데도 안 되네요. 에러 메시지는 "Connection timeout" 입니다.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Agent Message -->
+                <div class="flex justify-end">
+                  <div class="max-w-[70%]">
+                    <div class="flex items-center gap-2 mb-1 justify-end">
+                      <span class="text-xs text-gray-500">김준우 • 방금</span>
+                      <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">김</div>
+                    </div>
+                    <div class="bg-[#F0FDF4] rounded-lg p-3 border border-green-200">
+                      <p class="text-sm">확인했습니다. VPN 서버에서 일시적인 부하가 발생한 것 같습니다. 지금 재시작 중이니 2-3분 후에 다시 접속 시도해 주세요!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Input Area -->
+              <div class="p-4 bg-white border-t border-gray-200">
+                <div class="flex gap-2">
+                  <button onclick="openTemplateSelectModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
+                    📝 템플릿
+                  </button>
+                  <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
+                    📎 첨부
+                  </button>
+                  <input type="text" id="inquiryReplyInput" placeholder="답변 입력..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <button onclick="sendInquiryReply()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    전송
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Templates Page -->
+        <div id="page-templates" class="page-content hidden p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold">답변 템플릿</h2>
+            <button onclick="openCreateTemplateModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+              + 새 템플릿
+            </button>
+          </div>
+
+          <!-- Category Tabs -->
+          <div class="flex gap-2 mb-6 border-b border-gray-200" id="templateCategoryTabs">
+            <button onclick="filterTemplateCategory('all')" class="template-category px-4 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-600 active" data-category="all">전체</button>
+            <button onclick="filterTemplateCategory('권한')" class="template-category px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300" data-category="권한">권한</button>
+            <button onclick="filterTemplateCategory('VPN')" class="template-category px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300" data-category="VPN">VPN</button>
+            <button onclick="filterTemplateCategory('배포')" class="template-category px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300" data-category="배포">배포</button>
+            <button onclick="filterTemplateCategory('기타')" class="template-category px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-b-2 hover:border-gray-300" data-category="기타">기타</button>
+          </div>
+
+          <!-- Template Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="templateGrid">
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="VPN" onclick="openEditTemplateModal('VPN 접속 불가 - 일반')">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-semibold">VPN 접속 불가 - 일반</h3>
+                <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">VPN</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                VPN 접속이 안 될 경우 다음 단계를 시도해 주세요: 1) VPN 클라이언트 재시작 2) 네트워크 연결 확인 3) 방화벽 설정 확인...
+              </p>
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>사용: 47회</span>
+                <span>최종: 1시간 전</span>
+              </div>
+            </div>
+
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="권한" onclick="openEditTemplateModal('DB 권한 요청 승인')">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-semibold">DB 권한 요청 승인</h3>
+                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                DB 권한 요청이 승인되었습니다. 접속 정보는 다음과 같습니다: [호스트], [계정명], [권한 범위]...
+              </p>
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>사용: 34회</span>
+                <span>최종: 23분 전</span>
+              </div>
+            </div>
+
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="배포" onclick="openEditTemplateModal('배포 완료 알림')">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-semibold">배포 완료 알림</h3>
+                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">배포</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                요청하신 배포가 완료되었습니다. 환경: [환경명], 버전: [버전], 배포 시간: [시간], 확인 URL: [URL]...
+              </p>
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>사용: 28회</span>
+                <span>최종: 1시간 전</span>
+              </div>
+            </div>
+
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="권한" onclick="openEditTemplateModal('API 키 발급 안내')">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-semibold">API 키 발급 안내</h3>
+                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                API 키가 발급되었습니다. 키: [API_KEY], 만료일: [날짜], 사용 가능 엔드포인트: [목록], 주의사항: 키는 재발급 불가...
+              </p>
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>사용: 21회</span>
+                <span>최종: 3시간 전</span>
+              </div>
+            </div>
+
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="기타" onclick="openEditTemplateModal('서버 점검 안내')">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-semibold">서버 점검 안내</h3>
+                <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">기타</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                서버 점검이 예정되어 있습니다. 일시: [날짜 시간], 예상 소요시간: [시간], 영향 범위: [서비스], 점검 내용: [상세]...
+              </p>
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>사용: 18회</span>
+                <span>최종: 2일 전</span>
+              </div>
+            </div>
+
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="권한" onclick="openEditTemplateModal('계정 비밀번호 재설정')">
+              <div class="flex items-start justify-between mb-3">
+                <h3 class="font-semibold">계정 비밀번호 재설정</h3>
+                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                비밀번호 재설정 링크를 발송했습니다. 24시간 내에 링크를 클릭하여 비밀번호를 재설정해 주세요. 보안을 위해...
+              </p>
+              <div class="flex items-center justify-between text-xs text-gray-500">
+                <span>사용: 15회</span>
+                <span>최종: 5시간 전</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Knowledge Base Page -->
+        <div id="page-knowledge" class="page-content hidden p-6">
+          <h2 class="text-2xl font-bold mb-6">지식 베이스</h2>
+          
+          <!-- Connector Management -->
+          <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold">커넥터 관리</h3>
+              <button onclick="openAddConnectorModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                + 커넥터 추가
+              </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <!-- Connected Connector -->
+              <div class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-2xl">📊</span>
+                    <div>
+                      <h4 class="font-semibold">Confluence</h4>
+                      <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">연결됨</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="space-y-2 text-sm mb-4">
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">문서 수:</span>
+                    <span class="font-semibold">342개</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">동기화 주기:</span>
+                    <span class="font-semibold">1시간</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-gray-600">마지막 동기화:</span>
+                    <span class="font-semibold">15분 전</span>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="syncConnector('Confluence')" class="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                    동기화
+                  </button>
+                  <button onclick="openConnectorSettingsModal('Confluence')" class="flex-1 px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm">
+                    설정
+                  </button>
+                </div>
+              </div>
+
+              <!-- Unconnected Connector -->
+              <div class="bg-white rounded-lg shadow p-5 border-l-4 border-gray-300">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-2xl">🚀</span>
+                    <div>
+                      <h4 class="font-semibold">ArgoCD</h4>
+                      <span class="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded">미연결</span>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">
+                  ArgoCD 애플리케이션 문서를 자동으로 수집하여 배포 관련 문의에 활용할 수 있습니다.
+                </p>
+                <button onclick="openConnectorSettingsModal('ArgoCD')" class="w-full px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                  연결
+                </button>
+              </div>
+
+              <!-- Unconnected Connector -->
+              <div class="bg-white rounded-lg shadow p-5 border-l-4 border-gray-300">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-2xl">☁️</span>
+                    <div>
+                      <h4 class="font-semibold">AWS Docs</h4>
+                      <span class="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded">미연결</span>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">
+                  AWS 관련 내부 문서를 수집하여 인프라 문의 시 빠르게 답변할 수 있습니다.
+                </p>
+                <button onclick="openConnectorSettingsModal('AWS Docs')" class="w-full px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                  연결
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Document List -->
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-semibold">문서 목록</h3>
+              <button onclick="openAddDocumentModal()" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                + 문서 수동 등록
+              </button>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="bg-white rounded-lg shadow p-4 mb-4 flex gap-4">
+              <input type="text" id="docSearchInput" oninput="searchDocuments()" placeholder="문서 검색..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <select id="docSourceFilter" onchange="filterDocumentsBySource()" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">모든 소스</option>
+                <option value="Confluence">Confluence</option>
+                <option value="수동">수동</option>
+                <option value="AI학습">AI학습</option>
+              </select>
+            </div>
+
+            <!-- Document Table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+              <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">제목</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">소스</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200" id="documentTableBody">
+                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="Confluence" onclick="openDocumentDetailModal('VPN 설정 가이드')">
+                    <td class="px-6 py-4">
+                      <div class="font-medium">VPN 설정 가이드</div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">Confluence</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">2024-03-15</td>
+                  </tr>
+                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="Confluence" onclick="openDocumentDetailModal('DB 권한 관리 정책')">
+                    <td class="px-6 py-4">
+                      <div class="font-medium">DB 권한 관리 정책</div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">Confluence</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">2024-03-14</td>
+                  </tr>
+                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="수동" onclick="openDocumentDetailModal('배포 프로세스 매뉴얼')">
+                    <td class="px-6 py-4">
+                      <div class="font-medium">배포 프로세스 매뉴얼</div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">수동</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">2024-03-13</td>
+                  </tr>
+                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="AI학습" onclick="openDocumentDetailModal('서버 모니터링 FAQ')">
+                    <td class="px-6 py-4">
+                      <div class="font-medium">서버 모니터링 FAQ</div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">AI학습</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">2024-03-12</td>
+                  </tr>
+                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="Confluence" onclick="openDocumentDetailModal('API 인증 가이드')">
+                    <td class="px-6 py-4">
+                      <div class="font-medium">API 인증 가이드</div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">Confluence</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">2024-03-10</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="page-settings" class="page-content hidden p-6">
+          <h2 class="text-2xl font-bold mb-6">설정</h2>
+          
+          <div class="max-w-3xl">
+            <!-- General Settings -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 class="text-lg font-semibold mb-4">일반 설정</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">언어</label>
+                  <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>한국어</option>
+                    <option>English</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">시간대</label>
+                  <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>Asia/Seoul (GMT+9)</option>
+                    <option>UTC</option>
+                  </select>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-sm font-medium text-gray-700">알림 활성화</div>
+                    <div class="text-xs text-gray-500">새 문의 도착 시 알림을 받습니다</div>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Settings -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 class="text-lg font-semibold mb-4">AI 설정</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">AI 모델</label>
+                  <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>GPT-4</option>
+                    <option>GPT-3.5</option>
+                    <option>Claude</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">자동 답변 신뢰도 임계값</label>
+                  <input type="range" min="0" max="100" value="70" class="w-full">
+                  <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0%</span>
+                    <span class="font-semibold text-blue-600">70%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="text-sm font-medium text-gray-700">AI 자동 답변</div>
+                    <div class="text-xs text-gray-500">신뢰도가 임계값 이상일 때 자동 답변</div>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- SLA Settings -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+              <h3 class="text-lg font-semibold mb-4">SLA 설정</h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">CRITICAL 응답 시간</label>
+                  <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>15분</option>
+                    <option>30분</option>
+                    <option selected>1시간</option>
+                    <option>2시간</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">HIGH 응답 시간</label>
+                  <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>2시간</option>
+                    <option selected>4시간</option>
+                    <option>8시간</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">NORMAL 응답 시간</label>
+                  <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option>4시간</option>
+                    <option selected>8시간</option>
+                    <option>24시간</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button onclick="saveSettings()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                설정 저장
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Modals -->
+
+  <!-- Task Detail Modal -->
+  <div id="taskDetailModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'taskDetailModal')">
+    <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
+        <h2 class="text-2xl font-bold">업무 상세</h2>
+        <button onclick="closeModal('taskDetailModal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      
+      <div class="p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Main Content -->
+          <div class="lg:col-span-2 space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">제목</label>
+              <input type="text" value="VPN 접속 불가 조사" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">설명</label>
+              <textarea rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="업무 설명을 입력하세요...">사용자들이 VPN 접속 시 timeout 에러가 발생하고 있습니다. 서버 상태 확인 및 네트워크 설정 점검이 필요합니다.</textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">체크리스트</label>
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" checked class="w-4 h-4 text-blue-600">
+                  <span class="text-sm line-through text-gray-500">VPN 서버 상태 확인</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" class="w-4 h-4 text-blue-600">
+                  <span class="text-sm">네트워크 설정 점검</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input type="checkbox" class="w-4 h-4 text-blue-600">
+                  <span class="text-sm">사용자 계정 권한 확인</span>
+                </div>
+                <button class="text-sm text-blue-600 hover:text-blue-700 mt-2">+ 항목 추가</button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">첨부파일</label>
+              <div class="space-y-2">
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  <span>📄</span>
+                  <span class="text-sm flex-1">vpn_error_log.txt</span>
+                  <span class="text-xs text-gray-500">2.3 KB</span>
+                </div>
+                <button class="text-sm text-blue-600 hover:text-blue-700">+ 파일 첨부</button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">활동 로그</label>
+              <div class="space-y-3">
+                <div class="flex gap-3">
+                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">김</div>
+                  <div class="flex-1">
+                    <div class="text-sm"><strong>김준우</strong>가 업무를 생성했습니다</div>
+                    <div class="text-xs text-gray-500">5분 전</div>
+                  </div>
+                </div>
+                <div class="flex gap-3">
+                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">김</div>
+                  <div class="flex-1">
+                    <div class="text-sm"><strong>김준우</strong>가 긴급도를 <span class="text-red-600 font-semibold">CRITICAL</span>로 설정했습니다</div>
+                    <div class="text-xs text-gray-500">4분 전</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">코멘트</label>
+              <div class="space-y-3 mb-3">
+                <div class="flex gap-3">
+                  <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">이</div>
+                  <div class="flex-1">
+                    <div class="text-sm"><strong>이영희</strong></div>
+                    <div class="text-sm text-gray-600 mt-1">서버 로그 확인했는데 최근 2시간 동안 접속 시도가 급증했네요. 부하 문제일 수 있습니다.</div>
+                    <div class="text-xs text-gray-500 mt-1">2분 전</div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <input type="text" placeholder="코멘트 작성..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">작성</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">상태</label>
+              <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option selected>대기</option>
+                <option>진행중</option>
+                <option>리뷰</option>
+                <option>완료</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">긴급도</label>
+              <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="critical" selected>CRITICAL</option>
+                <option value="high">HIGH</option>
+                <option value="normal">NORMAL</option>
+                <option value="low">LOW</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">유형</label>
+              <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option selected>인프라</option>
+                <option>개발</option>
+                <option>권한</option>
+                <option>배포</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">담당자</label>
+              <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option selected>김준우</option>
+                <option>이영희</option>
+                <option>박민수</option>
+              </select>
+            </div>
+
+            <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div class="text-sm font-medium text-gray-700 mb-2">SLA 타이머</div>
+              <div class="text-2xl font-bold text-[#EF4444]">1시간 58분</div>
+              <div class="text-xs text-gray-500 mt-1">남은 시간</div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">태그</label>
+              <div class="flex flex-wrap gap-2 mb-2">
+                <span class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full">#긴급</span>
+                <span class="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full">#인프라</span>
+              </div>
+              <button class="text-sm text-blue-600 hover:text-blue-700">+ 태그 추가</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex justify-end gap-3">
+        <button onclick="closeModal('taskDetailModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+          취소
+        </button>
+        <button onclick="saveTask()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Task Modal -->
+  <div id="createTaskModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'createTaskModal')">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
+        <h2 class="text-xl font-bold">새 업무 생성</h2>
+        <button onclick="closeModal('createTaskModal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">제목 *</label>
+          <input type="text" placeholder="업무 제목을 입력하세요" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">설명</label>
+          <textarea rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="업무 설명을 입력하세요..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">유형 *</label>
+            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">선택하세요</option>
+              <option>인프라</option>
+              <option>개발</option>
+              <option>권한</option>
+              <option>배포</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">긴급도 *</label>
+            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">선택하세요</option>
+              <option value="critical">CRITICAL</option>
+              <option value="high">HIGH</option>
+              <option value="normal">NORMAL</option>
+              <option value="low">LOW</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">담당자</label>
+          <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">선택하세요</option>
+            <option>김준우</option>
+            <option>이영희</option>
+            <option>박민수</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">마감일</label>
+          <input type="date" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">태그</label>
+          <input type="text" placeholder="#태그1 #태그2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex justify-end gap-3">
+        <button onclick="closeModal('createTaskModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+          취소
+        </button>
+        <button onclick="createTask()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          생성
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Convert to Task Modal -->
+  <div id="convertToTaskModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'convertToTaskModal')">
+    <div class="bg-white rounded-lg max-w-md w-full" onclick="event.stopPropagation()">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold mb-4">문의를 업무로 전환하시겠습니까?</h3>
+        <p class="text-sm text-gray-600 mb-6">이 문의 내용을 기반으로 새로운 업무가 생성됩니다.</p>
+        <div class="flex justify-end gap-3">
+          <button onclick="closeModal('convertToTaskModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+            취소
+          </button>
+          <button onclick="convertToTask()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+            전환
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resolve Inquiry Modal -->
+  <div id="resolveModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'resolveModal')">
+    <div class="bg-white rounded-lg max-w-md w-full" onclick="event.stopPropagation()">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold mb-4">문의를 해결 완료로 표시하시겠습니까?</h3>
+        <p class="text-sm text-gray-600 mb-6">해결 완료된 문의는 더 이상 대기 목록에 표시되지 않습니다.</p>
+        <div class="flex justify-end gap-3">
+          <button onclick="closeModal('resolveModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+            취소
+          </button>
+          <button onclick="resolveInquiry()" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+            해결 완료
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Select Modal -->
+  <div id="templateSelectModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'templateSelectModal')">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
+        <h2 class="text-xl font-bold">템플릿 선택</h2>
+        <button onclick="closeModal('templateSelectModal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      
+      <div class="p-6 space-y-3">
+        <div class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer" onclick="selectTemplate('VPN 접속 불가 - 일반')">
+          <div class="font-medium mb-1">VPN 접속 불가 - 일반</div>
+          <div class="text-sm text-gray-600">VPN 접속이 안 될 경우 다음 단계를 시도해 주세요...</div>
+        </div>
+        <div class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer" onclick="selectTemplate('DB 권한 요청 승인')">
+          <div class="font-medium mb-1">DB 권한 요청 승인</div>
+          <div class="text-sm text-gray-600">DB 권한 요청이 승인되었습니다...</div>
+        </div>
+        <div class="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer" onclick="selectTemplate('배포 완료 알림')">
+          <div class="font-medium mb-1">배포 완료 알림</div>
+          <div class="text-sm text-gray-600">요청하신 배포가 완료되었습니다...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create/Edit Template Modal -->
+  <div id="templateModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'templateModal')">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
+        <h2 class="text-xl font-bold">템플릿 생성</h2>
+        <button onclick="closeModal('templateModal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">제목 *</label>
+          <input type="text" placeholder="템플릿 제목" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">카테고리 *</label>
+          <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">선택하세요</option>
+            <option>VPN</option>
+            <option>권한</option>
+            <option>배포</option>
+            <option>기타</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">내용 *</label>
+          <textarea rows="8" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="템플릿 내용을 입력하세요...&#10;&#10;변수 사용 예시: [사용자명], [날짜], [URL]"></textarea>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div class="text-xs font-medium text-blue-900 mb-1">💡 변수 안내</div>
+          <div class="text-xs text-blue-700">
+            [사용자명], [날짜], [시간], [URL], [환경], [버전] 등의 변수를 사용할 수 있습니다. 답변 시 자동으로 실제 값으로 대체됩니다.
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex justify-end gap-3">
+        <button onclick="closeModal('templateModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+          취소
+        </button>
+        <button onclick="saveTemplate()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'deleteModal')">
+    <div class="bg-white rounded-lg max-w-md w-full" onclick="event.stopPropagation()">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold mb-4">정말 삭제하시겠습니까?</h3>
+        <p class="text-sm text-gray-600 mb-6">이 작업은 되돌릴 수 없습니다.</p>
+        <div class="flex justify-end gap-3">
+          <button onclick="closeModal('deleteModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+            취소
+          </button>
+          <button onclick="confirmDelete()" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+            삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connector Settings Modal -->
+  <div id="connectorSettingsModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'connectorSettingsModal')">
+    <div class="bg-white rounded-lg max-w-md w-full" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
+        <h2 class="text-xl font-bold">커넥터 설정</h2>
+        <button onclick="closeModal('connectorSettingsModal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">커넥터 URL *</label>
+          <input type="url" placeholder="https://..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">API 키 *</label>
+          <input type="password" placeholder="API 키를 입력하세요" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">동기화 주기</label>
+          <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option>30분</option>
+            <option selected>1시간</option>
+            <option>6시간</option>
+            <option>24시간</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex justify-end gap-3">
+        <button onclick="closeModal('connectorSettingsModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+          취소
+        </button>
+        <button onclick="saveConnectorSettings()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          저장
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Connector Modal -->
+  <div id="addConnectorModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'addConnectorModal')">
+    <div class="bg-white rounded-lg max-w-md w-full" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
+        <h2 class="text-xl font-bold">커넥터 추가</h2>
+        <button onclick="closeModal('addConnectorModal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">커넥터 유형 *</label>
+          <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="">선택하세요</option>
+            <option>Confluence</option>
+            <option>Notion</option>
+            <option>GitHub Wiki</option>
+            <option>Custom API</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">이름 *</label>
+          <input type="text" placeholder="커넥터 이름" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">URL *</label>
+          <input type="url" placeholder="https://..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">API 키 *</label>
+          <input type="password" placeholder="API 키를 입력하세요" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex justify-end gap-3">
+        <button onclick="closeModal('addConnectorModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+          취소
+        </button>
+        <button onclick="addConnector()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+          추가
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Document Modal -->
+  <div id="addDocumentModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'addDocumentModal')">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
+        <h2 class="text-xl font-bold">문서 수동 등록</h2>
+        <button onclick="closeModal('addDocumentModal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">제목 *</label>
+          <input type="text" placeholder="문서 제목" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">내용 *</label>
+          <textarea rows="10" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="문서 내용을 입력하세요..."></textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">태그</label>
+          <input type="text" placeholder="#태그1 #태그2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex justify-end gap-3">
+        <button onclick="closeModal('addDocumentModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors">
+          취소
+        </button>
+        <button onclick="addDocument()" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+          등록
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Document Detail Modal -->
+  <div id="documentDetailModal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50 p-4" onclick="closeModalOnOverlay(event, 'documentDetailModal')">
+    <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+      <div class="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between z-10">
+        <h2 class="text-xl font-bold">VPN 설정 가이드</h2>
+        <button onclick="closeModal('documentDetailModal')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      
+      <div class="p-6">
+        <!-- Document Info -->
+        <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-200">
+          <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">Confluence</span>
+          <span class="text-sm text-gray-500">2024-03-15</span>
+          <div class="flex gap-2">
+            <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">#VPN</span>
+            <span class="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">#네트워크</span>
+          </div>
+        </div>
+
+        <!-- Document Content Preview -->
+        <div class="prose max-w-none mb-6">
+          <h3 class="text-lg font-semibold mb-3">문서 미리보기</h3>
+          <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+            <p class="mb-3"><strong>VPN 클라이언트 설치 및 설정</strong></p>
+            <p class="mb-2">1. VPN 클라이언트 다운로드</p>
+            <p class="mb-2">2. 설치 후 서버 정보 입력</p>
+            <p class="mb-2">3. 인증서 설정</p>
+            <p class="mb-2">4. 연결 테스트</p>
+            <p class="mt-4 text-gray-500">... (내용 중략)</p>
+          </div>
+        </div>
+
+        <!-- AI Usage Stats -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 class="text-sm font-semibold text-blue-900 mb-3">📊 AI 활용 통계</h4>
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div class="text-2xl font-bold text-blue-600">47</div>
+              <div class="text-xs text-blue-700 mt-1">참조 횟수</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-blue-600">89%</div>
+              <div class="text-xs text-blue-700 mt-1">정확도</div>
+            </div>
+            <div>
+              <div class="text-2xl font-bold text-blue-600">3일 전</div>
+              <div class="text-xs text-blue-700 mt-1">최근 사용</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex justify-end">
+        <button onclick="closeModal('documentDetailModal')" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== Navigation ====================
+    function showPage(pageName) {
+      document.querySelectorAll('.page-content').forEach(page => {
+        page.classList.add('hidden');
+      });
+      
+      document.getElementById('page-' + pageName).classList.remove('hidden');
+      
+      document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active', 'bg-[#3B82F6]');
+      });
+      
+      const activeItem = document.querySelector(`[data-page="${pageName}"]`);
+      if (activeItem) {
+        activeItem.classList.add('active', 'bg-[#3B82F6]');
+      }
+    }
+
+    // ==================== Modals ====================
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.classList.add('show');
+      }, 10);
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.classList.remove('show');
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 200);
+    }
+
+    function closeModalOnOverlay(event, modalId) {
+      if (event.target === event.currentTarget) {
+        closeModal(modalId);
+      }
+    }
+
+    // ESC key to close modals
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal.show').forEach(modal => {
+          closeModal(modal.id);
+        });
+      }
+    });
+
+    // Task Modals
+    function openTaskDetailModal(title) {
+      openModal('taskDetailModal');
+    }
+
+    function openCreateTaskModal() {
+      openModal('createTaskModal');
+    }
+
+    function createTask() {
+      showToast('업무가 생성되었습니다', 'success');
+      closeModal('createTaskModal');
+    }
+
+    function saveTask() {
+      showToast('업무가 저장되었습니다', 'success');
+      closeModal('taskDetailModal');
+    }
+
+    // Inquiry Modals
+    function showInquiry(title) {
+      showPage('inquiries');
+      selectInquiry(1);
+    }
+
+    function selectInquiry(id) {
+      document.querySelectorAll('.inquiry-item').forEach(item => {
+        item.classList.remove('bg-blue-50', 'border-l-4', 'border-blue-500');
+      });
+      const selected = document.querySelector(`.inquiry-item[data-id="${id}"]`);
+      if (selected) {
+        selected.classList.add('bg-blue-50', 'border-l-4', 'border-blue-500');
+      }
+    }
+
+    function openConvertToTaskModal() {
+      openModal('convertToTaskModal');
+    }
+
+    function convertToTask() {
+      showToast('문의가 업무로 전환되었습니다', 'success');
+      closeModal('convertToTaskModal');
+      showPage('tasks');
+    }
+
+    function openResolveModal() {
+      openModal('resolveModal');
+    }
+
+    function resolveInquiry() {
+      showToast('문의가 해결 완료되었습니다', 'success');
+      closeModal('resolveModal');
+    }
+
+    function sendInquiryReply() {
+      const input = document.getElementById('inquiryReplyInput');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      const messagesContainer = document.getElementById('inquiryMessages');
+      const messageHtml = `
+        <div class="flex justify-end">
+          <div class="max-w-[70%]">
+            <div class="flex items-center gap-2 mb-1 justify-end">
+              <span class="text-xs text-gray-500">김준우 • 방금</span>
+              <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">김</div>
+            </div>
+            <div class="bg-[#F0FDF4] rounded-lg p-3 border border-green-200">
+              <p class="text-sm">${text}</p>
+            </div>
+          </div>
+        </div>
+      `;
+      messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+      input.value = '';
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      showToast('답변이 전송되었습니다', 'success');
+    }
+
+    // Template Modals
+    function openTemplateSelectModal() {
+      openModal('templateSelectModal');
+    }
+
+    function selectTemplate(name) {
+      document.getElementById('inquiryReplyInput').value = `[템플릿: ${name}] 내용이 입력되었습니다.`;
+      closeModal('templateSelectModal');
+      showToast('템플릿이 적용되었습니다', 'success');
+    }
+
+    function openCreateTemplateModal() {
+      openModal('templateModal');
+    }
+
+    function openEditTemplateModal(title) {
+      openModal('templateModal');
+    }
+
+    function saveTemplate() {
+      showToast('템플릿이 저장되었습니다', 'success');
+      closeModal('templateModal');
+    }
+
+    // Knowledge Base Modals
+    function openConnectorSettingsModal(name) {
+      openModal('connectorSettingsModal');
+    }
+
+    function saveConnectorSettings() {
+      showToast('커넥터 설정이 저장되었습니다', 'success');
+      closeModal('connectorSettingsModal');
+    }
+
+    function openAddConnectorModal() {
+      openModal('addConnectorModal');
+    }
+
+    function addConnector() {
+      showToast('커넥터가 추가되었습니다', 'success');
+      closeModal('addConnectorModal');
+    }
+
+    function syncConnector(name) {
+      const btn = event.target;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<div class="spinner mx-auto"></div>';
+      btn.disabled = true;
+      
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        showToast(`${name} 동기화가 완료되었습니다`, 'success');
+      }, 2000);
+    }
+
+    function openAddDocumentModal() {
+      openModal('addDocumentModal');
+    }
+
+    function addDocument() {
+      showToast('문서가 등록되었습니다', 'success');
+      closeModal('addDocumentModal');
+    }
+
+    function openDocumentDetailModal(title) {
+      openModal('documentDetailModal');
+    }
+
+    function searchDocuments() {
+      const query = document.getElementById('docSearchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('.document-row');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+      });
+    }
+
+    function filterDocumentsBySource() {
+      const source = document.getElementById('docSourceFilter').value;
+      const rows = document.querySelectorAll('.document-row');
+      rows.forEach(row => {
+        if (!source || row.dataset.source === source) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    // Settings
+    function saveSettings() {
+      showToast('설정이 저장되었습니다', 'success');
+    }
+
+    // ==================== Filters ====================
+    function filterTasks() {
+      const typeFilter = document.getElementById('taskTypeFilter').value;
+      const priorityFilter = document.getElementById('taskPriorityFilter').value;
+      const searchQuery = document.getElementById('taskSearchInput').value.toLowerCase();
+      
+      document.querySelectorAll('.task-card').forEach(card => {
+        const type = card.dataset.type || '';
+        const priority = card.dataset.priority || '';
+        const title = (card.dataset.title || '').toLowerCase();
+        
+        const typeMatch = !typeFilter || type === typeFilter;
+        const priorityMatch = !priorityFilter || priority === priorityFilter;
+        const searchMatch = !searchQuery || title.includes(searchQuery);
+        
+        if (typeMatch && priorityMatch && searchMatch) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function filterInquiries(status) {
+      document.querySelectorAll('.inquiry-filter').forEach(btn => {
+        btn.classList.remove('bg-blue-500', 'text-white', 'active');
+        btn.classList.add('bg-gray-200', 'text-gray-700');
+      });
+      event.target.classList.remove('bg-gray-200', 'text-gray-700');
+      event.target.classList.add('bg-blue-500', 'text-white', 'active');
+      
+      document.querySelectorAll('.inquiry-item').forEach(item => {
+        if (status === 'all' || item.dataset.status === status) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    function filterTemplateCategory(category) {
+      document.querySelectorAll('.template-category').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'text-blue-600', 'active');
+        btn.classList.add('text-gray-500');
+      });
+      event.target.classList.remove('text-gray-500');
+      event.target.classList.add('border-blue-500', 'text-blue-600', 'active');
+      
+      document.querySelectorAll('.template-card').forEach(card => {
+        if (category === 'all' || card.dataset.category === category) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // ==================== Toast Notifications ====================
+    function showToast(message, type = 'success') {
+      const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500',
+        warning: 'bg-yellow-500'
+      };
+      
+      const toast = document.createElement('div');
+      toast.className = `toast ${colors[type] || colors.success}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // ==================== Sidebar Toggle ====================
+    document.getElementById('sidebarToggle').addEventListener('click', function() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('-translate-x-full');
+    });
+
+    // ==================== Initialize ====================
+    showPage('dashboard');
+  </script>
+
+</body>
+</html>

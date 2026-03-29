@@ -52,7 +52,7 @@
 | **메신저** | n8n 웹훅 통합 | Slack, Teams, Jira, 메일, 웹 채팅 |
 | **지식 소스** | 커넥터 플러그인 | Confluence, Datadog, ArgoCD, AWS, 기타 |
 | **벡터 DB** | 추상화 레이어 | pgvector, Milvus, Chroma |
-| **DB** | JPA/Hibernate | MySQL, PostgreSQL |
+| **DB** | JPA/Hibernate | PostgreSQL, PostgreSQL |
 | **인프라** | Docker 컨테이너 | K8s, Docker Compose, 단독 실행 |
 
 ### 2.2 확장 최대화
@@ -257,8 +257,7 @@ LOW:      응답 1일   / 해결 5일
 | **Monorepo** | Turborepo + Bun | 빌드 오케스트레이션 |
 | **프론트엔드** | Next.js + TypeScript + Bun | 대시보드 |
 | **백엔드** | Java 25 LTS + Spring Boot 3.x | REST API + AI 처리 |
-| **DB** | MySQL + pgvector (또는 별도 벡터 DB) | 데이터 + 벡터 검색 |
-| **캐시** | Redis | 세션, 빈번 조회 캐싱 |
+| **DB** | PostgreSQL + pgvector (또는 별도 벡터 DB) | 데이터 + 벡터 검색 |
 | **자동화** | n8n (별도 운영) | 멀티채널 수집 |
 
 ### 4.2 AI
@@ -649,7 +648,7 @@ breaddesk/
 │   └── shared/                 # 프론트/백 공유 타입 (API 스키마 등)
 │
 ├── infrastructure/
-│   ├── docker-compose.dev.yml  # 로컬 개발 (MySQL, Redis, Ollama)
+│   ├── docker-compose.dev.yml  # 로컬 개발 (PostgreSQL, Redis, Ollama)
 │   └── k8s/                    # K8s 매니페스트
 │
 ├── specs/                      # 스펙 문서
