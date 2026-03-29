@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Transactional
     public MemberResponse createMember(MemberRequest request) {
@@ -29,6 +31,7 @@ public class MemberService {
         Member member = Member.builder()
                 .name(request.getName())
                 .email(request.getEmail())
+                .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole() != null ? request.getRole() : Member.MemberRole.AGENT)
                 .skills(request.getSkills())
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
@@ -60,6 +63,9 @@ public class MemberService {
 
         if (request.getName() != null) {
             member.setName(request.getName());
+        }
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            member.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         }
         if (request.getRole() != null) {
             member.setRole(request.getRole());

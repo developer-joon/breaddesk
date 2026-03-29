@@ -23,6 +23,9 @@ public class MemberRequest {
     @Email(message = "Invalid email format")
     private String email;
 
+    @NotBlank(message = "Password is required")
+    private String password;
+
     private Member.MemberRole role;
 
     private Map<String, Double> skills;
@@ -31,12 +34,15 @@ public class MemberRequest {
 
     public static class Update {
         private String name;
+        private String password;
         private Member.MemberRole role;
         private Map<String, Double> skills;
         private Boolean isActive;
 
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
         public Member.MemberRole getRole() { return role; }
         public void setRole(Member.MemberRole role) { this.role = role; }
         public Map<String, Double> getSkills() { return skills; }

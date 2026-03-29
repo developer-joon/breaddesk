@@ -48,33 +48,14 @@ public class InquiryService {
         // 사용자 메시지 기록
         saveMessage(saved.getId(), InquiryMessage.MessageRole.USER, request.getMessage());
 
-        // AI 자동 답변 생성
-        InquiryAiService.AiAnswerResult aiResult = aiService.generateAnswer(request.getMessage());
-        saved.setAiResponse(aiResult.getAnswer());
-        saved.setAiConfidence(aiResult.getConfidence());
+        log.info("Created inquiry: {} from {} - AI processing will run asynchronously", 
+                saved.getId(), saved.getSenderName());
 
-        // 신뢰도에 따른 처리
-        if (aiResult.getConfidence() >= 0.8) {
-            // 높은 신뢰도: 자동 답변
-            saved.setStatus(Inquiry.InquiryStatus.AI_ANSWERED);
-            saveMessage(saved.getId(), InquiryMessage.MessageRole.AI, aiResult.getAnswer());
-            log.info("High confidence AI answer for inquiry {}", saved.getId());
-        } else if (aiResult.getConfidence() >= 0.5) {
-            // 중간 신뢰도: 답변 + 담당자 알림
-            saved.setStatus(Inquiry.InquiryStatus.AI_ANSWERED);
-            saveMessage(saved.getId(), InquiryMessage.MessageRole.AI, aiResult.getAnswer());
-            log.warn("Medium confidence AI answer for inquiry {} - human review needed", saved.getId());
-            // TODO: 담당자 알림 (Phase 3)
-        } else {
-            // 낮은 신뢰도: 에스컬레이션
-            escalateToTask(saved);
-            log.info("Low confidence - escalated inquiry {} to task", saved.getId());
-        }
+        // AI 답변 생성 (비동기)
+        aiService.generateAnswerAsync(saved.getId(), request.getMessage());
 
-        inquiryRepository.save(saved);
-        log.info("Created inquiry: {} from {}", saved.getId(), saved.getSenderName());
-
-        return getInquiry(saved.getId());
+        // 즉시 반환 (AI 답변은 백그라운드에서 처리)
+        return InquiryResponse.from(saved, List.of());
     }
 
     @Transactional(readOnly = true)

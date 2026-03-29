@@ -32,6 +32,9 @@ public class Member {
     @Column(nullable = false, unique = true, length = 200)
     private String email;
 
+    @Column(nullable = false)
+    private String passwordHash;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default

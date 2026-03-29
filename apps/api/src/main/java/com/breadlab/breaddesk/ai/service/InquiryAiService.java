@@ -2,10 +2,17 @@ package com.breadlab.breaddesk.ai.service;
 
 import com.breadlab.breaddesk.ai.LLMProvider;
 import com.breadlab.breaddesk.ai.LLMResponse;
+import com.breadlab.breaddesk.inquiry.entity.Inquiry;
+import com.breadlab.breaddesk.inquiry.entity.InquiryMessage;
+import com.breadlab.breaddesk.inquiry.repository.InquiryMessageRepository;
+import com.breadlab.breaddesk.inquiry.repository.InquiryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -17,6 +24,8 @@ import java.util.List;
 public class InquiryAiService {
 
     private final LLMProvider llmProvider;
+    private final InquiryRepository inquiryRepository;
+    private final InquiryMessageRepository messageRepository;
 
     /**
      * 문의에 대한 AI 답변 생성
@@ -51,6 +60,58 @@ public class InquiryAiService {
                 .confidence(response.confidence())
                 .shouldEscalate(shouldEscalate)
                 .build();
+    }
+
+    /**
+     * 비동기로 AI 답변 생성 후 문의 상태 업데이트
+     * @param inquiryId 문의 ID
+     * @param message 문의 내용
+     */
+    @Async
+    @Transactional
+    public void generateAnswerAsync(Long inquiryId, String message) {
+        log.info("Async AI answer generation started for inquiry {}", inquiryId);
+
+        try {
+            Inquiry inquiry = inquiryRepository.findById(inquiryId).orElseThrow();
+
+            // AI 답변 생성
+            AiAnswerResult aiResult = generateAnswer(message);
+            inquiry.setAiResponse(aiResult.getAnswer());
+            inquiry.setAiConfidence(aiResult.getConfidence());
+
+            // 신뢰도에 따른 상태 변경
+            if (aiResult.getConfidence() >= 0.8) {
+                // 높은 신뢰도: 자동 답변
+                inquiry.setStatus(Inquiry.InquiryStatus.AI_ANSWERED);
+                saveMessage(inquiryId, InquiryMessage.MessageRole.AI, aiResult.getAnswer());
+                log.info("High confidence AI answer for inquiry {}", inquiryId);
+            } else if (aiResult.getConfidence() >= 0.5) {
+                // 중간 신뢰도: 답변 + 담당자 알림
+                inquiry.setStatus(Inquiry.InquiryStatus.AI_ANSWERED);
+                saveMessage(inquiryId, InquiryMessage.MessageRole.AI, aiResult.getAnswer());
+                log.warn("Medium confidence AI answer for inquiry {} - human review needed", inquiryId);
+            } else {
+                // 낮은 신뢰도: 에스컬레이션 필요 (InquiryService에서 처리)
+                inquiry.setStatus(Inquiry.InquiryStatus.OPEN);
+                log.info("Low confidence for inquiry {} - manual escalation needed", inquiryId);
+            }
+
+            inquiryRepository.save(inquiry);
+            log.info("Async AI answer generation completed for inquiry {}", inquiryId);
+
+        } catch (Exception e) {
+            log.error("Failed to generate AI answer for inquiry {}", inquiryId, e);
+        }
+    }
+
+    private void saveMessage(Long inquiryId, InquiryMessage.MessageRole role, String message) {
+        InquiryMessage msg = InquiryMessage.builder()
+                .inquiryId(inquiryId)
+                .role(role)
+                .message(message)
+                .build();
+        messageRepository.save(msg);
     }
 
     @lombok.Data
