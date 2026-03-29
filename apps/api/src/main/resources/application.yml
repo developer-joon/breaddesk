@@ -4,6 +4,7 @@ spring:
 
   docker:
     compose:
+      enabled: false
       file: ../../docker-compose.yml
       lifecycle-management: start-and-stop   # 앱 종료 시 컨테이너도 정지
 
@@ -64,6 +65,6 @@ logging:
 
 security:
   jwt:
-    secret: ${JWT_SECRET:breaddesk-secret}
+    secret: ${JWT_SECRET:breaddesk-secret-key-for-jwt-token-signature-min-32-bytes}
     access-token-expiration-minutes: 15
     refresh-token-expiration-days: 7
