@@ -20,18 +20,20 @@
 
 ```
 breaddesk/
-├── apps/web/          # Next.js 프론트엔드
-├── services/api/      # Spring Boot 백엔드
-├── packages/shared/   # 공유 타입
-├── infrastructure/    # Docker, K8s
-└── specs/             # 설계 문서
+├── apps/
+│   ├── web/           # Next.js 프론트엔드
+│   └── api/           # Spring Boot 백엔드
+├── docs/              # 설계 문서
+├── k8s/               # K8s 매니페스트 (배포 시)
+├── docker-compose.yml # 로컬 개발 인프라
+└── turbo.json
 ```
 
 ## 로컬 개발
 
 ### 인프라 실행
 ```bash
-docker compose -f infrastructure/docker-compose.dev.yml up -d
+docker compose up -d
 ```
 
 ### 프론트엔드

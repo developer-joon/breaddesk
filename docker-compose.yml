@@ -43,7 +43,7 @@ services:
     image: ghcr.io/openclaw/openclaw:latest
     container_name: breaddesk-openclaw
     volumes:
-      - ../:/workspace    # 프로젝트 루트 마운트
+      - ./:/workspace    # 프로젝트 루트 마운트
     ports:
       - "3001:3000"       # OpenClaw 웹 (프론트와 충돌 방지)
     restart: unless-stopped
