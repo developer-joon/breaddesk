@@ -80,9 +80,34 @@ CREATE TABLE tasks (
     sla_responded_at TIMESTAMP,
     sla_response_breached BOOLEAN NOT NULL DEFAULT FALSE,
     sla_resolve_breached BOOLEAN NOT NULL DEFAULT FALSE,
+    jira_issue_key VARCHAR(50),
+    jira_issue_url VARCHAR(500),
+    transfer_count INT NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     started_at TIMESTAMP,
     completed_at TIMESTAMP
+);
+
+-- 업무 전달 이력
+CREATE TABLE task_transfers (
+    id BIGSERIAL PRIMARY KEY,
+    task_id BIGINT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    from_member_id BIGINT REFERENCES members(id) ON DELETE SET NULL,
+    to_member_id BIGINT REFERENCES members(id) ON DELETE SET NULL,
+    reason TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 업무 AI 가이드 (할당 시 자동 생성)
+CREATE TABLE task_guides (
+    id BIGSERIAL PRIMARY KEY,
+    task_id BIGINT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    checklist_json JSONB,
+    related_docs_json JSONB,
+    similar_tasks_json JSONB,
+    guidelines TEXT,
+    estimated_hours REAL,
+    generated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- inquiries.task_id FK

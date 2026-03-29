@@ -98,8 +98,11 @@
   <!-- Main Container -->
   <div class="flex h-screen">
     
+    <!-- Sidebar Overlay (mobile) -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+    
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-60 bg-[#1E293B] text-white flex-shrink-0 transition-transform duration-300">
+    <aside id="sidebar" class="w-60 bg-[#1E293B] text-white flex-shrink-0 transition-transform duration-300 fixed lg:static inset-y-0 left-0 z-50 -translate-x-full lg:translate-x-0">
       <div class="p-4">
         <div class="flex items-center gap-2 mb-8">
           <span class="text-3xl">🍞</span>
@@ -1655,6 +1658,14 @@
       if (activeItem) {
         activeItem.classList.add('active', 'bg-[#3B82F6]');
       }
+      
+      // 모바일: 메뉴 클릭 시 사이드바 닫기
+      if (window.innerWidth < 1024) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      }
     }
 
     // ==================== Modals ====================
@@ -1940,9 +1951,14 @@
     }
 
     // ==================== Sidebar Toggle ====================
-    document.getElementById('sidebarToggle').addEventListener('click', function() {
+    function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
       sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+    document.getElementById('sidebarToggle').addEventListener('click', function() {
+      toggleSidebar();
     });
 
     // ==================== Initialize ====================
