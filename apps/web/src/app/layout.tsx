@@ -1,4 +1,7 @@
 import type { Metadata } from 'next';
+import './globals.css';
+import { Sidebar } from '../components/Sidebar';
+import { Header } from '../components/Header';
 
 export const metadata: Metadata = {
   title: 'BreadDesk',
@@ -12,7 +15,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <div className="flex h-screen">
+          <Sidebar />
+          <div className="flex flex-1 flex-col">
+            <Header />
+            <main className="flex-1 overflow-y-auto p-6">{children}</main>
+          </div>
+        </div>
+      </body>
     </html>
   );
 }

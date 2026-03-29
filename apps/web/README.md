@@ -1,127 +1,101 @@
-# BreadDesk Web (Frontend)
+# BreadDesk Web Frontend
 
-Next.js 15 + TypeScript + Tailwind CSS로 구현된 BreadDesk 프론트엔드입니다.
+Phase 1 프론트엔드 구현 (shadcn/ui 기반)
 
 ## 기술 스택
 
 - **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript (strict mode)
+- **UI Components**: shadcn/ui (Base Nova 스타일)
 - **Styling**: Tailwind CSS
-- **State**: React Hooks
-- **API**: Fetch API 래퍼
+- **Icons**: Lucide React
+- **TypeScript**: Strict mode
 
-## 프로젝트 구조
+## 주요 기능
 
-```
-src/
-├── app/                # Next.js App Router
-│   ├── page.tsx        # 대시보드
-│   ├── tasks/          # 업무 관리 (칸반, 상세)
-│   ├── inquiries/      # 문의 관리 (목록, 상세)
-│   ├── templates/      # 답변 템플릿
-│   └── settings/       # 설정
-├── components/         # 공통 컴포넌트
-│   ├── Sidebar.tsx     # 사이드바 네비게이션
-│   ├── Header.tsx      # 헤더
-│   └── StatCard.tsx    # 통계 카드
-├── lib/                # 유틸리티
-│   └── api.ts          # API 클라이언트
-└── types/              # 타입 정의
-    └── index.ts        # 공통 타입
-```
+- ✅ 대시보드 (통계 카드, 업무 현황, 최근 문의)
+- ✅ Skeleton UI 로딩 상태
+- ✅ 에러 처리 (모든 API 호출)
+- ✅ 백엔드 ApiResponse<T> 타입 대응
+- ✅ Responsive 레이아웃
 
-## 개발 환경 설정
+## 설치 및 실행
 
-### 환경 변수
+```bash
+# 의존성 설치
+npm install
 
-`.env.local` 파일을 생성하고 백엔드 API URL을 설정하세요:
-
-\`\`\`bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
-\`\`\`
-
-### 실행
-
-\`\`\`bash
-# 개발 서버 실행 (http://localhost:3000)
+# 개발 서버 실행 (localhost:3000)
 npm run dev
 
 # 프로덕션 빌드
 npm run build
 
-# 프로덕션 서버 실행
-npm run start
+# 프로덕션 실행
+npm start
+```
 
-# 타입 체크
-npm run type-check
-\`\`\`
+## 환경 변수
 
-## 구현된 기능 (Phase 1)
+`.env.local` 파일에 다음 변수 설정:
 
-### 1. 레이아웃
-- ✅ 사이드바 네비게이션 (문의, 업무, 템플릿, 설정)
-- ✅ 헤더 (로고 + 알림)
-- ✅ 반응형 디자인 (모바일 햄버거 메뉴)
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
+```
 
-### 2. 대시보드
-- ✅ 전체 현황 카드 (총 문의, 미해결, 오늘 접수, 처리율)
-- ✅ 최근 문의 목록 (5건)
-- ✅ 업무 상태별 요약
+## 구조
 
-### 3. 업무 관리
-- ✅ 칸반 보드 (WAITING / IN_PROGRESS / REVIEW / DONE)
-- ✅ 업무 카드 (제목, 유형 배지, 긴급도, 담당자)
-- ✅ 업무 상세 페이지
-  - 제목, 설명, 상태, 긴급도, 담당자
-  - 체크리스트
-  - 태그
-  - 코멘트/로그
-  - SLA 정보
+```
+src/
+├── app/                  # Next.js App Router 페이지
+│   ├── page.tsx         # 대시보드
+│   ├── layout.tsx       # 루트 레이아웃 (Sidebar + Header)
+│   └── globals.css      # shadcn/ui CSS 변수
+├── components/          # 공통 컴포넌트
+│   ├── ui/             # shadcn/ui 컴포넌트
+│   ├── Header.tsx      # 헤더 (알림, 프로필)
+│   ├── Sidebar.tsx     # 사이드바 네비게이션
+│   └── StatCard.tsx    # 통계 카드
+├── lib/
+│   ├── api.ts          # API 클라이언트
+│   └── utils.ts        # cn() 헬퍼
+└── types/
+    └── index.ts        # TypeScript 타입 정의
+```
 
-### 4. 문의 관리
-- ✅ 문의 목록 (상태 필터, 검색)
-- ✅ 문의 상세
-  - 대화 이력 (사용자/AI/담당자 구분)
-  - 담당자 답변 입력
-  - 업무로 전환 (에스컬레이션)
+## Phase 1 완료 사항
 
-### 5. 답변 템플릿
-- ✅ 템플릿 목록
-- ✅ 생성/수정/삭제
-- ✅ 카테고리 분류
-- ✅ 사용 횟수 통계
+### 1. shadcn/ui 적용
+- Base Nova 스타일
+- 라이트 모드 only
+- Button, Card, Badge, Skeleton, Dialog 등 추가
 
-### 6. 설정
-- ✅ LLM Provider 설정
-- ✅ 업무 유형 관리
-- ✅ SLA 규칙 표시
+### 2. 에러 처리
+- API 호출 실패 시 에러 메시지 표시
+- 에러 상태 UI (AlertCircle 아이콘)
 
-## API 연동
+### 3. 로딩 UX
+- Skeleton UI 컴포넌트
+- 데이터 로딩 중 깜빡임 없음
 
-`lib/api.ts`에 모든 API 엔드포인트가 정의되어 있습니다:
+### 4. 빌드 검증
+- TypeScript strict 모드 통과
+- 빌드 에러 0개
 
-- **Inquiry**: 문의 목록, 상세, 답변, 피드백
-- **Task**: 업무 CRUD, 할당, 칸반 데이터
-- **Template**: 템플릿 CRUD
-- **Dashboard**: 통계 데이터
-- **Knowledge**: 지식베이스 커넥터
-- **Member**: 팀원 목록
-
-## 다음 단계 (Phase 2+)
-
-- [ ] 업무 드래그앤드롭 (칸반)
-- [ ] 파일 첨부 UI
-- [ ] 실시간 알림
-- [ ] 지식베이스 검색 UI
-- [ ] 통계 차트
-- [ ] 다크 모드
-- [ ] 키보드 단축키
+### 5. API 응답 타입
+- 백엔드 `{ success, data, message }` 구조 대응
+- ApiResponse<T> 인터페이스 일치
 
 ## 주의사항
 
-- 현재 빌드 시 Monorepo 환경으로 인한 모듈 해석 이슈가 있을 수 있습니다. 개발 모드(`npm run dev`)는 정상 작동합니다.
-- 실제 API가 연결되기 전까지 로딩 상태나 빈 데이터가 표시됩니다.
+- **경로 별칭**: tsconfig의 `@/` 별칭이 Next.js 15에서 제대로 작동하지 않아 상대 경로 사용
+- **모듈 해석**: webpack alias는 추가했지만 TypeScript 타입 체크에서는 상대 경로 필요
+- **API 엔드포인트**: 백엔드 서버가 실행 중이어야 실제 데이터 로드 가능
 
-## 라이선스
+## 다음 단계 (Phase 2)
 
-Proprietary - BreadLab
+- [ ] 문의 관리 페이지 (목록, 상세, 답변)
+- [ ] 업무 관리 페이지 (칸반 보드, 상세)
+- [ ] 답변 템플릿 관리
+- [ ] 설정 페이지 (지식베이스, 팀원, 채널)
+- [ ] 다크 모드 지원
+- [ ] 실시간 업데이트 (WebSocket)
