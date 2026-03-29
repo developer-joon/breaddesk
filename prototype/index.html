@@ -259,29 +259,29 @@
       <main class="flex-1 overflow-y-auto">
         
         <!-- Dashboard Page -->
-        <div id="page-dashboard" class="page-content p-6">
-          <h2 class="text-2xl font-bold mb-6">대시보드</h2>
+        <div id="page-dashboard" class="page-content p-4 sm:p-6">
+          <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">대시보드</h2>
           
           <!-- Stats Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow p-6 cursor-pointer hover-lift" onclick="showPage('inquiries')">
-              <div class="text-gray-500 text-sm mb-1">총 문의</div>
-              <div class="text-3xl font-bold text-gray-900">127</div>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-3 sm:p-6 cursor-pointer hover-lift" onclick="showPage('inquiries')">
+              <div class="text-gray-500 text-xs sm:text-sm mb-1">총 문의</div>
+              <div class="text-xl sm:text-3xl font-bold text-gray-900">127</div>
               <div class="text-xs text-gray-400 mt-1">전체 누적</div>
             </div>
-            <div class="bg-white rounded-lg shadow p-6 cursor-pointer hover-lift" onclick="showPage('inquiries')">
-              <div class="text-gray-500 text-sm mb-1">미해결</div>
-              <div class="text-3xl font-bold text-orange-500">12</div>
+            <div class="bg-white rounded-lg shadow p-3 sm:p-6 cursor-pointer hover-lift" onclick="showPage('inquiries')">
+              <div class="text-gray-500 text-xs sm:text-sm mb-1">미해결</div>
+              <div class="text-xl sm:text-3xl font-bold text-orange-500">12</div>
               <div class="text-xs text-gray-400 mt-1">대응 필요</div>
             </div>
-            <div class="bg-white rounded-lg shadow p-6 cursor-pointer hover-lift" onclick="showPage('inquiries')">
-              <div class="text-gray-500 text-sm mb-1">오늘 접수</div>
-              <div class="text-3xl font-bold text-blue-500">8</div>
+            <div class="bg-white rounded-lg shadow p-3 sm:p-6 cursor-pointer hover-lift" onclick="showPage('inquiries')">
+              <div class="text-gray-500 text-xs sm:text-sm mb-1">오늘 접수</div>
+              <div class="text-xl sm:text-3xl font-bold text-blue-500">8</div>
               <div class="text-xs text-gray-400 mt-1">신규 문의</div>
             </div>
-            <div class="bg-white rounded-lg shadow p-6 cursor-pointer hover-lift">
-              <div class="text-gray-500 text-sm mb-1">AI 해결률</div>
-              <div class="text-3xl font-bold text-green-500">73%</div>
+            <div class="bg-white rounded-lg shadow p-3 sm:p-6 cursor-pointer hover-lift">
+              <div class="text-gray-500 text-xs sm:text-sm mb-1">AI 해결률</div>
+              <div class="text-xl sm:text-3xl font-bold text-green-500">73%</div>
               <div class="text-xs text-gray-400 mt-1">지난 7일 평균</div>
             </div>
           </div>
@@ -402,8 +402,8 @@
 
         <!-- Tasks Kanban Page -->
         <div id="page-tasks" class="page-content hidden p-6">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-2xl font-bold">업무 칸반</h2>
+          <div class="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 class="text-xl sm:text-2xl font-bold">업무 칸반</h2>
             <button onclick="openCreateTaskModal()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
               + 새 업무
             </button>
@@ -436,9 +436,9 @@
           </div>
 
           <!-- Kanban Board -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
             <!-- Backlog Column -->
-            <div class="bg-gray-100 rounded-lg p-4">
+            <div class="bg-gray-100 rounded-lg p-4 min-w-[280px] lg:min-w-0 snap-start">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="font-semibold">대기 <span class="text-gray-500">(8)</span></h3>
               </div>
@@ -485,7 +485,7 @@
             </div>
 
             <!-- In Progress Column -->
-            <div class="bg-gray-100 rounded-lg p-4">
+            <div class="bg-gray-100 rounded-lg p-4 min-w-[280px] lg:min-w-0 snap-start">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="font-semibold">진행중 <span class="text-gray-500">(12)</span></h3>
               </div>
@@ -578,7 +578,7 @@
             </div>
 
             <!-- Review Column -->
-            <div class="bg-gray-100 rounded-lg p-4">
+            <div class="bg-gray-100 rounded-lg p-4 min-w-[280px] lg:min-w-0 snap-start">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="font-semibold">리뷰 <span class="text-gray-500">(5)</span></h3>
               </div>
@@ -605,7 +605,7 @@
             </div>
 
             <!-- Done Column -->
-            <div class="bg-gray-100 rounded-lg p-4">
+            <div class="bg-gray-100 rounded-lg p-4 min-w-[280px] lg:min-w-0 snap-start">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="font-semibold">완료 <span class="text-gray-500">(18)</span></h3>
               </div>
