@@ -66,7 +66,7 @@ CREATE TABLE tasks (
     description TEXT,
     type VARCHAR(50) NOT NULL DEFAULT 'GENERAL',
     urgency VARCHAR(20) NOT NULL DEFAULT 'NORMAL' CHECK (urgency IN ('LOW', 'NORMAL', 'HIGH', 'CRITICAL')),
-    status VARCHAR(20) NOT NULL DEFAULT 'WAITING' CHECK (status IN ('WAITING', 'IN_PROGRESS', 'REVIEW', 'DONE')),
+    status VARCHAR(20) NOT NULL DEFAULT 'WAITING' CHECK (status IN ('WAITING', 'IN_PROGRESS', 'PENDING', 'REVIEW', 'DONE')),
     requester_name VARCHAR(100),
     requester_email VARCHAR(200),
     assignee_id BIGINT REFERENCES members(id) ON DELETE SET NULL,
@@ -86,6 +86,38 @@ CREATE TABLE tasks (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     started_at TIMESTAMP,
     completed_at TIMESTAMP
+);
+
+-- 알림
+CREATE TABLE notifications (
+    id BIGSERIAL PRIMARY KEY,
+    member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(300) NOT NULL,
+    message TEXT,
+    link VARCHAR(500),
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_notifications_member ON notifications(member_id, is_read);
+
+-- 업무 보류 이력
+CREATE TABLE task_holds (
+    id BIGSERIAL PRIMARY KEY,
+    task_id BIGINT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    reason TEXT NOT NULL,
+    started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ended_at TIMESTAMP,
+    sla_paused_minutes INT DEFAULT 0
+);
+
+-- 개인 메모
+CREATE TABLE personal_notes (
+    id BIGSERIAL PRIMARY KEY,
+    member_id BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 업무 전달 이력
