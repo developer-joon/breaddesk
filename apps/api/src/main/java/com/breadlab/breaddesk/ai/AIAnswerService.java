@@ -1,12 +1,8 @@
 package com.breadlab.breaddesk.ai;
 
-import com.breadlab.breaddesk.inquiry.entity.Inquiry;
-import com.breadlab.breaddesk.inquiry.entity.InquiryMessage;
-import com.breadlab.breaddesk.inquiry.entity.InquiryMessageRole;
-import com.breadlab.breaddesk.inquiry.entity.InquiryResolvedBy;
-import com.breadlab.breaddesk.inquiry.entity.InquiryStatus;
-import com.breadlab.breaddesk.inquiry.repository.InquiryMessageRepository;
-import com.breadlab.breaddesk.inquiry.repository.InquiryRepository;
+import com.breadlab.breaddesk.inquiry.entity.*;
+import com.breadlab.breaddesk.inquiry.repository.*;
+import com.breadlab.breaddesk.knowledge.service.VectorSearchService;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,17 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * AI 자동 답변 서비스.
- * 문의 접수 시 LLM에 질문 → 응답 + confidence 저장.
- * confidence >= 0.7 이면 AI_ANSWERED, 아니면 에스컬레이션 대상.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AIAnswerService {
 
     private static final float CONFIDENCE_THRESHOLD = 0.7f;
+    private static final int RAG_CONTEXT_LIMIT = 5;
 
     private static final String SYSTEM_PROMPT = """
             당신은 BreadDesk 고객 지원 AI 어시스턴트입니다.
@@ -33,15 +25,21 @@ public class AIAnswerService {
             답변은 간결하되 도움이 되도록 작성해주세요.
             """;
 
+    private static final String RAG_SYSTEM_PROMPT = """
+            당신은 BreadDesk 고객 지원 AI 어시스턴트입니다.
+            다음 관련 문서를 참고하여 고객의 질문에 정확하게 답변해주세요.
+            문서에 없는 내용은 추측하지 말고, 담당자 확인이 필요하다고 안내해주세요.
+            답변은 간결하되 도움이 되도록 작성해주세요.
+            
+            관련 문서:
+            %s
+            """;
+
     private final LLMProvider llmProvider;
     private final InquiryRepository inquiryRepository;
     private final InquiryMessageRepository inquiryMessageRepository;
+    private final VectorSearchService vectorSearchService;
 
-    /**
-     * 문의에 대해 AI 답변을 시도합니다.
-     *
-     * @return true if AI confidence >= threshold (auto-resolved), false otherwise (escalation needed)
-     */
     @Transactional
     public boolean tryAutoAnswer(Inquiry inquiry) {
         if (!llmProvider.isAvailable()) {
@@ -50,40 +48,57 @@ public class AIAnswerService {
         }
 
         try {
-            LLMResponse response = llmProvider.chat(
-                    SYSTEM_PROMPT,
-                    inquiry.getMessage(),
-                    List.of()  // Phase 2에서 knowledge docs 연동
-            );
+            List<String> contextDocs = vectorSearchService.searchAsContext(inquiry.getMessage(), RAG_CONTEXT_LIMIT);
 
-            // AI 응답 저장
+            List<VectorSearchService.SearchResult> searchResults =
+                    vectorSearchService.search(inquiry.getMessage(), RAG_CONTEXT_LIMIT, 0.7);
+            double avgSimilarity = searchResults.stream()
+                    .mapToDouble(VectorSearchService.SearchResult::similarity).average().orElse(0.0);
+
+            String systemPrompt;
+            if (!contextDocs.isEmpty()) {
+                String docsContext = String.join("\n---\n", contextDocs);
+                systemPrompt = RAG_SYSTEM_PROMPT.formatted(docsContext);
+                log.info("문의 #{}: RAG 컨텍스트 {} 문서, 평균 유사도 {}",
+                        inquiry.getId(), contextDocs.size(), String.format("%.2f", avgSimilarity));
+            } else {
+                systemPrompt = SYSTEM_PROMPT;
+                log.info("문의 #{}: 관련 문서 없음 — 기본 프롬프트 사용", inquiry.getId());
+            }
+
+            LLMResponse response = llmProvider.chat(systemPrompt, inquiry.getMessage(), contextDocs);
+
+            float finalConfidence = calculateConfidence(response.confidence(), avgSimilarity, !contextDocs.isEmpty());
+
             inquiry.setAiResponse(response.content());
-            inquiry.setAiConfidence(response.confidence());
+            inquiry.setAiConfidence(finalConfidence);
 
-            // AI 메시지 이력 추가
             InquiryMessage aiMessage = InquiryMessage.builder()
-                    .inquiry(inquiry)
-                    .role(InquiryMessageRole.AI)
-                    .message(response.content())
-                    .createdAt(LocalDateTime.now())
-                    .build();
+                    .inquiry(inquiry).role(InquiryMessageRole.AI)
+                    .message(response.content()).createdAt(LocalDateTime.now()).build();
             inquiryMessageRepository.save(aiMessage);
 
-            if (response.confidence() >= CONFIDENCE_THRESHOLD) {
+            if (finalConfidence >= CONFIDENCE_THRESHOLD) {
                 inquiry.setStatus(InquiryStatus.AI_ANSWERED);
                 inquiry.setResolvedBy(InquiryResolvedBy.AI);
                 inquiryRepository.save(inquiry);
-                log.info("문의 #{} AI 자동 답변 성공 (confidence: {})", inquiry.getId(), response.confidence());
+                log.info("문의 #{} AI 자동 답변 성공 (confidence: {}, docs: {})",
+                        inquiry.getId(), finalConfidence, contextDocs.size());
                 return true;
             } else {
                 inquiryRepository.save(inquiry);
                 log.info("문의 #{} AI confidence 부족 ({} < {}) — 에스컬레이션 필요",
-                        inquiry.getId(), response.confidence(), CONFIDENCE_THRESHOLD);
+                        inquiry.getId(), finalConfidence, CONFIDENCE_THRESHOLD);
                 return false;
             }
         } catch (Exception e) {
             log.error("AI 답변 시도 중 오류 (문의 #{}): {}", inquiry.getId(), e.getMessage(), e);
             return false;
         }
+    }
+
+    private float calculateConfidence(float llmConfidence, double avgSimilarity, boolean hasContext) {
+        if (!hasContext) return llmConfidence * 0.8f;
+        return (float) (llmConfidence * 0.6 + avgSimilarity * 0.4);
     }
 }

@@ -2,9 +2,12 @@ package com.breadlab.breaddesk.knowledge.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -46,6 +49,14 @@ public class KnowledgeDocumentEntity {
 
     @Column(columnDefinition = "vector(768)")
     private String embedding;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "connector_id")
+    private KnowledgeConnectorEntity connector;
+
+    @Column(name = "chunk_index")
+    @Builder.Default
+    private Integer chunkIndex = 0;
 
     @Column(name = "synced_at")
     private LocalDateTime syncedAt;
