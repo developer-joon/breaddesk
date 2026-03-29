@@ -102,7 +102,7 @@
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
     
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-60 bg-[#1E293B] text-white flex-shrink-0 transition-transform duration-300 fixed lg:static inset-y-0 left-0 z-50 -translate-x-full lg:translate-x-0">
+    <aside id="sidebar" class="w-60 bg-[#1E293B] text-white flex-shrink-0 transition-transform duration-300 fixed lg:static inset-y-0 left-0 z-50 -translate-x-full lg:translate-x-0 overflow-y-auto">
       <div class="p-4">
         <div class="flex items-center gap-2 mb-8">
           <span class="text-3xl">🍞</span>
@@ -146,12 +146,23 @@
     <div class="flex-1 flex flex-col overflow-hidden">
       
       <!-- Header -->
-      <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-        <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-gray-900">
-          <span class="text-2xl">☰</span>
-        </button>
+      <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-6">
+        <div class="flex items-center gap-3">
+          <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-gray-900">
+            <span class="text-2xl">☰</span>
+          </button>
+          <span class="text-xl lg:hidden">🍞</span>
+        </div>
         
-        <div class="flex-1"></div>
+        <!-- 글로벌 검색 -->
+        <div class="hidden sm:flex flex-1 max-w-md mx-4">
+          <button onclick="openSearchOverlay()" class="w-full flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-gray-400 hover:bg-gray-200 transition-colors text-sm">
+            <span>🔍</span>
+            <span>검색... (⌘K)</span>
+          </button>
+        </div>
+        
+        <div class="flex-1 sm:hidden"></div>
         
         <div class="flex items-center gap-4">
           <div class="relative">
@@ -163,7 +174,10 @@
             <!-- Notification Dropdown -->
             <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
               <div class="p-4 border-b border-gray-200">
-                <h3 class="font-semibold text-lg mb-3">알림</h3>
+                <div class="flex items-center justify-between mb-3">
+                  <h3 class="font-semibold text-lg">알림</h3>
+                  <button onclick="clearAllNotifications()" class="text-xs text-red-600 hover:text-red-700">모든 알림 삭제</button>
+                </div>
                 
                 <!-- Filter Tabs -->
                 <div class="flex gap-2 mb-3">
@@ -181,43 +195,47 @@
               </div>
               
               <div class="max-h-96 overflow-y-auto" id="notificationList">
-                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer" data-type="task" data-unread="true">
+                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer group" data-type="task" data-unread="true">
                   <div class="flex gap-3">
                     <div class="w-2 h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
                     <div class="flex-1">
                       <div class="text-sm font-medium">업무가 배정되었습니다: VPN 접속 불가 조사</div>
                       <div class="text-xs text-gray-500 mt-1">5분 전</div>
                     </div>
+                    <button onclick="event.stopPropagation(); deleteNotification(this)" class="text-gray-400 hover:text-red-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity">×</button>
                   </div>
                 </div>
                 
-                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer" data-type="inquiry" data-unread="true">
+                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer group" data-type="inquiry" data-unread="true">
                   <div class="flex gap-3">
                     <div class="w-2 h-2 bg-blue-500 rounded-full mt-1 flex-shrink-0"></div>
                     <div class="flex-1">
                       <div class="text-sm font-medium">새 문의가 접수되었습니다</div>
                       <div class="text-xs text-gray-500 mt-1">15분 전</div>
                     </div>
+                    <button onclick="event.stopPropagation(); deleteNotification(this)" class="text-gray-400 hover:text-red-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity">×</button>
                   </div>
                 </div>
                 
-                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer" data-type="system" data-unread="false">
+                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer group" data-type="system" data-unread="false">
                   <div class="flex gap-3">
                     <div class="w-2 h-2 bg-transparent rounded-full mt-1 flex-shrink-0"></div>
                     <div class="flex-1">
                       <div class="text-sm text-gray-600">서버 디스크 사용률 80% 초과</div>
                       <div class="text-xs text-gray-500 mt-1">2시간 전</div>
                     </div>
+                    <button onclick="event.stopPropagation(); deleteNotification(this)" class="text-gray-400 hover:text-red-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity">×</button>
                   </div>
                 </div>
                 
-                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer" data-type="task" data-unread="false">
+                <div class="notification-item hover:bg-gray-50 p-3 border-b border-gray-100 cursor-pointer group" data-type="task" data-unread="false">
                   <div class="flex gap-3">
                     <div class="w-2 h-2 bg-transparent rounded-full mt-1 flex-shrink-0"></div>
                     <div class="flex-1">
                       <div class="text-sm text-gray-600">DB 권한 설정 업무가 완료되었습니다</div>
                       <div class="text-xs text-gray-500 mt-1">3시간 전</div>
                     </div>
+                    <button onclick="event.stopPropagation(); deleteNotification(this)" class="text-gray-400 hover:text-red-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity">×</button>
                   </div>
                 </div>
               </div>
@@ -772,14 +790,18 @@
                 </div>
 
                 <!-- Agent Message -->
-                <div class="flex justify-end">
+                <div class="flex justify-end group">
                   <div class="max-w-[70%]">
                     <div class="flex items-center gap-2 mb-1 justify-end">
+                      <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="editChatMessage(this)" class="text-xs text-blue-600 hover:text-blue-700">수정</button>
+                        <button onclick="deleteChatMessage(this)" class="text-xs text-red-600 hover:text-red-700">삭제</button>
+                      </div>
                       <span class="text-xs text-gray-500">김준우 • 방금</span>
                       <div class="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">김</div>
                     </div>
                     <div class="bg-[#F0FDF4] rounded-lg p-3 border border-green-200">
-                      <p class="text-sm">확인했습니다. VPN 서버에서 일시적인 부하가 발생한 것 같습니다. 지금 재시작 중이니 2-3분 후에 다시 접속 시도해 주세요!</p>
+                      <p class="text-sm" data-message-text>확인했습니다. VPN 서버에서 일시적인 부하가 발생한 것 같습니다. 지금 재시작 중이니 2-3분 후에 다시 접속 시도해 주세요!</p>
                     </div>
                   </div>
                 </div>
@@ -794,7 +816,7 @@
                   <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
                     📎 첨부
                   </button>
-                  <input type="text" id="inquiryReplyInput" placeholder="답변 입력..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <textarea id="inquiryReplyInput" placeholder="답변 입력... (Shift+Enter: 줄바꿈)" rows="1" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" onkeydown="handleInquiryReplyKeydown(event)"></textarea>
                   <button onclick="sendInquiryReply()" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                     전송
                   </button>
@@ -824,87 +846,117 @@
 
           <!-- Template Grid -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="templateGrid">
-            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="VPN" onclick="openEditTemplateModal('VPN 접속 불가 - 일반')">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-semibold">VPN 접속 불가 - 일반</h3>
-                <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">VPN</span>
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer relative group" data-category="VPN">
+              <div class="absolute top-3 right-3">
+                <button onclick="event.stopPropagation(); openTemplateMenu(event, this)" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
               </div>
-              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
-                VPN 접속이 안 될 경우 다음 단계를 시도해 주세요: 1) VPN 클라이언트 재시작 2) 네트워크 연결 확인 3) 방화벽 설정 확인...
-              </p>
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>사용: 47회</span>
-                <span>최종: 1시간 전</span>
-              </div>
-            </div>
-
-            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="권한" onclick="openEditTemplateModal('DB 권한 요청 승인')">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-semibold">DB 권한 요청 승인</h3>
-                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
-              </div>
-              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
-                DB 권한 요청이 승인되었습니다. 접속 정보는 다음과 같습니다: [호스트], [계정명], [권한 범위]...
-              </p>
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>사용: 34회</span>
-                <span>최종: 23분 전</span>
+              <div onclick="openEditTemplateModal('VPN 접속 불가 - 일반')">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold pr-8">VPN 접속 불가 - 일반</h3>
+                  <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">VPN</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                  VPN 접속이 안 될 경우 다음 단계를 시도해 주세요: 1) VPN 클라이언트 재시작 2) 네트워크 연결 확인 3) 방화벽 설정 확인...
+                </p>
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                  <span>사용: 47회</span>
+                  <span>최종: 1시간 전</span>
+                </div>
               </div>
             </div>
 
-            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="배포" onclick="openEditTemplateModal('배포 완료 알림')">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-semibold">배포 완료 알림</h3>
-                <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">배포</span>
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer relative group" data-category="권한">
+              <div class="absolute top-3 right-3">
+                <button onclick="event.stopPropagation(); openTemplateMenu(event, this)" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
               </div>
-              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
-                요청하신 배포가 완료되었습니다. 환경: [환경명], 버전: [버전], 배포 시간: [시간], 확인 URL: [URL]...
-              </p>
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>사용: 28회</span>
-                <span>최종: 1시간 전</span>
-              </div>
-            </div>
-
-            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="권한" onclick="openEditTemplateModal('API 키 발급 안내')">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-semibold">API 키 발급 안내</h3>
-                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
-              </div>
-              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
-                API 키가 발급되었습니다. 키: [API_KEY], 만료일: [날짜], 사용 가능 엔드포인트: [목록], 주의사항: 키는 재발급 불가...
-              </p>
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>사용: 21회</span>
-                <span>최종: 3시간 전</span>
+              <div onclick="openEditTemplateModal('DB 권한 요청 승인')">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold pr-8">DB 권한 요청 승인</h3>
+                  <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                  DB 권한 요청이 승인되었습니다. 접속 정보는 다음과 같습니다: [호스트], [계정명], [권한 범위]...
+                </p>
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                  <span>사용: 34회</span>
+                  <span>최종: 23분 전</span>
+                </div>
               </div>
             </div>
 
-            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="기타" onclick="openEditTemplateModal('서버 점검 안내')">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-semibold">서버 점검 안내</h3>
-                <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">기타</span>
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer relative group" data-category="배포">
+              <div class="absolute top-3 right-3">
+                <button onclick="event.stopPropagation(); openTemplateMenu(event, this)" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
               </div>
-              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
-                서버 점검이 예정되어 있습니다. 일시: [날짜 시간], 예상 소요시간: [시간], 영향 범위: [서비스], 점검 내용: [상세]...
-              </p>
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>사용: 18회</span>
-                <span>최종: 2일 전</span>
+              <div onclick="openEditTemplateModal('배포 완료 알림')">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold pr-8">배포 완료 알림</h3>
+                  <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">배포</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                  요청하신 배포가 완료되었습니다. 환경: [환경명], 버전: [버전], 배포 시간: [시간], 확인 URL: [URL]...
+                </p>
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                  <span>사용: 28회</span>
+                  <span>최종: 1시간 전</span>
+                </div>
               </div>
             </div>
 
-            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer" data-category="권한" onclick="openEditTemplateModal('계정 비밀번호 재설정')">
-              <div class="flex items-start justify-between mb-3">
-                <h3 class="font-semibold">계정 비밀번호 재설정</h3>
-                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer relative group" data-category="권한">
+              <div class="absolute top-3 right-3">
+                <button onclick="event.stopPropagation(); openTemplateMenu(event, this)" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
               </div>
-              <p class="text-sm text-gray-600 mb-3 line-clamp-3">
-                비밀번호 재설정 링크를 발송했습니다. 24시간 내에 링크를 클릭하여 비밀번호를 재설정해 주세요. 보안을 위해...
-              </p>
-              <div class="flex items-center justify-between text-xs text-gray-500">
-                <span>사용: 15회</span>
-                <span>최종: 5시간 전</span>
+              <div onclick="openEditTemplateModal('API 키 발급 안내')">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold pr-8">API 키 발급 안내</h3>
+                  <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                  API 키가 발급되었습니다. 키: [API_KEY], 만료일: [날짜], 사용 가능 엔드포인트: [목록], 주의사항: 키는 재발급 불가...
+                </p>
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                  <span>사용: 21회</span>
+                  <span>최종: 3시간 전</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer relative group" data-category="기타">
+              <div class="absolute top-3 right-3">
+                <button onclick="event.stopPropagation(); openTemplateMenu(event, this)" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
+              </div>
+              <div onclick="openEditTemplateModal('서버 점검 안내')">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold pr-8">서버 점검 안내</h3>
+                  <span class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">기타</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                  서버 점검이 예정되어 있습니다. 일시: [날짜 시간], 예상 소요시간: [시간], 영향 범위: [서비스], 점검 내용: [상세]...
+                </p>
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                  <span>사용: 18회</span>
+                  <span>최종: 2일 전</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="template-card bg-white rounded-lg shadow p-5 hover:shadow-lg transition-shadow cursor-pointer relative group" data-category="권한">
+              <div class="absolute top-3 right-3">
+                <button onclick="event.stopPropagation(); openTemplateMenu(event, this)" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
+              </div>
+              <div onclick="openEditTemplateModal('계정 비밀번호 재설정')">
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="font-semibold pr-8">계정 비밀번호 재설정</h3>
+                  <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">권한</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3 line-clamp-3">
+                  비밀번호 재설정 링크를 발송했습니다. 24시간 내에 링크를 클릭하여 비밀번호를 재설정해 주세요. 보안을 위해...
+                </p>
+                <div class="flex items-center justify-between text-xs text-gray-500">
+                  <span>사용: 15회</span>
+                  <span>최종: 5시간 전</span>
+                </div>
               </div>
             </div>
           </div>
@@ -955,6 +1007,9 @@
                   </button>
                   <button onclick="openConnectorSettingsModal('Confluence')" class="flex-1 px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm">
                     설정
+                  </button>
+                  <button onclick="disconnectConnector('Confluence')" class="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm">
+                    연결 해제
                   </button>
                 </div>
               </div>
@@ -1027,53 +1082,69 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">제목</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">소스</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">날짜</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">액션</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200" id="documentTableBody">
-                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="Confluence" onclick="openDocumentDetailModal('VPN 설정 가이드')">
-                    <td class="px-6 py-4">
+                  <tr class="document-row hover:bg-gray-50 group" data-source="Confluence">
+                    <td class="px-6 py-4 cursor-pointer" onclick="openDocumentDetailModal('VPN 설정 가이드')">
                       <div class="font-medium">VPN 설정 가이드</div>
                     </td>
                     <td class="px-6 py-4">
                       <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">Confluence</span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-500">2024-03-15</td>
+                    <td class="px-6 py-4 text-right">
+                      <button onclick="event.stopPropagation(); openDocMenu(event, 'Confluence')" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
+                    </td>
                   </tr>
-                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="Confluence" onclick="openDocumentDetailModal('DB 권한 관리 정책')">
-                    <td class="px-6 py-4">
+                  <tr class="document-row hover:bg-gray-50 group" data-source="Confluence">
+                    <td class="px-6 py-4 cursor-pointer" onclick="openDocumentDetailModal('DB 권한 관리 정책')">
                       <div class="font-medium">DB 권한 관리 정책</div>
                     </td>
                     <td class="px-6 py-4">
                       <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">Confluence</span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-500">2024-03-14</td>
+                    <td class="px-6 py-4 text-right">
+                      <button onclick="event.stopPropagation(); openDocMenu(event, 'Confluence')" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
+                    </td>
                   </tr>
-                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="수동" onclick="openDocumentDetailModal('배포 프로세스 매뉴얼')">
-                    <td class="px-6 py-4">
+                  <tr class="document-row hover:bg-gray-50 group" data-source="수동">
+                    <td class="px-6 py-4 cursor-pointer" onclick="openDocumentDetailModal('배포 프로세스 매뉴얼')">
                       <div class="font-medium">배포 프로세스 매뉴얼</div>
                     </td>
                     <td class="px-6 py-4">
                       <span class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">수동</span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-500">2024-03-13</td>
+                    <td class="px-6 py-4 text-right">
+                      <button onclick="event.stopPropagation(); openDocMenu(event, '수동')" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
+                    </td>
                   </tr>
-                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="AI학습" onclick="openDocumentDetailModal('서버 모니터링 FAQ')">
-                    <td class="px-6 py-4">
+                  <tr class="document-row hover:bg-gray-50 group" data-source="AI학습">
+                    <td class="px-6 py-4 cursor-pointer" onclick="openDocumentDetailModal('서버 모니터링 FAQ')">
                       <div class="font-medium">서버 모니터링 FAQ</div>
                     </td>
                     <td class="px-6 py-4">
                       <span class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded">AI학습</span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-500">2024-03-12</td>
+                    <td class="px-6 py-4 text-right">
+                      <button onclick="event.stopPropagation(); openDocMenu(event, 'AI학습')" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
+                    </td>
                   </tr>
-                  <tr class="document-row hover:bg-gray-50 cursor-pointer" data-source="Confluence" onclick="openDocumentDetailModal('API 인증 가이드')">
-                    <td class="px-6 py-4">
+                  <tr class="document-row hover:bg-gray-50 group" data-source="Confluence">
+                    <td class="px-6 py-4 cursor-pointer" onclick="openDocumentDetailModal('API 인증 가이드')">
                       <div class="font-medium">API 인증 가이드</div>
                     </td>
                     <td class="px-6 py-4">
                       <span class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">Confluence</span>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-500">2024-03-10</td>
+                    <td class="px-6 py-4 text-right">
+                      <button onclick="event.stopPropagation(); openDocMenu(event, 'Confluence')" class="text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity">⋯</button>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -1334,33 +1405,40 @@
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">체크리스트</label>
-              <div class="space-y-2">
-                <div class="flex items-center gap-2">
+              <div class="space-y-2" id="checklistItems">
+                <div class="flex items-center gap-2 group">
                   <input type="checkbox" checked class="w-4 h-4 text-blue-600">
-                  <span class="text-sm line-through text-gray-500">VPN 서버 상태 확인</span>
+                  <span class="text-sm line-through text-gray-500 flex-1 cursor-pointer" onclick="editChecklistItem(this)">VPN 서버 상태 확인</span>
+                  <button onclick="deleteChecklistItem(this)" class="text-gray-400 hover:text-red-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 group">
                   <input type="checkbox" class="w-4 h-4 text-blue-600">
-                  <span class="text-sm">네트워크 설정 점검</span>
+                  <span class="text-sm flex-1 cursor-pointer" onclick="editChecklistItem(this)">네트워크 설정 점검</span>
+                  <button onclick="deleteChecklistItem(this)" class="text-gray-400 hover:text-red-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 group">
                   <input type="checkbox" class="w-4 h-4 text-blue-600">
-                  <span class="text-sm">사용자 계정 권한 확인</span>
+                  <span class="text-sm flex-1 cursor-pointer" onclick="editChecklistItem(this)">사용자 계정 권한 확인</span>
+                  <button onclick="deleteChecklistItem(this)" class="text-gray-400 hover:text-red-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
                 </div>
-                <button class="text-sm text-blue-600 hover:text-blue-700 mt-2">+ 항목 추가</button>
+              </div>
+              <div class="mt-2 flex gap-2" id="checklistAddContainer">
+                <input type="text" id="checklistNewItem" placeholder="새 항목 입력..." class="hidden flex-1 px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onkeydown="if(event.key==='Enter') addChecklistItem(); if(event.key==='Escape') cancelAddChecklistItem();">
+                <button onclick="showChecklistInput()" id="checklistAddBtn" class="text-sm text-blue-600 hover:text-blue-700">+ 항목 추가</button>
               </div>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">첨부파일</label>
-              <div class="space-y-2">
-                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <div class="space-y-2" id="attachmentList">
+                <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg group">
                   <span>📄</span>
                   <span class="text-sm flex-1">vpn_error_log.txt</span>
                   <span class="text-xs text-gray-500">2.3 KB</span>
+                  <button onclick="deleteAttachment(this)" class="text-gray-400 hover:text-red-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
                 </div>
-                <button class="text-sm text-blue-600 hover:text-blue-700">+ 파일 첨부</button>
               </div>
+              <button onclick="attachFile()" class="text-sm text-blue-600 hover:text-blue-700 mt-2">+ 파일 첨부</button>
             </div>
 
             <div>
@@ -1385,19 +1463,33 @@
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-3">코멘트</label>
-              <div class="space-y-3 mb-3">
-                <div class="flex gap-3">
+              <div class="space-y-3 mb-3" id="commentList">
+                <div class="flex gap-3 group">
                   <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">이</div>
                   <div class="flex-1">
                     <div class="text-sm"><strong>이영희</strong></div>
-                    <div class="text-sm text-gray-600 mt-1">서버 로그 확인했는데 최근 2시간 동안 접속 시도가 급증했네요. 부하 문제일 수 있습니다.</div>
-                    <div class="text-xs text-gray-500 mt-1">2분 전</div>
+                    <div class="text-sm text-gray-600 mt-1" data-comment-text>서버 로그 확인했는데 최근 2시간 동안 접속 시도가 급증했네요. 부하 문제일 수 있습니다.</div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <div class="text-xs text-gray-500">2분 전</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex gap-3 group">
+                  <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">김</div>
+                  <div class="flex-1">
+                    <div class="text-sm"><strong>김준우</strong> <span class="text-xs text-gray-400">(나)</span></div>
+                    <div class="text-sm text-gray-600 mt-1" data-comment-text>확인했습니다. 재시작 진행하겠습니다.</div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <div class="text-xs text-gray-500">방금</div>
+                      <button onclick="editComment(this)" class="text-xs text-blue-600 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity">수정</button>
+                      <button onclick="deleteComment(this)" class="text-xs text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity">삭제</button>
+                    </div>
                   </div>
                 </div>
               </div>
               <div class="flex gap-2">
-                <input type="text" placeholder="코멘트 작성..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">작성</button>
+                <input type="text" id="commentInput" placeholder="코멘트 작성..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onkeydown="if(event.key==='Enter') addComment();">
+                <button onclick="addComment()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">작성</button>
               </div>
             </div>
           </div>
@@ -1451,11 +1543,14 @@
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">태그</label>
-              <div class="flex flex-wrap gap-2 mb-2">
-                <span class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full">#긴급</span>
-                <span class="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full">#인프라</span>
+              <div class="flex flex-wrap gap-2 mb-2" id="tagContainer">
+                <span class="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full flex items-center gap-1">#긴급 <button onclick="deleteTag(this)" class="hover:text-red-600">×</button></span>
+                <span class="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-full flex items-center gap-1">#인프라 <button onclick="deleteTag(this)" class="hover:text-red-600">×</button></span>
               </div>
-              <button class="text-sm text-blue-600 hover:text-blue-700">+ 태그 추가</button>
+              <div class="flex gap-2">
+                <input type="text" id="tagNewInput" placeholder="새 태그 입력..." class="hidden flex-1 px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onkeydown="if(event.key==='Enter') addTag(); if(event.key==='Escape') cancelAddTag();">
+                <button onclick="showTagInput()" id="tagAddBtn" class="text-sm text-blue-600 hover:text-blue-700">+ 태그 추가</button>
+              </div>
             </div>
 
             <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -2314,6 +2409,315 @@
           if (el.textContent.includes('지난')) el.textContent = '지난 달';
         });
       }
+    }
+
+    // ==================== Checklist Functions ====================
+    function showChecklistInput() {
+      document.getElementById('checklistNewItem').classList.remove('hidden');
+      document.getElementById('checklistAddBtn').classList.add('hidden');
+      document.getElementById('checklistNewItem').focus();
+    }
+
+    function cancelAddChecklistItem() {
+      document.getElementById('checklistNewItem').classList.add('hidden');
+      document.getElementById('checklistAddBtn').classList.remove('hidden');
+      document.getElementById('checklistNewItem').value = '';
+    }
+
+    function addChecklistItem() {
+      const input = document.getElementById('checklistNewItem');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      const container = document.getElementById('checklistItems');
+      const item = document.createElement('div');
+      item.className = 'flex items-center gap-2 group';
+      item.innerHTML = `
+        <input type="checkbox" class="w-4 h-4 text-blue-600">
+        <span class="text-sm flex-1 cursor-pointer" onclick="editChecklistItem(this)">${text}</span>
+        <button onclick="deleteChecklistItem(this)" class="text-gray-400 hover:text-red-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">🗑️</button>
+      `;
+      container.appendChild(item);
+      
+      input.value = '';
+      cancelAddChecklistItem();
+      showToast('체크리스트 항목이 추가되었습니다', 'success');
+    }
+
+    function editChecklistItem(el) {
+      const currentText = el.textContent;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = currentText;
+      input.className = 'text-sm flex-1 px-2 py-1 border border-blue-500 rounded focus:outline-none';
+      
+      input.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+          el.textContent = input.value.trim() || currentText;
+          el.style.display = '';
+          input.remove();
+          showToast('체크리스트 항목이 수정되었습니다', 'success');
+        } else if (e.key === 'Escape') {
+          el.style.display = '';
+          input.remove();
+        }
+      };
+      
+      el.style.display = 'none';
+      el.parentNode.insertBefore(input, el);
+      input.focus();
+      input.select();
+    }
+
+    function deleteChecklistItem(btn) {
+      btn.closest('.flex').remove();
+      showToast('체크리스트 항목이 삭제되었습니다', 'success');
+    }
+
+    // ==================== Tag Functions ====================
+    function showTagInput() {
+      document.getElementById('tagNewInput').classList.remove('hidden');
+      document.getElementById('tagAddBtn').classList.add('hidden');
+      document.getElementById('tagNewInput').focus();
+    }
+
+    function cancelAddTag() {
+      document.getElementById('tagNewInput').classList.add('hidden');
+      document.getElementById('tagAddBtn').classList.remove('hidden');
+      document.getElementById('tagNewInput').value = '';
+    }
+
+    function addTag() {
+      const input = document.getElementById('tagNewInput');
+      let text = input.value.trim();
+      if (!text) return;
+      
+      if (!text.startsWith('#')) text = '#' + text;
+      
+      const container = document.getElementById('tagContainer');
+      const tag = document.createElement('span');
+      tag.className = 'text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full flex items-center gap-1';
+      tag.innerHTML = `${text} <button onclick="deleteTag(this)" class="hover:text-red-600">×</button>`;
+      container.appendChild(tag);
+      
+      input.value = '';
+      cancelAddTag();
+      showToast('태그가 추가되었습니다', 'success');
+    }
+
+    function deleteTag(btn) {
+      btn.closest('span').remove();
+      showToast('태그가 삭제되었습니다', 'success');
+    }
+
+    // ==================== Attachment Functions ====================
+    function attachFile() {
+      showToast('파일 첨부 기능은 데모입니다', 'info');
+    }
+
+    function deleteAttachment(btn) {
+      if (!confirm('이 파일을 삭제하시겠습니까?')) return;
+      btn.closest('.flex').remove();
+      showToast('첨부파일이 삭제되었습니다', 'success');
+    }
+
+    // ==================== Comment Functions ====================
+    function addComment() {
+      const input = document.getElementById('commentInput');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      const list = document.getElementById('commentList');
+      const comment = document.createElement('div');
+      comment.className = 'flex gap-3 group';
+      comment.innerHTML = `
+        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs flex-shrink-0">김</div>
+        <div class="flex-1">
+          <div class="text-sm"><strong>김준우</strong> <span class="text-xs text-gray-400">(나)</span></div>
+          <div class="text-sm text-gray-600 mt-1" data-comment-text>${text}</div>
+          <div class="flex items-center gap-2 mt-1">
+            <div class="text-xs text-gray-500">방금</div>
+            <button onclick="editComment(this)" class="text-xs text-blue-600 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity">수정</button>
+            <button onclick="deleteComment(this)" class="text-xs text-red-600 hover:text-red-700 opacity-0 group-hover:opacity-100 transition-opacity">삭제</button>
+          </div>
+        </div>
+      `;
+      list.appendChild(comment);
+      input.value = '';
+      showToast('코멘트가 작성되었습니다', 'success');
+    }
+
+    function editComment(btn) {
+      const commentDiv = btn.closest('.flex-1').querySelector('[data-comment-text]');
+      const currentText = commentDiv.textContent;
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = currentText;
+      input.className = 'text-sm w-full px-2 py-1 border border-blue-500 rounded focus:outline-none';
+      
+      input.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+          commentDiv.textContent = input.value.trim() || currentText;
+          commentDiv.style.display = '';
+          input.remove();
+          showToast('코멘트가 수정되었습니다', 'success');
+        } else if (e.key === 'Escape') {
+          commentDiv.style.display = '';
+          input.remove();
+        }
+      };
+      
+      commentDiv.style.display = 'none';
+      commentDiv.parentNode.insertBefore(input, commentDiv);
+      input.focus();
+      input.select();
+    }
+
+    function deleteComment(btn) {
+      if (!confirm('정말 코멘트를 삭제하시겠습니까?')) return;
+      btn.closest('.group').remove();
+      showToast('코멘트가 삭제되었습니다', 'success');
+    }
+
+    // ==================== Chat Message Functions ====================
+    function handleInquiryReplyKeydown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendInquiryReply();
+      }
+    }
+
+    function editChatMessage(btn) {
+      const msgDiv = btn.closest('.max-w-\\[70\\%\\]').querySelector('[data-message-text]');
+      const currentText = msgDiv.textContent;
+      const input = document.createElement('textarea');
+      input.value = currentText;
+      input.rows = 3;
+      input.className = 'text-sm w-full px-2 py-1 border border-blue-500 rounded focus:outline-none resize-none';
+      
+      input.onkeydown = function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          msgDiv.textContent = input.value.trim() || currentText;
+          msgDiv.style.display = '';
+          input.remove();
+          showToast('메시지가 수정되었습니다', 'success');
+        } else if (e.key === 'Escape') {
+          msgDiv.style.display = '';
+          input.remove();
+        }
+      };
+      
+      msgDiv.style.display = 'none';
+      msgDiv.parentNode.insertBefore(input, msgDiv);
+      input.focus();
+      input.select();
+    }
+
+    function deleteChatMessage(btn) {
+      if (!confirm('정말 메시지를 삭제하시겠습니까?')) return;
+      btn.closest('.group').remove();
+      showToast('메시지가 삭제되었습니다', 'success');
+    }
+
+    // ==================== Template Menu ====================
+    function openTemplateMenu(e, btn) {
+      e.stopPropagation();
+      const existingMenu = document.querySelector('.template-context-menu');
+      if (existingMenu) existingMenu.remove();
+      
+      const menu = document.createElement('div');
+      menu.className = 'template-context-menu absolute bg-white shadow-lg border border-gray-200 rounded-lg py-2 z-50';
+      menu.style.top = (btn.getBoundingClientRect().bottom + window.scrollY) + 'px';
+      menu.style.right = (window.innerWidth - btn.getBoundingClientRect().right) + 'px';
+      menu.innerHTML = `
+        <button onclick="showToast('템플릿 수정 기능', 'info'); closeTemplateMenu();" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">수정</button>
+        <button onclick="showToast('템플릿 복제 기능', 'info'); closeTemplateMenu();" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">복제</button>
+        <button onclick="confirmDeleteTemplate(); closeTemplateMenu();" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600">삭제</button>
+      `;
+      document.body.appendChild(menu);
+      
+      setTimeout(() => {
+        document.addEventListener('click', closeTemplateMenu, { once: true });
+      }, 10);
+    }
+
+    function closeTemplateMenu() {
+      const menu = document.querySelector('.template-context-menu');
+      if (menu) menu.remove();
+    }
+
+    function confirmDeleteTemplate() {
+      if (confirm('정말 이 템플릿을 삭제하시겠습니까?')) {
+        showToast('템플릿이 삭제되었습니다', 'success');
+      }
+    }
+
+    // ==================== Document Menu ====================
+    function openDocMenu(e, source) {
+      e.stopPropagation();
+      const existingMenu = document.querySelector('.doc-context-menu');
+      if (existingMenu) existingMenu.remove();
+      
+      const menu = document.createElement('div');
+      menu.className = 'doc-context-menu absolute bg-white shadow-lg border border-gray-200 rounded-lg py-2 z-50';
+      const rect = e.target.getBoundingClientRect();
+      menu.style.top = (rect.bottom + window.scrollY) + 'px';
+      menu.style.left = (rect.left + window.scrollX - 100) + 'px';
+      
+      if (source === 'Confluence') {
+        menu.innerHTML = `
+          <button onclick="showToast('문서 수정은 Confluence에서만 가능합니다', 'warning'); closeDocMenu();" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-400">수정 (커넥터 문서)</button>
+          <button onclick="showToast('커넥터 문서는 삭제할 수 없습니다', 'warning'); closeDocMenu();" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-gray-400">삭제 (불가)</button>
+        `;
+      } else {
+        menu.innerHTML = `
+          <button onclick="showToast('문서 수정 기능', 'info'); closeDocMenu();" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100">수정</button>
+          <button onclick="confirmDeleteDoc(); closeDocMenu();" class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 text-red-600">삭제</button>
+        `;
+      }
+      document.body.appendChild(menu);
+      
+      setTimeout(() => {
+        document.addEventListener('click', closeDocMenu, { once: true });
+      }, 10);
+    }
+
+    function closeDocMenu() {
+      const menu = document.querySelector('.doc-context-menu');
+      if (menu) menu.remove();
+    }
+
+    function confirmDeleteDoc() {
+      if (confirm('정말 이 문서를 삭제하시겠습니까?')) {
+        showToast('문서가 삭제되었습니다', 'success');
+      }
+    }
+
+    // ==================== Connector Functions ====================
+    function disconnectConnector(name) {
+      if (confirm(`정말 ${name} 커넥터 연결을 해제하시겠습니까?`)) {
+        showToast(`${name} 커넥터 연결이 해제되었습니다`, 'success');
+      }
+    }
+
+    // ==================== Notification Functions ====================
+    function deleteNotification(btn) {
+      btn.closest('.notification-item').remove();
+      const remaining = document.querySelectorAll('.notification-item').length;
+      if (remaining === 0) {
+        document.getElementById('notificationList').classList.add('hidden');
+        document.getElementById('notificationEmpty').classList.remove('hidden');
+      }
+      showToast('알림이 삭제되었습니다', 'success');
+    }
+
+    function clearAllNotifications() {
+      if (!confirm('모든 알림을 삭제하시겠습니까?')) return;
+      document.querySelectorAll('.notification-item').forEach(item => item.remove());
+      document.getElementById('notificationList').classList.add('hidden');
+      document.getElementById('notificationEmpty').classList.remove('hidden');
+      showToast('모든 알림이 삭제되었습니다', 'success');
     }
 
     // ==================== Initialize ====================
