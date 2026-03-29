@@ -101,7 +101,19 @@ public class InquiryAiService {
             log.info("Async AI answer generation completed for inquiry {}", inquiryId);
 
         } catch (Exception e) {
-            log.error("Failed to generate AI answer for inquiry {}", inquiryId, e);
+            log.error("Failed to generate AI answer for inquiry {}: {}", inquiryId, e.getMessage(), e);
+            // AI 실패 시 문의 상태를 OPEN으로 유지
+            try {
+                Inquiry inquiry = inquiryRepository.findById(inquiryId).orElse(null);
+                if (inquiry != null && inquiry.getStatus() != Inquiry.InquiryStatus.AI_ANSWERED) {
+                    inquiry.setStatus(Inquiry.InquiryStatus.OPEN);
+                    inquiry.setAiResponse("AI 답변 생성 실패: 담당자가 곧 연락드리겠습니다.");
+                    inquiryRepository.save(inquiry);
+                }
+            } catch (Exception ex) {
+                log.error("Failed to update inquiry status after AI error: {}", ex.getMessage());
+            }
+            // TODO Phase 2: 관리자 알림 (이메일, Slack 등)
         }
     }
 

@@ -54,22 +54,26 @@ public class OllamaProvider implements LLMProvider {
                             Mono.error(new RuntimeException("Ollama API error: " + clientResponse.statusCode())))
                     .bodyToMono(Map.class)
                     .timeout(Duration.ofSeconds(30))
+                    .onErrorReturn(Map.of("response", "AI 서비스 오류가 발생했습니다. 담당자에게 문의해주세요.", "error", true))
                     .block();
 
             if (response != null && response.containsKey("response")) {
                 String content = (String) response.get("response");
-                float confidence = estimateConfidence(content);
+                boolean isError = response.containsKey("error");
+                float confidence = isError ? 0.0f : estimateConfidence(content);
 
-                log.debug("Ollama response: {} chars, confidence: {}", content.length(), confidence);
+                log.debug("Ollama response: {} chars, confidence: {}, error: {}", content.length(), confidence, isError);
                 return LLMResponse.of(content, confidence);
             } else {
                 log.warn("Unexpected Ollama response format: {}", response);
                 return LLMResponse.of("응답 생성에 실패했습니다.", 0.0f);
             }
         } catch (Exception e) {
-            log.error("Failed to call Ollama API", e);
-            return LLMResponse.of("AI 서비스에 연결할 수 없습니다.", 0.0f);
+            log.error("Failed to call Ollama API: {}", e.getMessage(), e);
+            // Fallback 응답 반환
+            return LLMResponse.of("AI 서비스에 연결할 수 없습니다. 담당자가 곧 연락드리겠습니다.", 0.0f);
         }
+        // TODO Phase 2: 동시 요청 제한 (Resilience4j RateLimiter 또는 Semaphore)
     }
 
     @Override

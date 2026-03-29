@@ -190,7 +190,7 @@ public class AttachmentService {
         try {
             // 날짜별 디렉토리 생성 (예: uploads/2026/03/29/)
             String datePath = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-            Path uploadDir = Paths.get(uploadPath, datePath);
+            Path uploadDir = Paths.get(uploadPath, datePath).normalize();
             Files.createDirectories(uploadDir);
 
             // 고유 파일명 생성 (UUID + 원본 확장자)
@@ -200,7 +200,14 @@ public class AttachmentService {
                     : "";
             String storedFilename = UUID.randomUUID().toString() + extension;
 
-            Path targetPath = uploadDir.resolve(storedFilename);
+            Path targetPath = uploadDir.resolve(storedFilename).normalize();
+            
+            // Path Traversal 방어: normalize 후 uploadDir 하위인지 확인
+            Path baseUploadPath = Paths.get(uploadPath).normalize();
+            if (!targetPath.startsWith(baseUploadPath)) {
+                throw new BusinessException("Invalid file path: path traversal detected", "INVALID_PATH");
+            }
+
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
             return targetPath.toString();

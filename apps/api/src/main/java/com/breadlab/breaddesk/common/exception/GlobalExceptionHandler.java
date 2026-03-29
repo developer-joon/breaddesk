@@ -2,6 +2,7 @@ package com.breadlab.breaddesk.common.exception;
 
 import com.breadlab.breaddesk.common.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -19,6 +20,9 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @Value("${spring.profiles.active:prod}")
+    private String activeProfile;
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(ResourceNotFoundException e) {
@@ -67,9 +71,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception e) {
-        log.error("Unexpected error occurred", e);
+        // 로그에만 상세 에러 기록
+        log.error("Unexpected error occurred: {}", e.getMessage(), e);
+        
+        // 응답에는 개발 환경일 때만 상세 정보 포함
+        String message = isDevelopmentEnvironment() 
+                ? "Internal server error: " + e.getMessage()
+                : "Internal server error";
+        
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("An unexpected error occurred", "INTERNAL_ERROR"));
+                .body(ApiResponse.error(message, "INTERNAL_ERROR"));
+    }
+
+    /**
+     * 개발 환경 체크
+     */
+    private boolean isDevelopmentEnvironment() {
+        return "dev".equalsIgnoreCase(activeProfile) 
+                || "local".equalsIgnoreCase(activeProfile);
     }
 }

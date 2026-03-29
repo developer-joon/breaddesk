@@ -8,9 +8,10 @@ import com.breadlab.breaddesk.common.exception.BusinessException;
 import com.breadlab.breaddesk.common.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public MemberResponse createMember(MemberRequest request) {
@@ -37,10 +38,14 @@ public class MemberService {
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
                 .build();
 
-        Member saved = memberRepository.save(member);
-        log.info("Created member: {} ({})", saved.getName(), saved.getEmail());
-
-        return MemberResponse.from(saved);
+        try {
+            Member saved = memberRepository.save(member);
+            log.info("Created member: {} ({})", saved.getName(), saved.getEmail());
+            return MemberResponse.from(saved);
+        } catch (DataIntegrityViolationException e) {
+            log.error("Email duplicate constraint violation: {}", request.getEmail());
+            throw new BusinessException("Email already exists", "EMAIL_DUPLICATE");
+        }
     }
 
     @Transactional(readOnly = true)
