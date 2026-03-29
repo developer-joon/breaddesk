@@ -1,0 +1,4 @@
+rootProject.name = 'breaddesk'
+
+// Spring Boot 백엔드
+includeBuild('apps/api')
