@@ -11,8 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
-    @Query("SELECT COUNT(t) FROM Task t WHERE t.status = :status")
-    long countByStatus(@Param("status") TaskStatus status);
+    long countByStatus(TaskStatus status);
 
     @Query("SELECT t FROM Task t WHERE t.title LIKE %:keyword% OR t.description LIKE %:keyword%")
     java.util.List<Task> searchByKeyword(@Param("keyword") String keyword);
@@ -27,6 +26,4 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("urgency") TaskUrgency urgency,
             @Param("assigneeId") Long assigneeId,
             Pageable pageable);
-
-    long countByStatus(TaskStatus status);
 }
