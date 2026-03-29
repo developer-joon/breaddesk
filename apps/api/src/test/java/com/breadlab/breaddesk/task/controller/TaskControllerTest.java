@@ -12,7 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -164,8 +164,11 @@ class TaskControllerTest {
     @DisplayName("should_getKanbanView_when_authenticated")
     void should_getKanbanView_when_authenticated() throws Exception {
         TaskKanbanResponse kanban = TaskKanbanResponse.builder()
-                .status(TaskStatus.WAITING)
-                .tasks(List.of(sampleResponse()))
+                .waiting(List.of(sampleResponse()))
+                .inProgress(List.of())
+                .pending(List.of())
+                .review(List.of())
+                .done(List.of())
                 .build();
 
         given(taskService.getKanbanView()).willReturn(kanban);

@@ -231,8 +231,6 @@ public final class TestDataFactory {
                 .category("greeting")
                 .content("Hello {{name}}, welcome!")
                 .usageCount(0)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
     }
 

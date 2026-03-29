@@ -48,7 +48,6 @@ public class PersonalNoteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Note not found"));
 
         note.setContent(request.getContent());
-        note.setUpdatedAt(LocalDateTime.now());
 
         return toResponse(personalNoteRepository.save(note));
     }

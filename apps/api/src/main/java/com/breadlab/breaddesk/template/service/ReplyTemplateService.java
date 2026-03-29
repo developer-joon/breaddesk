@@ -55,7 +55,6 @@ public class ReplyTemplateService {
         template.setTitle(request.getTitle());
         template.setCategory(request.getCategory());
         template.setContent(request.getContent());
-        template.setUpdatedAt(LocalDateTime.now());
 
         return toResponse(replyTemplateRepository.save(template));
     }
