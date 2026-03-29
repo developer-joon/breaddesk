@@ -8,6 +8,23 @@
   <style>
     [x-cloak] { display: none; }
     
+    /* 모바일 safe area + 상단 여백 */
+    @media (max-width: 1023px) {
+      #app-root {
+        padding-top: max(env(safe-area-inset-top, 0px), 0px);
+      }
+      header {
+        padding-top: 16px !important;
+      }
+    }
+    @supports (padding-top: env(safe-area-inset-top)) {
+      @media (max-width: 1023px) {
+        header {
+          padding-top: calc(env(safe-area-inset-top) + 8px) !important;
+        }
+      }
+    }
+    
     /* Task Card Hover */
     .task-card { 
       transition: transform 0.2s, box-shadow 0.2s; 
@@ -96,7 +113,7 @@
 <body class="bg-[#F8FAFC] overflow-hidden">
   
   <!-- Main Container -->
-  <div class="flex h-screen">
+  <div id="app-root" class="flex h-screen">
     
     <!-- Sidebar Overlay (mobile) -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
@@ -112,7 +129,7 @@
         <nav class="space-y-1">
           <a href="#" onclick="showPage('dashboard'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors active" data-page="dashboard">
             <span>📊</span>
-            <span>대시보드</span>
+            <span>팀 현황</span>
           </a>
           <a href="#" onclick="showPage('inquiries'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="inquiries">
             <span>💬</span>
@@ -132,7 +149,7 @@
           </a>
           <a href="#" onclick="showPage('mypage'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="mypage">
             <span>👤</span>
-            <span>My Page</span>
+            <span>내 업무</span>
           </a>
           <a href="#" onclick="showPage('settings'); return false;" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#334155] transition-colors" data-page="settings">
             <span>⚙️</span>
@@ -146,7 +163,7 @@
     <div class="flex-1 flex flex-col overflow-hidden">
       
       <!-- Header -->
-      <header class="bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-4 lg:px-6" style="min-height: 56px; padding-top: calc(env(safe-area-inset-top, 0px) + 8px); padding-bottom: 8px;">
+      <header class="bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-4 lg:px-6 py-3" style="min-height: 56px;">
         <div class="flex items-center gap-2 sm:gap-3">
           <button id="sidebarToggle" class="lg:hidden text-gray-600 hover:text-gray-900 p-2 -ml-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
             <span class="text-xl sm:text-2xl">☰</span>
@@ -260,7 +277,7 @@
         
         <!-- Dashboard Page -->
         <div id="page-dashboard" class="page-content p-4 sm:p-6">
-          <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">대시보드</h2>
+          <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">팀 현황</h2>
           
           <!-- Stats Cards -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -1154,7 +1171,7 @@
         <!-- Settings Page -->
         <!-- My Page -->
         <div id="page-mypage" class="page-content hidden p-6">
-          <h2 class="text-2xl font-bold mb-6">My Page</h2>
+          <h2 class="text-2xl font-bold mb-6">내 업무</h2>
           
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <!-- KPI Cards -->
