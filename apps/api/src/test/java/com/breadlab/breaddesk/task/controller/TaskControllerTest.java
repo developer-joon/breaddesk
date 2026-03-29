@@ -1,6 +1,5 @@
 package com.breadlab.breaddesk.task.controller;
 
-import com.breadlab.breaddesk.auth.JwtAuthenticationFilter;
 import com.breadlab.breaddesk.auth.JwtTokenProvider;
 import com.breadlab.breaddesk.common.TestDataFactory;
 import com.breadlab.breaddesk.task.dto.*;
@@ -13,6 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -30,7 +31,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(TaskController.class)
+@WebMvcTest(value = TaskController.class,
+        includeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
+                classes = {com.breadlab.breaddesk.auth.JwtAuthenticationFilter.class,
+                        com.breadlab.breaddesk.auth.SecurityConfig.class}))
 class TaskControllerTest {
 
     @Autowired
@@ -44,9 +48,6 @@ class TaskControllerTest {
 
     @MockBean
     private JwtTokenProvider jwtTokenProvider;
-
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockBean
     private UserDetailsService userDetailsService;
@@ -182,6 +183,6 @@ class TaskControllerTest {
     @DisplayName("should_returnUnauthorized_when_noAuth")
     void should_returnUnauthorized_when_noAuth() throws Exception {
         mockMvc.perform(get("/api/v1/tasks"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
     }
 }

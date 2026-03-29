@@ -66,6 +66,7 @@ class TaskServiceTest {
             saved.setId(1L);
             return saved;
         });
+        given(taskRepository.findById(1L)).willReturn(Optional.of(task));
         given(taskLogRepository.save(any(TaskLog.class))).willReturn(new TaskLog());
 
         // When
@@ -89,6 +90,7 @@ class TaskServiceTest {
             saved.setId(1L);
             return saved;
         });
+        given(taskRepository.findById(1L)).willReturn(Optional.of(task));
         given(taskLogRepository.save(any(TaskLog.class))).willReturn(new TaskLog());
 
         // When
