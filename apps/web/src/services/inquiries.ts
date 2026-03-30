@@ -60,3 +60,10 @@ export async function convertInquiryToTask(
 export async function deleteInquiry(id: number): Promise<void> {
   await api.delete(`/inquiries/${id}`);
 }
+
+export async function getSimilarInquiries(id: number, limit = 5): Promise<any[]> {
+  const { data } = await api.get<ApiResponse<any[]>>(`/inquiries/${id}/similar`, {
+    params: { limit },
+  });
+  return data.data;
+}

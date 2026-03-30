@@ -454,6 +454,7 @@ export default function SettingsPage() {
       {/* Channel Edit Modal */}
       {editingChannel && (
         <Modal
+          isOpen={!!editingChannel}
           title={`${CHANNEL_LABELS[editingChannel.channelType] || editingChannel.channelType} 설정`}
           onClose={() => setEditingChannel(null)}
         >
