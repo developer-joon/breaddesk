@@ -30,6 +30,7 @@ public class TaskService {
     private final TaskTransferRepository taskTransferRepository;
     private final MemberRepository memberRepository;
     private final SlaTimerService slaTimerService;
+    private final TaskWatcherService watcherService;
 
     @Transactional
     public TaskResponse createTask(TaskRequest request) {
@@ -121,6 +122,8 @@ public class TaskService {
 
         Task saved = taskRepository.save(task);
         logAction(id, "STATUS_CHANGED", null, Map.of("from", oldStatus.name(), "to", newStatus.name()));
+        watcherService.notifyWatchers(id, "업무 상태 변경",
+                "업무 [" + task.getTitle() + "] 상태: " + oldStatus + " → " + newStatus, null);
         return toResponse(saved);
     }
 
@@ -215,11 +218,21 @@ public class TaskService {
         slaTimerService.recordResponse(task);
 
         logAction(taskId, "COMMENT_ADDED", authorId, null);
+        watcherService.notifyWatchers(taskId, "새 코멘트",
+                "업무 [" + task.getTitle() + "]에 새 코멘트가 추가되었습니다.", authorId);
         return toCommentResponse(saved);
     }
 
     public List<TaskCommentResponse> getComments(Long taskId) {
         return taskCommentRepository.findByTaskIdOrderByCreatedAtDesc(taskId).stream()
+                .filter(c -> !c.isInternal()) // Exclude internal comments for general access
+                .map(this::toCommentResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<TaskCommentResponse> getInternalComments(Long taskId) {
+        return taskCommentRepository.findByTaskIdOrderByCreatedAtDesc(taskId).stream()
+                .filter(TaskComment::isInternal)
                 .map(this::toCommentResponse)
                 .collect(Collectors.toList());
     }

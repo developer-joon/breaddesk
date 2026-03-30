@@ -2,6 +2,7 @@ package com.breadlab.breaddesk.inquiry.service;
 
 import com.breadlab.breaddesk.ai.AIAnswerService;
 import com.breadlab.breaddesk.ai.EscalationService;
+import com.breadlab.breaddesk.channel.service.WebhookOutboundService;
 import com.breadlab.breaddesk.common.exception.ResourceNotFoundException;
 import com.breadlab.breaddesk.inquiry.dto.*;
 import com.breadlab.breaddesk.inquiry.entity.Inquiry;
@@ -33,6 +34,7 @@ public class InquiryService {
     private final MemberRepository memberRepository;
     private final AIAnswerService aiAnswerService;
     private final EscalationService escalationService;
+    private final WebhookOutboundService webhookOutboundService;
 
     @Transactional
     public InquiryResponse createInquiry(InquiryRequest request) {
@@ -57,6 +59,16 @@ public class InquiryService {
             }
             // 최신 상태 다시 로드
             saved = inquiryRepository.findById(saved.getId()).orElse(saved);
+
+            // AI가 답변을 생성했으면 원래 채널로 역전달
+            if (aiResolved && saved.getAiResponse() != null) {
+                try {
+                    webhookOutboundService.sendResponse(saved, saved.getAiResponse(), "AI");
+                } catch (Exception outboundEx) {
+                    log.error("Outbound webhook failed for inquiry #{}: {}",
+                            saved.getId(), outboundEx.getMessage());
+                }
+            }
         } catch (Exception e) {
             log.error("AI 답변/에스컬레이션 처리 중 오류 (문의 #{}): {}", saved.getId(), e.getMessage(), e);
             // AI 실패해도 문의 자체는 정상 생성
@@ -81,6 +93,15 @@ public class InquiryService {
         
         if (request.getStatus() == InquiryStatus.RESOLVED || request.getStatus() == InquiryStatus.CLOSED) {
             inquiry.setResolvedAt(LocalDateTime.now());
+
+            // Send outbound webhook for resolved inquiries
+            String response = inquiry.getAiResponse() != null ? inquiry.getAiResponse() : inquiry.getMessage();
+            String resolvedBy = inquiry.getResolvedBy() != null ? inquiry.getResolvedBy().name() : "HUMAN";
+            try {
+                webhookOutboundService.sendResponse(inquiry, response, resolvedBy);
+            } catch (Exception e) {
+                log.error("Outbound webhook failed for inquiry #{}: {}", id, e.getMessage());
+            }
         }
         
         return toResponse(inquiryRepository.save(inquiry));
