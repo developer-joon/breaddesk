@@ -1,8 +1,11 @@
 package com.breadlab.breaddesk.task.controller;
 
+import com.breadlab.breaddesk.ai.AIAssignmentService;
 import com.breadlab.breaddesk.common.dto.ApiResponse;
 import com.breadlab.breaddesk.task.dto.*;
+import com.breadlab.breaddesk.task.service.TaskRelationService;
 import com.breadlab.breaddesk.task.service.TaskService;
+import com.breadlab.breaddesk.task.service.TaskWatcherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +23,9 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
+    private final TaskWatcherService watcherService;
+    private final TaskRelationService relationService;
+    private final AIAssignmentService aiAssignmentService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<TaskResponse>> createTask(@Valid @RequestBody TaskRequest request) {
@@ -150,5 +156,75 @@ public class TaskController {
             @Valid @RequestBody TaskTransferRequest request) {
         taskService.transferTask(taskId, request);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    // ── Watch / Unwatch ──
+
+    @PostMapping("/{taskId}/watch")
+    public ResponseEntity<ApiResponse<Void>> watchTask(
+            @PathVariable Long taskId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long memberId = Long.parseLong(userDetails.getUsername());
+        watcherService.watch(taskId, memberId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @DeleteMapping("/{taskId}/watch")
+    public ResponseEntity<ApiResponse<Void>> unwatchTask(
+            @PathVariable Long taskId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long memberId = Long.parseLong(userDetails.getUsername());
+        watcherService.unwatch(taskId, memberId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @GetMapping("/{taskId}/watching")
+    public ResponseEntity<ApiResponse<Boolean>> isWatching(
+            @PathVariable Long taskId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long memberId = Long.parseLong(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success(watcherService.isWatching(taskId, memberId)));
+    }
+
+    // ── Relations ──
+
+    @PostMapping("/{taskId}/relations")
+    public ResponseEntity<ApiResponse<TaskRelationResponse>> addRelation(
+            @PathVariable Long taskId,
+            @Valid @RequestBody TaskRelationRequest request) {
+        TaskRelationResponse response = relationService.addRelation(taskId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+    }
+
+    @GetMapping("/{taskId}/relations")
+    public ResponseEntity<ApiResponse<List<TaskRelationResponse>>> getRelations(
+            @PathVariable Long taskId) {
+        return ResponseEntity.ok(ApiResponse.success(relationService.getRelations(taskId)));
+    }
+
+    @DeleteMapping("/{taskId}/relations/{relationId}")
+    public ResponseEntity<ApiResponse<Void>> deleteRelation(
+            @PathVariable Long taskId,
+            @PathVariable Long relationId) {
+        relationService.deleteRelation(taskId, relationId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    // ── AI Assignee Recommendation ──
+
+    @GetMapping("/{taskId}/recommend-assignee")
+    public ResponseEntity<ApiResponse<List<AIAssignmentService.AssigneeRecommendation>>> recommendAssignee(
+            @PathVariable Long taskId) {
+        return ResponseEntity.ok(ApiResponse.success(aiAssignmentService.recommendAssignees(taskId)));
+    }
+
+    // ── Internal Comments (ADMIN only) ──
+
+    @GetMapping("/{taskId}/comments/internal")
+    public ResponseEntity<ApiResponse<List<TaskCommentResponse>>> getInternalComments(
+            @PathVariable Long taskId) {
+        // Only returns internal comments — security handled by @PreAuthorize or role check
+        List<TaskCommentResponse> responses = taskService.getInternalComments(taskId);
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 }

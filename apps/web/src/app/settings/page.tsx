@@ -6,7 +6,14 @@ import { Badge } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { Modal } from '@/components/ui/Modal';
 import { getMembers } from '@/services/members';
+import {
+  getChannels,
+  updateChannel,
+  testChannel,
+  type ChannelConfigResponse,
+} from '@/services/channels';
 import api from '@/lib/api';
 import type { User, ApiResponse } from '@/types';
 import toast from 'react-hot-toast';
@@ -19,20 +26,41 @@ interface SlaRuleResponse {
   enabled: boolean;
 }
 
+const CHANNEL_ICONS: Record<string, string> = {
+  slack: '💬',
+  teams: '👥',
+  email: '📧',
+};
+
+const CHANNEL_LABELS: Record<string, string> = {
+  slack: 'Slack',
+  teams: 'Microsoft Teams',
+  email: 'Email',
+};
+
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'sla' | 'team'>('sla');
+  const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels'>('sla');
   const [slaRules, setSlaRules] = useState<SlaRuleResponse[]>([]);
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
+  const [channels, setChannels] = useState<ChannelConfigResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Channel edit modal state
+  const [editingChannel, setEditingChannel] = useState<ChannelConfigResponse | null>(null);
+  const [editWebhookUrl, setEditWebhookUrl] = useState('');
+  const [editAuthToken, setEditAuthToken] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState<number | null>(null);
 
   const loadSettings = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const [membersResult, slaResult] = await Promise.allSettled([
+      const [membersResult, slaResult, channelsResult] = await Promise.allSettled([
         getMembers(),
         api.get<ApiResponse<SlaRuleResponse[]>>('/sla-rules'),
+        getChannels(),
       ]);
 
       if (membersResult.status === 'fulfilled') {
@@ -40,6 +68,9 @@ export default function SettingsPage() {
       }
       if (slaResult.status === 'fulfilled' && slaResult.value.data.success) {
         setSlaRules(slaResult.value.data.data);
+      }
+      if (channelsResult.status === 'fulfilled') {
+        setChannels(channelsResult.value);
       }
     } catch (err) {
       console.error('Failed to load settings:', err);
@@ -52,6 +83,61 @@ export default function SettingsPage() {
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
+
+  const handleToggleChannel = async (channel: ChannelConfigResponse) => {
+    try {
+      await updateChannel(channel.id, {
+        channelType: channel.channelType,
+        isActive: !channel.isActive,
+      });
+      setChannels((prev) =>
+        prev.map((c) => (c.id === channel.id ? { ...c, isActive: !c.isActive } : c)),
+      );
+      toast.success(`${CHANNEL_LABELS[channel.channelType] || channel.channelType} ${!channel.isActive ? '활성화' : '비활성화'}됨`);
+    } catch {
+      toast.error('채널 상태 변경에 실패했습니다.');
+    }
+  };
+
+  const handleEditChannel = (channel: ChannelConfigResponse) => {
+    setEditingChannel(channel);
+    setEditWebhookUrl(channel.webhookUrl || '');
+    setEditAuthToken('');
+  };
+
+  const handleSaveChannel = async () => {
+    if (!editingChannel) return;
+    setIsSaving(true);
+    try {
+      const request: Record<string, unknown> = {
+        channelType: editingChannel.channelType,
+        webhookUrl: editWebhookUrl || null,
+      };
+      if (editAuthToken) {
+        request.authToken = editAuthToken;
+      }
+      const updated = await updateChannel(editingChannel.id, request as never);
+      setChannels((prev) => prev.map((c) => (c.id === editingChannel.id ? updated : c)));
+      setEditingChannel(null);
+      toast.success('채널 설정이 저장되었습니다.');
+    } catch {
+      toast.error('채널 설정 저장에 실패했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleTestWebhook = async (channel: ChannelConfigResponse) => {
+    setIsTesting(channel.id);
+    try {
+      const result = await testChannel(channel.id);
+      toast.success(result || '웹훅 테스트 성공');
+    } catch {
+      toast.error('웹훅 테스트에 실패했습니다.');
+    } finally {
+      setIsTesting(null);
+    }
+  };
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
@@ -116,6 +202,16 @@ export default function SettingsPage() {
               >
                 팀원 관리
               </button>
+              <button
+                onClick={() => setActiveTab('channels')}
+                className={`px-6 py-3 font-medium transition-colors ${
+                  activeTab === 'channels'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                채널 연동
+              </button>
             </div>
           </div>
 
@@ -123,6 +219,7 @@ export default function SettingsPage() {
             {isLoading && <LoadingSpinner text="설정을 불러오는 중..." />}
             {error && <ErrorMessage message={error} onRetry={loadSettings} />}
 
+            {/* SLA Tab */}
             {!isLoading && !error && activeTab === 'sla' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
@@ -187,6 +284,7 @@ export default function SettingsPage() {
               </div>
             )}
 
+            {/* Team Tab */}
             {!isLoading && !error && activeTab === 'team' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
@@ -247,9 +345,169 @@ export default function SettingsPage() {
                 )}
               </div>
             )}
+
+            {/* Channels Tab */}
+            {!isLoading && !error && activeTab === 'channels' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-semibold">채널 연동</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      외부 채널(Slack, Teams, Email)과의 웹훅 연동을 설정합니다
+                    </p>
+                  </div>
+                </div>
+
+                {channels.length === 0 ? (
+                  <div className="bg-gray-50 rounded-lg p-8 text-center">
+                    <p className="text-gray-500">등록된 채널이 없습니다.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {channels.map((channel) => (
+                      <div
+                        key={channel.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-2xl">
+                                {CHANNEL_ICONS[channel.channelType] || '🔗'}
+                              </span>
+                              <span className="text-lg font-medium">
+                                {CHANNEL_LABELS[channel.channelType] || channel.channelType}
+                              </span>
+                              <Badge variant={channel.isActive ? 'success' : 'default'}>
+                                {channel.isActive ? '활성' : '비활성'}
+                              </Badge>
+                              {channel.hasAuthToken && (
+                                <Badge variant="info">🔑 토큰 설정됨</Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-gray-600 ml-9">
+                              {channel.webhookUrl ? (
+                                <span>
+                                  웹훅 URL: <code className="bg-gray-100 px-1 rounded text-xs">{channel.webhookUrl}</code>
+                                </span>
+                              ) : (
+                                <span className="text-yellow-600">웹훅 URL 미설정</span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleTestWebhook(channel)}
+                              disabled={!channel.webhookUrl || isTesting === channel.id}
+                              className="px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isTesting === channel.id ? '테스트 중...' : '🔔 테스트'}
+                            </button>
+                            <button
+                              onClick={() => handleEditChannel(channel)}
+                              className="px-3 py-1.5 text-sm border border-blue-300 text-blue-600 rounded-md hover:bg-blue-50"
+                            >
+                              ✏️ 설정
+                            </button>
+                            <button
+                              onClick={() => handleToggleChannel(channel)}
+                              className={`px-3 py-1.5 text-sm rounded-md ${
+                                channel.isActive
+                                  ? 'bg-red-50 text-red-600 border border-red-300 hover:bg-red-100'
+                                  : 'bg-green-50 text-green-600 border border-green-300 hover:bg-green-100'
+                              }`}
+                            >
+                              {channel.isActive ? '비활성화' : '활성화'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                  <div className="flex items-start gap-3">
+                    <span className="text-xl">ℹ️</span>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-semibold mb-1">채널 연동이란?</p>
+                      <p>
+                        n8n 등의 자동화 도구를 통해 Slack, Teams, Email로 들어오는 문의를
+                        BreadDesk에서 자동으로 수신하고, AI 답변을 원래 채널로 되돌려 보냅니다.
+                      </p>
+                      <p className="mt-2">
+                        <strong>수신:</strong> 외부 → <code className="bg-blue-100 px-1 rounded">POST /api/v1/webhooks/incoming</code> → BreadDesk
+                      </p>
+                      <p>
+                        <strong>발신:</strong> BreadDesk → 설정된 웹훅 URL → n8n → 외부 채널
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Channel Edit Modal */}
+      {editingChannel && (
+        <Modal
+          title={`${CHANNEL_LABELS[editingChannel.channelType] || editingChannel.channelType} 설정`}
+          onClose={() => setEditingChannel(null)}
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                웹훅 URL (발신)
+              </label>
+              <input
+                type="url"
+                value={editWebhookUrl}
+                onChange={(e) => setEditWebhookUrl(e.target.value)}
+                placeholder="https://n8n.example.com/webhook/..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                AI/담당자 답변을 이 URL로 전송합니다 (n8n 웹훅 URL)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                인증 토큰 (수신)
+              </label>
+              <input
+                type="password"
+                value={editAuthToken}
+                onChange={(e) => setEditAuthToken(e.target.value)}
+                placeholder={editingChannel.hasAuthToken ? '(기존 토큰 유지)' : '인증 토큰 입력'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                외부에서 웹훅 수신 시 X-Webhook-Token 헤더로 검증합니다
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => setEditingChannel(null)}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSaveChannel}
+                disabled={isSaving}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isSaving ? '저장 중...' : '저장'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </AppLayout>
   );
 }
