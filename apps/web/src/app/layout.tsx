@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import './globals.css';
+import { ThemeProvider } from '@/components/providers/ThemeProvider';
 
 export const metadata: Metadata = {
   title: 'BreadDesk',
@@ -12,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

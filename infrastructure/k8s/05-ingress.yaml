@@ -1,0 +1,32 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: breaddesk-ingress
+  namespace: breaddesk
+spec:
+  ingressClassName: cilium
+  rules:
+  - host: breaddesk.k6s.app
+    http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: breaddesk-api
+            port:
+              number: 8080
+      - path: /actuator
+        pathType: Prefix
+        backend:
+          service:
+            name: breaddesk-api
+            port:
+              number: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: breaddesk-web
+            port:
+              number: 3000

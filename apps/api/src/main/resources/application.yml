@@ -4,21 +4,22 @@ spring:
 
   docker:
     compose:
+      enabled: false
       file: ../../docker-compose.yml
       lifecycle-management: start-and-stop   # 앱 종료 시 컨테이너도 정지
 
   datasource:
-    url: jdbc:mysql://localhost:3306/breaddesk?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    url: jdbc:postgresql://localhost:5432/breaddesk
     username: ${DB_USERNAME:breaddesk}
     password: ${DB_PASSWORD:breaddesk}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
 
@@ -26,11 +27,6 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
 
   servlet:
     multipart:
@@ -42,6 +38,15 @@ server:
 
 # BreadDesk custom config
 breaddesk:
+  features:
+    kanban-tasks: false      # 칸반/업무 관리 (기본 OFF)
+    internal-notes: true     # 내부 메모 (기본 ON)
+    ai-assignment: false     # AI 담당자 추천 (기본 OFF, 칸반 의존)
+    jira-integration: false  # Jira 연동 (기본 OFF, 추후 구현)
+  sla:
+    scheduler:
+      enabled: true
+      interval-ms: 60000
   llm:
     provider: ${LLM_PROVIDER:ollama}
     ollama:
@@ -57,6 +62,8 @@ breaddesk:
       model: all-MiniLM-L6-v2
   vector:
     provider: ${VECTOR_PROVIDER:pgvector}
+  webhook:
+    default-token: ${WEBHOOK_DEFAULT_TOKEN:}
   upload:
     path: ${UPLOAD_PATH:./uploads}
     max-file-size: 10485760  # 10MB
@@ -66,3 +73,19 @@ logging:
   level:
     com.breadlab.breaddesk: DEBUG
     org.hibernate.SQL: WARN
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:breaddesk-secret-key-for-jwt-token-signature-min-32-bytes}
+    access-token-expiration-minutes: 15
+    refresh-token-expiration-days: 7
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

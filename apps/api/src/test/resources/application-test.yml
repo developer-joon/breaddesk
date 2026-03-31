@@ -1,0 +1,47 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+    show-sql: false
+
+  flyway:
+    enabled: false
+
+  docker:
+    compose:
+      enabled: false
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+server:
+  port: 0
+
+security:
+  jwt:
+    secret: test-secret-key-for-breaddesk-unit-tests-minimum-32-bytes
+    access-token-expiration-minutes: 15
+    refresh-token-expiration-days: 7
+
+breaddesk:
+  upload:
+    path: /tmp/breaddesk-test-uploads
+    max-file-size: 10485760
+    max-files-per-entity: 5
+  llm:
+    provider: ollama
+    ollama:
+      url: http://localhost:11434
+      model: test

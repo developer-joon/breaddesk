@@ -11,8 +11,7 @@
 | Monorepo | Turborepo + Bun |
 | Frontend | Next.js + TypeScript |
 | Backend | Java 25 + Spring Boot 3.x |
-| Database | MySQL + pgvector |
-| Cache | Redis |
+| Database | PostgreSQL + pgvector |
 | AI | LLM 추상화 (Ollama, OpenAI, Claude 교체 가능) |
 | Automation | n8n (멀티채널 통합) |
 
@@ -32,22 +31,43 @@ breaddesk/
 ## 로컬 개발
 
 ### 준비물
-- JDK 25+
+- JDK 21+
 - Docker Desktop
-- Bun
+- Node.js 22+
 
 ### 백엔드 (IntelliJ)
 1. IntelliJ → `Open` → `breaddesk/` 루트 선택
 2. `BreadDeskApplication.java` → ▶️ Run
-3. MySQL, Redis, Ollama가 **자동으로 기동됨** (spring-boot-docker-compose)
+3. PostgreSQL, Ollama가 **자동으로 기동됨** (spring-boot-docker-compose)
 4. 앱 종료 시 컨테이너도 **자동 정지**
 
 ### 프론트엔드
 ```bash
 cd apps/web
-bun install
-bun run dev
+npm install
+npm run dev
 ```
+
+## 배포
+
+### CI/CD 파이프라인
+- **CI** (`.github/workflows/ci.yml`): PR/Push 시 자동 테스트
+- **CD** (`.github/workflows/cd.yml`): main 머지 시 자동 배포
+
+### 필수 설정
+1. GitHub Secrets에 `KUBECONFIG` 추가 (Base64 인코딩)
+2. K8s 클러스터에 `breaddesk` 네임스페이스 생성
+3. GHCR Pull Secret 설정
+
+자세한 내용은 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) 참고.
+
+## 모니터링 & 로깅
+
+- **Metrics**: Prometheus + Grafana (기존)
+- **Logs**: Loki + Promtail + Grafana
+- **Tracing**: Correlation ID (X-Correlation-ID 헤더)
+
+로그는 프로덕션에서 JSON 포맷으로 출력되며, Loki에서 파싱하여 Grafana Explore에서 조회 가능.
 
 ## 설계 원칙
 

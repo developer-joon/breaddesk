@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    
+    <!-- MDC 패턴: Correlation ID 추가 -->
+    <property name="CONSOLE_LOG_PATTERN" 
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %5p [%X{correlationId:-}] --- [%15.15t] %-40.40logger{39} : %m%n"/>
+    
+    <!-- JSON 로그 패턴 (프로덕션) -->
+    <property name="JSON_LOG_PATTERN" 
+              value='{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","level":"%level","correlationId":"%X{correlationId:-}","thread":"%thread","logger":"%logger","message":"%message","exception":"%exception{full}"}%n'/>
+    
+    <!-- 개발 환경: 콘솔 출력 (일반 포맷) -->
+    <springProfile name="default,dev,local">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        
+        <logger name="com.breadlab.breaddesk" level="DEBUG"/>
+        <logger name="org.springframework.web" level="DEBUG"/>
+    </springProfile>
+    
+    <!-- 프로덕션 환경: JSON 로그 (Loki/Promtail 파싱 용이) -->
+    <springProfile name="prod,production">
+        <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <includeContext>true</includeContext>
+                <includeMdc>true</includeMdc>
+                <includeStructuredArguments>true</includeStructuredArguments>
+                <includeNonStructuredArguments>false</includeNonStructuredArguments>
+                <includeTags>true</includeTags>
+                <includeCallerData>false</includeCallerData>
+                
+                <fieldNames>
+                    <timestamp>timestamp</timestamp>
+                    <version>[ignore]</version>
+                    <message>message</message>
+                    <logger>logger</logger>
+                    <thread>thread</thread>
+                    <level>level</level>
+                    <levelValue>[ignore]</levelValue>
+                </fieldNames>
+                
+                <customFields>{"service":"breaddesk-api"}</customFields>
+            </encoder>
+        </appender>
+        
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE"/>
+        </root>
+        
+        <logger name="com.breadlab.breaddesk" level="INFO"/>
+        <logger name="org.springframework.web" level="WARN"/>
+        <logger name="org.hibernate" level="WARN"/>
+    </springProfile>
+    
+    <!-- 에러 로그 별도 파일 (선택사항) -->
+    <springProfile name="prod,production">
+        <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>logs/error.log</file>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>logs/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>30</maxHistory>
+            </rollingPolicy>
+        </appender>
+        
+        <root level="INFO">
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+    </springProfile>
+</configuration>

@@ -1,0 +1,43 @@
+# Build stage
+FROM node:22-alpine AS build
+
+WORKDIR /monorepo
+
+# Copy root package files
+COPY package*.json ./
+COPY turbo.json ./
+
+# Copy web app package file
+COPY apps/web/package*.json ./apps/web/
+
+# Install dependencies
+RUN npm install
+
+# Copy web app source
+COPY apps/web/ ./apps/web/
+
+# Build Next.js application
+WORKDIR /monorepo/apps/web
+ENV NEXT_PUBLIC_API_URL=""
+RUN npm run build
+
+# Runtime stage
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Copy standalone output from build stage
+COPY --from=build /monorepo/apps/web/.next/standalone ./
+COPY --from=build /monorepo/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build /monorepo/apps/web/public ./apps/web/public
+
+# Expose port
+EXPOSE 3000
+
+# Set environment
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+# Run application
+CMD ["node", "apps/web/server.js"]
