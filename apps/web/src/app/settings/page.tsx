@@ -7,6 +7,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { Modal } from '@/components/ui/Modal';
+import { useFeaturesStore } from '@/stores/features';
 import { getMembers, createMember, updateMember, deleteMember } from '@/services/members';
 import {
   getChannels,
@@ -38,8 +39,206 @@ const CHANNEL_LABELS: Record<string, string> = {
   email: 'Email',
 };
 
+// Features List Component
+function FeaturesList() {
+  const { features, isLoading } = useFeaturesStore();
+
+  if (isLoading) {
+    return <LoadingSpinner text="기능 목록을 불러오는 중..." />;
+  }
+
+  if (!features) {
+    return <p className="text-gray-500">기능 목록을 불러올 수 없습니다.</p>;
+  }
+
+  const featureLabels: Record<keyof typeof features, string> = {
+    kanbanTasks: '칸반/업무 관리',
+    internalNotes: '내부 메모',
+    aiAssignment: 'AI 담당자 추천',
+    jiraIntegration: 'Jira 연동',
+  };
+
+  return (
+    <div className="space-y-3">
+      {Object.entries(features).map(([key, enabled]) => (
+        <div
+          key={key}
+          className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+        >
+          <div>
+            <h3 className="font-medium text-gray-900">
+              {featureLabels[key as keyof typeof features] || key}
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              {key === 'kanbanTasks' && '칸반 보드 기반 업무 관리 기능'}
+              {key === 'internalNotes' && '문의에 대한 내부 메모 작성 기능'}
+              {key === 'aiAssignment' && 'AI 기반 담당자 자동 추천 (칸반 기능 의존)'}
+              {key === 'jiraIntegration' && 'Jira 이슈 생성 및 동기화 연동'}
+            </p>
+          </div>
+          <Badge variant={enabled ? 'success' : 'default'}>
+            {enabled ? 'ON' : 'OFF'}
+          </Badge>
+        </div>
+      ))}
+
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+        <p className="text-sm text-yellow-800">
+          <strong>⚠️ 알림:</strong> 기능 플래그는 현재 서버 설정 파일(application.yml)에서만 변경 가능합니다.
+          런타임 변경 기능은 향후 추가될 예정입니다.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Jira Integration Card Component
+function JiraIntegrationCard() {
+  const [jiraUrl, setJiraUrl] = useState('');
+  const [jiraEmail, setJiraEmail] = useState('');
+  const [jiraToken, setJiraToken] = useState('');
+  const [projectKey, setProjectKey] = useState('');
+  const [isTestingConnection, setIsTestingConnection] = useState(false);
+
+  const handleTestConnection = async () => {
+    if (!jiraUrl || !jiraEmail || !jiraToken || !projectKey) {
+      toast.error('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    setIsTestingConnection(true);
+    try {
+      // TODO: API 구현 후 실제 호출로 교체
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      toast.success('연결 테스트 성공 (준비 중)');
+    } catch (error) {
+      toast.error('연결 테스트에 실패했습니다.');
+    } finally {
+      setIsTestingConnection(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!jiraUrl || !jiraEmail || !jiraToken || !projectKey) {
+      toast.error('모든 필드를 입력해주세요.');
+      return;
+    }
+
+    try {
+      // TODO: API 구현 후 실제 호출로 교체
+      toast('Jira 연동 기능은 아직 구현 중입니다.', { icon: 'ℹ️' });
+    } catch (error) {
+      toast.error('저장에 실패했습니다.');
+    }
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-lg p-6 space-y-4">
+      <div className="flex items-center gap-3 mb-4">
+        <span className="text-3xl">🔗</span>
+        <div>
+          <h3 className="text-lg font-semibold">Jira 연동</h3>
+          <p className="text-sm text-gray-600">문의를 Jira 이슈로 에스컬레이션하고 상태를 동기화합니다.</p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Jira Cloud URL <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={jiraUrl}
+            onChange={(e) => setJiraUrl(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://your-domain.atlassian.net"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Service Account Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            value={jiraEmail}
+            onChange={(e) => setJiraEmail(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="service-account@example.com"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            API Token <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="password"
+            value={jiraToken}
+            onChange={(e) => setJiraToken(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="••••••••••••••••"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Jira API Token은{' '}
+            <a
+              href="https://id.atlassian.com/manage-profile/security/api-tokens"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              여기
+            </a>
+            에서 생성할 수 있습니다.
+          </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            프로젝트 키 <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={projectKey}
+            onChange={(e) => setProjectKey(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="SUPPORT"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Jira 프로젝트 키 (예: SUPPORT, DEV 등)
+          </p>
+        </div>
+
+        <div className="flex gap-2 pt-2">
+          <button
+            onClick={handleTestConnection}
+            disabled={isTestingConnection}
+            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isTestingConnection ? '테스트 중...' : '🔍 연결 테스트'}
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          >
+            💾 저장
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+        <p className="text-sm text-blue-800">
+          <strong>ℹ️ 알림:</strong> Jira 연동 기능은 현재 스펙 문서가 작성되었으며, 실제 구현은 향후 진행될 예정입니다.
+          자세한 스펙은 <code className="bg-blue-100 px-1 rounded">specs/features/jira-integration.md</code>를 참고하세요.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels'>('sla');
+  const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels' | 'features' | 'integrations'>('sla');
   const [slaRules, setSlaRules] = useState<SlaRuleResponse[]>([]);
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [channels, setChannels] = useState<ChannelConfigResponse[]>([]);
@@ -314,6 +513,26 @@ export default function SettingsPage() {
               >
                 채널 연동
               </button>
+              <button
+                onClick={() => setActiveTab('features')}
+                className={`px-6 py-3 font-medium transition-colors ${
+                  activeTab === 'features'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                기능 관리
+              </button>
+              <button
+                onClick={() => setActiveTab('integrations')}
+                className={`px-6 py-3 font-medium transition-colors ${
+                  activeTab === 'integrations'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                🔗 연동
+              </button>
             </div>
           </div>
 
@@ -572,6 +791,34 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Features Tab */}
+            {!isLoading && !error && activeTab === 'features' && (
+              <div className="space-y-4">
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold">기능 관리</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    각 기능의 활성화 여부를 확인합니다. (현재는 조회만 가능하며, 변경은 서버 설정 파일에서 수정해야 합니다.)
+                  </p>
+                </div>
+
+                <FeaturesList />
+              </div>
+            )}
+
+            {/* Integrations Tab */}
+            {!isLoading && !error && activeTab === 'integrations' && (
+              <div className="space-y-4">
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold">🔗 외부 연동</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Jira, Slack, Teams 등 외부 시스템과의 연동을 관리합니다.
+                  </p>
+                </div>
+
+                <JiraIntegrationCard />
               </div>
             )}
           </div>

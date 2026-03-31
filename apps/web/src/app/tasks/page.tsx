@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
@@ -8,6 +9,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
+import { useFeaturesStore } from '@/stores/features';
 import {
   getKanbanView,
   createTask,
@@ -60,11 +62,21 @@ const COLUMNS: { status: TaskStatus; label: string }[] = [
 ];
 
 export default function TasksPage() {
+  const router = useRouter();
+  const { isFeatureEnabled } = useFeaturesStore();
   const [kanbanData, setKanbanData] = useState<KanbanMap>({ waiting: [], inProgress: [], pending: [], review: [], done: [] });
   const [selectedTask, setSelectedTask] = useState<TaskResponse | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Feature Flag 체크: kanban-tasks가 OFF면 dashboard로 리다이렉트
+  useEffect(() => {
+    if (!isFeatureEnabled('kanbanTasks')) {
+      toast.error('칸반 업무 기능이 비활성화되어 있습니다.');
+      router.push('/dashboard');
+    }
+  }, [isFeatureEnabled, router]);
 
   // Create form state
   const [newTitle, setNewTitle] = useState('');

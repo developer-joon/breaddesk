@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Toaster } from 'react-hot-toast';
+import { useFeaturesStore } from '@/stores/features';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,12 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { fetchFeatures } = useFeaturesStore();
+
+  // 앱 시작 시 Feature Flag 로드
+  useEffect(() => {
+    fetchFeatures();
+  }, [fetchFeatures]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">

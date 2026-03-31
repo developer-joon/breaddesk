@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import React from 'react';
 import { useAuthStore } from '@/stores/auth';
+import { useFeaturesStore } from '@/stores/features';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -13,17 +14,18 @@ interface SidebarProps {
 const navItems = [
   { href: '/dashboard', icon: '📊', label: '팀 현황' },
   { href: '/inquiries', icon: '💬', label: '문의' },
-  { href: '/tasks', icon: '✅', label: '업무' },
+  { href: '/tasks', icon: '✅', label: '업무', requiresFeature: 'kanbanTasks' as const },
   { href: '/templates', icon: '📝', label: '템플릿' },
   { href: '/knowledge', icon: '📚', label: '지식' },
   { href: '/stats', icon: '📈', label: '통계' },
-  { href: '/my', icon: '👤', label: '내 업무' },
+  { href: '/my', icon: '👤', label: '내 업무', requiresFeature: 'kanbanTasks' as const },
   { href: '/settings', icon: '⚙️', label: '설정' },
 ];
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useAuthStore();
+  const { isFeatureEnabled } = useFeaturesStore();
 
   return (
     <>
@@ -49,6 +51,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
           <nav className="space-y-1">
             {navItems.map((item) => {
+              // Feature Flag 체크: requiresFeature가 있으면 해당 기능이 활성화되어야 표시
+              if (item.requiresFeature && !isFeatureEnabled(item.requiresFeature)) {
+                return null;
+              }
+
               const isActive = pathname === item.href;
               return (
                 <Link

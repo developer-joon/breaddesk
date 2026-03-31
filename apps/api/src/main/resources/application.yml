@@ -38,6 +38,11 @@ server:
 
 # BreadDesk custom config
 breaddesk:
+  features:
+    kanban-tasks: false      # 칸반/업무 관리 (기본 OFF)
+    internal-notes: true     # 내부 메모 (기본 ON)
+    ai-assignment: false     # AI 담당자 추천 (기본 OFF, 칸반 의존)
+    jira-integration: false  # Jira 연동 (기본 OFF, 추후 구현)
   sla:
     scheduler:
       enabled: true
