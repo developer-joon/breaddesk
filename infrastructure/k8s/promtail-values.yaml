@@ -1,0 +1,48 @@
+# Promtail Helm Chart Values
+# Kubernetes 파드 로그를 Loki로 전송
+
+config:
+  clients:
+    - url: http://loki.monitoring:3100/loki/api/v1/push
+  
+  snippets:
+    pipelineStages:
+      - cri: {}
+      # JSON 로그 파싱 (Spring Boot JSON 로그용)
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            logger: logger
+            message: message
+            correlationId: correlationId
+            service: service
+      # 타임스탬프 추출
+      - timestamp:
+          source: timestamp
+          format: "2006-01-02 15:04:05.000"
+      # 라벨 추가
+      - labels:
+          level:
+          logger:
+          correlationId:
+          service:
+
+# DaemonSet으로 모든 노드에 배포
+daemonset:
+  enabled: true
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+# ServiceMonitor (Prometheus Operator 사용 시)
+serviceMonitor:
+  enabled: false
+
+# 네임스페이스 설정
+namespace: monitoring

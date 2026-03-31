@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: breaddesk-api
-  namespace: openclaw
+  namespace: breaddesk
 spec:
   replicas: 1
   selector:
@@ -16,11 +16,15 @@ spec:
       imagePullSecrets:
       - name: ghcr-secret
       containers:
-      - name: api
-        image: ghcr.io/botjoonwoo/breaddesk-api:0.1.0
+      - name: breaddesk-api
+        image: ghcr.io/botjoonwoo/breaddesk-api:latest
         ports:
         - containerPort: 8080
         env:
+        # Spring Profile
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        # Database
         - name: SPRING_DATASOURCE_URL
           value: jdbc:postgresql://breaddesk-postgres:5432/breaddesk
         - name: SPRING_DATASOURCE_USERNAME
@@ -33,11 +37,13 @@ spec:
             secretKeyRef:
               name: breaddesk-secrets
               key: DB_PASSWORD
+        # Security
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: breaddesk-secrets
               key: JWT_SECRET
+        # AI Provider
         - name: BREADDESK_AI_PROVIDER_URL
           value: "http://localhost:11434"
         resources:
@@ -64,7 +70,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: breaddesk-api
-  namespace: openclaw
+  namespace: breaddesk
 spec:
   selector:
     app: breaddesk-api

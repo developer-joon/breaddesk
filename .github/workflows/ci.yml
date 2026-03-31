@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: breaddesk_test
+          POSTGRES_USER: breaddesk
+          POSTGRES_PASSWORD: breaddesk
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+        working-directory: ./apps/api
+      
+      - name: Run tests
+        run: ./gradlew test
+        working-directory: ./apps/api
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/breaddesk_test
+          SPRING_DATASOURCE_USERNAME: breaddesk
+          SPRING_DATASOURCE_PASSWORD: breaddesk
+      
+      - name: Build application
+        run: ./gradlew build -x test
+        working-directory: ./apps/api
+      
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: apps/api/build/reports/tests/test/
+          retention-days: 7
+
+  frontend-build:
+    name: Frontend Build & Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      
+      - name: Install root dependencies
+        run: npm ci
+      
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./apps/web
+      
+      - name: Run linter
+        run: npm run lint
+        working-directory: ./apps/web
+      
+      - name: Build application
+        run: npm run build
+        working-directory: ./apps/web
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: apps/web/.next/
+          retention-days: 7
