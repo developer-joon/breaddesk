@@ -84,7 +84,7 @@ export function TaskDetailModal({ task, onClose, onUpdate }: TaskDetailModalProp
   const loadMembers = async () => {
     try {
       const data = await getMembers();
-      setAllMembers(data.content);
+      setAllMembers(data);
     } catch (err) {
       console.error('Failed to load members:', err);
     }

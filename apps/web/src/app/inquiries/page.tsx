@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/Badge';
+import { Modal } from '@/components/ui/Modal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -12,12 +13,15 @@ import {
   addInquiryMessage,
   updateInquiryStatus,
   getSimilarInquiries,
+  convertInquiryToTask,
 } from '@/services/inquiries';
 import { exportInquiries } from '@/services/export';
 import type { InquiryResponse, InquiryMessageResponse, InquiryStatus, SimilarInquiryResponse } from '@/types';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function InquiriesPage() {
+  const router = useRouter();
   const [inquiries, setInquiries] = useState<InquiryResponse[]>([]);
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryResponse | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -28,6 +32,9 @@ export default function InquiriesPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [similarInquiries, setSimilarInquiries] = useState<SimilarInquiryResponse[]>([]);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
+  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [convertTaskTitle, setConvertTaskTitle] = useState('');
+  const [isConverting, setIsConverting] = useState(false);
 
   const fetchInquiries = useCallback(async () => {
     setIsLoading(true);
@@ -166,6 +173,31 @@ export default function InquiriesPage() {
     }
   };
 
+  const handleConvertToTask = async () => {
+    if (!selectedInquiry || !convertTaskTitle.trim()) {
+      toast.error('업무 제목을 입력하세요');
+      return;
+    }
+
+    setIsConverting(true);
+    try {
+      await convertInquiryToTask(selectedInquiry.id, {
+        title: convertTaskTitle,
+        description: selectedInquiry.message,
+        urgency: 'NORMAL',
+      });
+      toast.success('업무로 전환되었습니다');
+      setShowConvertModal(false);
+      setConvertTaskTitle('');
+      fetchInquiries();
+      router.push('/tasks');
+    } catch (err) {
+      toast.error('전환에 실패했습니다');
+    } finally {
+      setIsConverting(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="h-full flex flex-col">
@@ -257,6 +289,15 @@ export default function InquiriesPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setConvertTaskTitle(selectedInquiry.senderName + ' 문의');
+                          setShowConvertModal(true);
+                        }}
+                        className="px-3 py-1 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700 transition-colors"
+                      >
+                        📋 업무로 전환
+                      </button>
                       <select
                         value={selectedInquiry.status}
                         onChange={(e) =>
@@ -403,6 +444,49 @@ export default function InquiriesPage() {
             </div>
           </div>
         )}
+
+        {/* Convert to Task Modal */}
+        <Modal
+          isOpen={showConvertModal}
+          onClose={() => setShowConvertModal(false)}
+          title="업무로 전환"
+          size="md"
+        >
+          <div className="p-6 space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              이 문의를 업무로 전환하시겠습니까?
+            </p>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                업무 제목 *
+              </label>
+              <input
+                type="text"
+                value={convertTaskTitle}
+                onChange={(e) => setConvertTaskTitle(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="업무 제목을 입력하세요"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleConvertToTask}
+                disabled={isConverting || !convertTaskTitle.trim()}
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-400"
+              >
+                {isConverting ? '전환 중...' : '전환'}
+              </button>
+              <button
+                onClick={() => setShowConvertModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </AppLayout>
   );

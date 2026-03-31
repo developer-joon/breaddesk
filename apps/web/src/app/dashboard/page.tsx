@@ -6,11 +6,13 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { fetchDashboardStats } from '@/services/dashboard';
 import { getSlaStats } from '@/services/sla';
-import type { DashboardStats, SlaStatsResponse } from '@/types';
+import { getWeeklyReport } from '@/services/stats';
+import type { DashboardStats, SlaStatsResponse, WeeklyReport } from '@/types';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [slaStats, setSlaStats] = useState<SlaStatsResponse | null>(null);
+  const [weeklyReport, setWeeklyReport] = useState<WeeklyReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,12 +20,14 @@ export default function DashboardPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [dashData, slaData] = await Promise.allSettled([
+      const [dashData, slaData, weeklyData] = await Promise.allSettled([
         fetchDashboardStats(),
         getSlaStats(),
+        getWeeklyReport(),
       ]);
       if (dashData.status === 'fulfilled') setStats(dashData.value);
       if (slaData.status === 'fulfilled') setSlaStats(slaData.value);
+      if (weeklyData.status === 'fulfilled') setWeeklyReport(weeklyData.value);
       if (dashData.status === 'rejected') throw dashData.reason;
     } catch (err) {
       console.error('Failed to fetch dashboard:', err);
@@ -200,6 +204,67 @@ export default function DashboardPage() {
                   </div>
                 )}
             </div>
+
+            {/* Weekly Report */}
+            {weeklyReport && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 mt-6">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">📅 주간 리포트</h2>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {weeklyReport.weekStart} ~ {weeklyReport.weekEnd}
+                  </span>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {weeklyReport.totalInquiries}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">총 문의</div>
+                    </div>
+                    <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                        {weeklyReport.totalTasks}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">총 업무</div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {weeklyReport.completedTasks}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">완료 업무</div>
+                    </div>
+                    <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                        {(weeklyReport.slaComplianceRate * 100).toFixed(1)}%
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">SLA 준수율</div>
+                    </div>
+                  </div>
+
+                  {weeklyReport.topIssues.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                        주요 이슈
+                      </h3>
+                      <div className="space-y-2">
+                        {weeklyReport.topIssues.map((issue, idx) => (
+                          <div
+                            key={idx}
+                            className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                          >
+                            <span className="text-sm text-gray-900 dark:text-white">{issue.issue}</span>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                              {issue.count}건
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
