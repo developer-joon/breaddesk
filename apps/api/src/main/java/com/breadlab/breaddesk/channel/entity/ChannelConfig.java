@@ -12,6 +12,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Getter
 @Setter
@@ -39,7 +41,8 @@ public class ChannelConfig extends BaseEntity {
     @Builder.Default
     private Boolean isActive = true;
 
-    @Column(columnDefinition = "jsonb default '{}'")
+    @Column(columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     @Builder.Default
     private String config = "{}";
 }
