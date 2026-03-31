@@ -7,6 +7,7 @@ import { Modal } from '@/components/ui/Modal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import {
   getKanbanView,
   createTask,
