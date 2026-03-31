@@ -60,6 +60,18 @@ public class MemberService {
         memberRepository.delete(getEntity(id));
     }
 
+    public void changePassword(Long memberId, String currentPassword, String newPassword) {
+        Member member = getEntity(memberId);
+        
+        // 현재 비밀번호 검증
+        if (!passwordEncoder.matches(currentPassword, member.getPasswordHash())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        
+        // 새 비밀번호 해싱 후 저장
+        member.setPasswordHash(passwordEncoder.encode(newPassword));
+    }
+
     private Member getEntity(Long id) {
         return memberRepository
                 .findById(id)

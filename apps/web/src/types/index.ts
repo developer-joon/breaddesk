@@ -54,6 +54,11 @@ export interface MemberRequest {
   active?: boolean;
 }
 
+export interface PasswordChangeRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 // ─── Inquiry ──────────────────────────────────────────────
 export type InquiryStatus = 'OPEN' | 'AI_ANSWERED' | 'ESCALATED' | 'RESOLVED' | 'CLOSED';
 export type InquiryMessageRole = 'USER' | 'AI' | 'AGENT';

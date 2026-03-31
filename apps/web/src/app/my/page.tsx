@@ -8,8 +8,9 @@ import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { getTasks } from '@/services/tasks';
 import { getNotifications } from '@/services/notifications';
+import { changePassword } from '@/services/auth';
 import api from '@/lib/api';
-import type { TaskResponse, NotificationResponse, ApiResponse, PersonalNoteResponse } from '@/types';
+import type { TaskResponse, NotificationResponse, ApiResponse, PersonalNoteResponse, User } from '@/types';
 import toast from 'react-hot-toast';
 
 export default function MyPage() {
@@ -19,6 +20,13 @@ export default function MyPage() {
   const [newNote, setNewNote] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
+  // Password change form
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -53,6 +61,17 @@ export default function MyPage() {
 
   useEffect(() => {
     loadData();
+    // Load current user info
+    if (typeof window !== 'undefined') {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          setCurrentUser(JSON.parse(userStr));
+        } catch {
+          // Invalid user data
+        }
+      }
+    }
   }, [loadData]);
 
   const handleAddNote = async () => {
@@ -78,6 +97,39 @@ export default function MyPage() {
       toast.success('메모가 삭제되었습니다');
     } catch {
       toast.error('메모 삭제에 실패했습니다.');
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('모든 필드를 입력해주세요');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('새 비밀번호가 일치하지 않습니다');
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error('비밀번호는 최소 8자 이상이어야 합니다');
+      return;
+    }
+    
+    setIsChangingPassword(true);
+    try {
+      await changePassword({ currentPassword, newPassword });
+      toast.success('비밀번호가 변경되었습니다');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      if (error.response?.data?.error?.includes('incorrect')) {
+        toast.error('현재 비밀번호가 올바르지 않습니다');
+      } else {
+        toast.error('비밀번호 변경에 실패했습니다');
+      }
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -113,6 +165,17 @@ export default function MyPage() {
   const inProgressTasks = tasks.filter((t) => t.status === 'IN_PROGRESS').length;
   const activeTasks = tasks.filter((t) => t.status !== 'DONE');
 
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'ADMIN':
+        return '관리자';
+      case 'AGENT':
+        return '상담원';
+      default:
+        return role;
+    }
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -126,6 +189,94 @@ export default function MyPage() {
 
         {!isLoading && !error && (
           <>
+            {/* My Profile & Password Change */}
+            <div className="grid lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold">내 프로필</h2>
+                </div>
+                <div className="p-6 space-y-4">
+                  {currentUser ? (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          이름
+                        </label>
+                        <div className="text-gray-900">{currentUser.name}</div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          이메일
+                        </label>
+                        <div className="text-gray-900">{currentUser.email}</div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          역할
+                        </label>
+                        <Badge>{getRoleLabel(currentUser.role)}</Badge>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-gray-500 text-center py-4">
+                      사용자 정보를 불러올 수 없습니다
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold">비밀번호 변경</h2>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      현재 비밀번호
+                    </label>
+                    <input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="현재 비밀번호를 입력하세요"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      새 비밀번호
+                    </label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="새 비밀번호 (최소 8자)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      새 비밀번호 확인
+                    </label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="새 비밀번호를 다시 입력하세요"
+                    />
+                  </div>
+                  <button
+                    onClick={handleChangePassword}
+                    disabled={isChangingPassword}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isChangingPassword ? '변경 중...' : '비밀번호 변경'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* KPI Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">

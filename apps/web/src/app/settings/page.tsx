@@ -7,7 +7,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { Modal } from '@/components/ui/Modal';
-import { getMembers } from '@/services/members';
+import { getMembers, createMember, updateMember, deleteMember } from '@/services/members';
 import {
   getChannels,
   updateChannel,
@@ -52,6 +52,18 @@ export default function SettingsPage() {
   const [editAuthToken, setEditAuthToken] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState<number | null>(null);
+
+  // Member modal state
+  const [showMemberModal, setShowMemberModal] = useState(false);
+  const [editingMember, setEditingMember] = useState<User | null>(null);
+  const [memberForm, setMemberForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'AGENT' as 'ADMIN' | 'AGENT',
+    skills: '',
+    active: true,
+  });
 
   const loadSettings = useCallback(async () => {
     setIsLoading(true);
@@ -136,6 +148,96 @@ export default function SettingsPage() {
       toast.error('웹훅 테스트에 실패했습니다.');
     } finally {
       setIsTesting(null);
+    }
+  };
+
+  const handleAddMember = () => {
+    setEditingMember(null);
+    setMemberForm({
+      name: '',
+      email: '',
+      password: '',
+      role: 'AGENT',
+      skills: '',
+      active: true,
+    });
+    setShowMemberModal(true);
+  };
+
+  const handleEditMember = (member: User) => {
+    setEditingMember(member);
+    setMemberForm({
+      name: member.name,
+      email: member.email,
+      password: '',
+      role: member.role,
+      skills: member.skills || '',
+      active: member.active !== false,
+    });
+    setShowMemberModal(true);
+  };
+
+  const handleSaveMember = async () => {
+    if (!memberForm.name || !memberForm.email) {
+      toast.error('이름과 이메일은 필수입니다');
+      return;
+    }
+    if (!editingMember && !memberForm.password) {
+      toast.error('새 팀원은 비밀번호가 필요합니다');
+      return;
+    }
+    if (memberForm.password && memberForm.password.length < 8) {
+      toast.error('비밀번호는 최소 8자 이상이어야 합니다');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (editingMember) {
+        // Update
+        const payload: Record<string, unknown> = {
+          name: memberForm.name,
+          email: memberForm.email,
+          role: memberForm.role,
+          skills: memberForm.skills || undefined,
+          active: memberForm.active,
+        };
+        if (memberForm.password) {
+          payload.password = memberForm.password;
+        }
+        await updateMember(Number(editingMember.id), payload as never);
+        toast.success('팀원 정보가 수정되었습니다');
+      } else {
+        // Create
+        await createMember({
+          name: memberForm.name,
+          email: memberForm.email,
+          password: memberForm.password,
+          role: memberForm.role,
+          skills: memberForm.skills || undefined,
+          active: memberForm.active,
+        });
+        toast.success('팀원이 추가되었습니다');
+      }
+      setShowMemberModal(false);
+      loadSettings();
+    } catch {
+      toast.error('팀원 저장에 실패했습니다');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteMember = async (member: User) => {
+    if (!confirm(`정말로 ${member.name}을(를) 삭제하시겠습니까?`)) {
+      return;
+    }
+    try {
+      await deleteMember(Number(member.id));
+      toast.success('팀원이 삭제되었습니다');
+      loadSettings();
+    } catch {
+      toast.error('팀원 삭제에 실패했습니다');
     }
   };
 
@@ -292,6 +394,12 @@ export default function SettingsPage() {
                     <h2 className="text-lg font-semibold">팀원 관리</h2>
                     <p className="text-sm text-gray-600 mt-1">팀원을 관리하고 권한을 설정합니다</p>
                   </div>
+                  <button
+                    onClick={handleAddMember}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    + 팀원 추가
+                  </button>
                 </div>
 
                 {teamMembers.length === 0 ? (
@@ -315,6 +423,9 @@ export default function SettingsPage() {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                             상태
                           </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            작업
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -336,6 +447,22 @@ export default function SettingsPage() {
                               <Badge variant={member.active !== false ? 'success' : 'default'}>
                                 {member.active !== false ? '활성' : '비활성'}
                               </Badge>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => handleEditMember(member)}
+                                  className="px-3 py-1 text-sm text-blue-600 border border-blue-300 rounded hover:bg-blue-50"
+                                >
+                                  수정
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteMember(member)}
+                                  className="px-3 py-1 text-sm text-red-600 border border-red-300 rounded hover:bg-red-50"
+                                >
+                                  삭제
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -450,6 +577,112 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Member Add/Edit Modal */}
+      {showMemberModal && (
+        <Modal
+          isOpen={showMemberModal}
+          title={editingMember ? '팀원 정보 수정' : '팀원 추가'}
+          onClose={() => setShowMemberModal(false)}
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                이름 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={memberForm.name}
+                onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="홍길동"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                이메일 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                value={memberForm.email}
+                onChange={(e) => setMemberForm({ ...memberForm, email: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="user@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                비밀번호 {!editingMember && <span className="text-red-500">*</span>}
+              </label>
+              <input
+                type="password"
+                value={memberForm.password}
+                onChange={(e) => setMemberForm({ ...memberForm, password: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={editingMember ? '(변경하지 않으려면 비워두세요)' : '최소 8자'}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                역할 <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={memberForm.role}
+                onChange={(e) =>
+                  setMemberForm({ ...memberForm, role: e.target.value as 'ADMIN' | 'AGENT' })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="AGENT">상담원</option>
+                <option value="ADMIN">관리자</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">스킬</label>
+              <input
+                type="text"
+                value={memberForm.skills}
+                onChange={(e) => setMemberForm({ ...memberForm, skills: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="결제, 배송, 환불"
+              />
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="member-active"
+                checked={memberForm.active}
+                onChange={(e) => setMemberForm({ ...memberForm, active: e.target.checked })}
+                className="mr-2"
+              />
+              <label htmlFor="member-active" className="text-sm text-gray-700">
+                활성 상태
+              </label>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+              <button
+                onClick={() => setShowMemberModal(false)}
+                className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSaveMember}
+                disabled={isSaving}
+                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isSaving ? '저장 중...' : editingMember ? '수정' : '추가'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Channel Edit Modal */}
       {editingChannel && (
