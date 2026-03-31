@@ -13,11 +13,11 @@ import {
   updateTaskStatus,
   addComment,
 } from '@/services/tasks';
+import type { KanbanMap } from '@/services/tasks';
 import type {
   TaskResponse,
   TaskStatus,
   TaskUrgency,
-  TaskKanbanResponse,
   TaskCommentResponse,
 } from '@/types';
 import toast from 'react-hot-toast';
@@ -58,7 +58,7 @@ const COLUMNS: { status: TaskStatus; label: string }[] = [
 ];
 
 export default function TasksPage() {
-  const [kanbanData, setKanbanData] = useState<TaskKanbanResponse[]>([]);
+  const [kanbanData, setKanbanData] = useState<KanbanMap>({ waiting: [], inProgress: [], pending: [], review: [], done: [] });
   const [selectedTask, setSelectedTask] = useState<TaskResponse | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,9 +92,17 @@ export default function TasksPage() {
     loadKanban();
   }, [loadKanban]);
 
+  const statusToKey: Record<TaskStatus, keyof KanbanMap> = {
+    WAITING: 'waiting',
+    IN_PROGRESS: 'inProgress',
+    PENDING: 'pending',
+    REVIEW: 'review',
+    DONE: 'done',
+  };
+
   const getTasksByStatus = (status: TaskStatus): TaskResponse[] => {
-    const column = kanbanData.find((k) => k.status === status);
-    return column?.tasks || [];
+    const key = statusToKey[status];
+    return kanbanData[key] || [];
   };
 
   const getUrgencyBadgeVariant = (urgency: TaskUrgency) => {

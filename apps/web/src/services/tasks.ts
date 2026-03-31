@@ -51,8 +51,16 @@ export async function deleteTask(id: number): Promise<void> {
   await api.delete(`/tasks/${id}`);
 }
 
-export async function getKanbanView(): Promise<TaskKanbanResponse[]> {
-  const { data } = await api.get<ApiResponse<TaskKanbanResponse[]>>('/tasks/kanban');
+export interface KanbanMap {
+  waiting: TaskResponse[];
+  inProgress: TaskResponse[];
+  pending: TaskResponse[];
+  review: TaskResponse[];
+  done: TaskResponse[];
+}
+
+export async function getKanbanView(): Promise<KanbanMap> {
+  const { data } = await api.get<ApiResponse<KanbanMap>>('/tasks/kanban');
   return data.data;
 }
 
