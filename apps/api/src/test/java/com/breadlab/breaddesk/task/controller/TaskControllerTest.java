@@ -52,6 +52,9 @@ class TaskControllerTest {
     @MockBean
     private UserDetailsService userDetailsService;
 
+    @MockBean
+    private com.breadlab.breaddesk.config.RateLimitInterceptor rateLimitInterceptor;
+
     private TaskResponse sampleResponse() {
         return TaskResponse.builder()
                 .id(1L)

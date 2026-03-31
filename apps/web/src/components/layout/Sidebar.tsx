@@ -16,6 +16,7 @@ const navItems = [
   { href: '/tasks', icon: '✅', label: '업무' },
   { href: '/templates', icon: '📝', label: '템플릿' },
   { href: '/knowledge', icon: '📚', label: '지식' },
+  { href: '/stats', icon: '📈', label: '통계' },
   { href: '/my', icon: '👤', label: '내 업무' },
   { href: '/settings', icon: '⚙️', label: '설정' },
 ];
@@ -36,7 +37,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <aside
-        className={`w-60 bg-[#1E293B] text-white flex-shrink-0 transition-transform duration-300 fixed lg:static inset-y-0 left-0 z-50 overflow-y-auto safe-top ${
+        className={`w-60 bg-[#1E293B] dark:bg-gray-800 text-white flex-shrink-0 transition-transform duration-300 fixed lg:static inset-y-0 left-0 z-50 overflow-y-auto safe-top ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -56,8 +57,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   onClick={() => onClose()}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                     isActive
-                      ? 'bg-[#334155] text-white'
-                      : 'hover:bg-[#334155] text-gray-300'
+                      ? 'bg-[#334155] dark:bg-gray-700 text-white'
+                      : 'hover:bg-[#334155] dark:hover:bg-gray-700 text-gray-300 dark:text-gray-200'
                   }`}
                 >
                   <span>{item.icon}</span>
@@ -69,7 +70,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
 
         {/* User Info */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 safe-bottom">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 dark:border-gray-600 safe-bottom">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-medium">
               {user?.name?.charAt(0)?.toUpperCase() || 'U'}

@@ -52,6 +52,9 @@ class AuthControllerTest {
     @MockBean
     private UserDetailsService userDetailsService;
 
+    @MockBean
+    private com.breadlab.breaddesk.config.RateLimitInterceptor rateLimitInterceptor;
+
     @Test
     @DisplayName("should_login_when_validCredentials")
     void should_login_when_validCredentials() throws Exception {

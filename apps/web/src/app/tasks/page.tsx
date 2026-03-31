@@ -13,6 +13,7 @@ import {
   updateTaskStatus,
   addComment,
 } from '@/services/tasks';
+import { exportTasks } from '@/services/export';
 import type { KanbanMap } from '@/services/tasks';
 import type {
   TaskResponse,
@@ -186,39 +187,56 @@ export default function TasksPage() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      await exportTasks();
+      toast.success('CSV 파일이 다운로드되었습니다');
+    } catch (err) {
+      toast.error('내보내기에 실패했습니다');
+    }
+  };
+
   return (
     <AppLayout>
       <div className="h-full flex flex-col">
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">업무 칸반</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">업무 칸반</h1>
           </div>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            + 새 업무
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+            >
+              📥 CSV 내보내기
+            </button>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              + 새 업무
+            </button>
+          </div>
         </div>
 
         {isLoading && <LoadingSpinner text="업무 칸반을 불러오는 중..." />}
         {error && <ErrorMessage message={error} onRetry={loadKanban} />}
 
         {!isLoading && !error && (
-          <div className="flex-1 overflow-x-auto">
-            <div className="flex gap-4 h-full" style={{ minWidth: '1000px' }}>
+          <div className="flex-1 overflow-x-auto custom-scrollbar">
+            <div className="flex gap-4 h-full pb-4" style={{ minWidth: '1000px' }}>
               {COLUMNS.map((column) => {
                 const columnTasks = getTasksByStatus(column.status);
                 return (
                   <div
                     key={column.status}
-                    className="flex-1 bg-gray-50 rounded-lg p-4 flex flex-col min-w-[200px]"
+                    className="flex-1 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 flex flex-col min-w-[280px] snap-start"
                   >
                     <div className="mb-4">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900">{column.label}</h3>
-                        <span className="px-2 py-1 bg-white rounded-full text-sm font-medium">
+                        <h3 className="font-semibold text-gray-900 dark:text-white">{column.label}</h3>
+                        <span className="px-2 py-1 bg-white dark:bg-gray-800 rounded-full text-sm font-medium">
                           {columnTasks.length}
                         </span>
                       </div>
@@ -232,7 +250,7 @@ export default function TasksPage() {
                           <div
                             key={task.id}
                             onClick={() => setSelectedTask(task)}
-                            className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 cursor-pointer hover:shadow-md transition-shadow"
+                            className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
                           >
                             <div className="flex items-center gap-2 mb-2">
                               <Badge variant={getUrgencyBadgeVariant(task.urgency)}>
@@ -248,7 +266,7 @@ export default function TasksPage() {
                                 {task.tags.map((t) => (
                                   <span
                                     key={t.id}
-                                    className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
+                                    className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 text-xs rounded"
                                   >
                                     {t.tag}
                                   </span>
@@ -506,7 +524,7 @@ export default function TasksPage() {
               </button>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 취소
               </button>

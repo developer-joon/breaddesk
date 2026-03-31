@@ -458,3 +458,103 @@ export interface SlaStatsResponse {
   totalResponseBreaches: number;
   totalResolveBreaches: number;
 }
+
+// ─── Search ───────────────────────────────────────────────
+export interface SearchResult {
+  inquiries: InquiryResponse[];
+  tasks: TaskResponse[];
+  knowledge: KnowledgeDocumentResponse[];
+}
+
+// ─── Attachments ──────────────────────────────────────────
+export interface AttachmentResponse {
+  id: number;
+  filename: string;
+  fileSize: number;
+  contentType: string;
+  uploadedBy: number;
+  uploadedAt: string;
+}
+
+// ─── Stats ────────────────────────────────────────────────
+export interface StatsOverview {
+  totalInquiries: number;
+  totalTasks: number;
+  totalMembers: number;
+  aiResolutionRate: number;
+  avgResponseTime: number;
+  avgResolveTime: number;
+}
+
+export interface AIStats {
+  totalAIResponses: number;
+  aiAcceptRate: number;
+  avgConfidence: number;
+  topResolvedCategories: Array<{ category: string; count: number }>;
+}
+
+export interface TeamStats {
+  members: Array<{
+    memberId: number;
+    memberName: string;
+    assignedTasks: number;
+    completedTasks: number;
+    avgCompletionHours: number;
+  }>;
+}
+
+export interface WeeklyReport {
+  weekStart: string;
+  weekEnd: string;
+  totalInquiries: number;
+  totalTasks: number;
+  completedTasks: number;
+  slaComplianceRate: number;
+  topIssues: Array<{ issue: string; count: number }>;
+}
+
+// ─── Task Relations ───────────────────────────────────────
+export interface TaskRelationResponse {
+  id: number;
+  taskId: number;
+  relatedTaskId: number;
+  relatedTaskTitle: string;
+  relationType: string;
+  createdAt: string;
+}
+
+export interface TaskRelationRequest {
+  relatedTaskId: number;
+  relationType?: string;
+}
+
+// ─── Task Watching ────────────────────────────────────────
+export interface TaskWatchResponse {
+  memberId: number;
+  taskId: number;
+  createdAt: string;
+}
+
+// ─── Task Assignee Recommendation ─────────────────────────
+export interface AssigneeRecommendation {
+  memberId: number;
+  memberName: string;
+  score: number;
+  reason: string;
+}
+
+// ─── Channel ──────────────────────────────────────────────
+export interface ChannelResponse {
+  id: number;
+  name: string;
+  type: string;
+  config?: Record<string, string>;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChannelTestResult {
+  success: boolean;
+  message: string;
+}

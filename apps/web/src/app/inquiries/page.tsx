@@ -13,6 +13,7 @@ import {
   updateInquiryStatus,
   getSimilarInquiries,
 } from '@/services/inquiries';
+import { exportInquiries } from '@/services/export';
 import type { InquiryResponse, InquiryMessageResponse, InquiryStatus, SimilarInquiryResponse } from '@/types';
 import toast from 'react-hot-toast';
 
@@ -156,11 +157,26 @@ export default function InquiriesPage() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      await exportInquiries();
+      toast.success('CSV 파일이 다운로드되었습니다');
+    } catch (err) {
+      toast.error('내보내기에 실패했습니다');
+    }
+  };
+
   return (
     <AppLayout>
       <div className="h-full flex flex-col">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">문의 관리</h1>
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">문의 관리</h1>
+          <button
+            onClick={handleExport}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+          >
+            📥 CSV 내보내기
+          </button>
         </div>
 
         {isLoading && <LoadingSpinner text="문의 목록을 불러오는 중..." />}
@@ -169,8 +185,8 @@ export default function InquiriesPage() {
         {!isLoading && !error && (
           <div className="flex-1 grid lg:grid-cols-3 gap-4 overflow-hidden">
             {/* Inquiry List */}
-            <div className="lg:col-span-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-              <div className="px-4 py-3 border-b border-gray-200">
+            <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="font-semibold">문의 목록 ({inquiries.length})</h2>
               </div>
               <div className="overflow-y-auto flex-1">
@@ -181,7 +197,7 @@ export default function InquiriesPage() {
                     <div
                       key={inquiry.id}
                       onClick={() => handleSelectInquiry(inquiry)}
-                      className={`p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 ${
+                      className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
                         selectedInquiry?.id === inquiry.id ? 'bg-blue-50' : ''
                       }`}
                     >
@@ -206,7 +222,7 @@ export default function InquiriesPage() {
               </div>
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="px-4 py-2 border-t border-gray-200 flex justify-between items-center">
+                <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
                   <button
                     disabled={page === 0}
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
@@ -229,14 +245,14 @@ export default function InquiriesPage() {
             </div>
 
             {/* Chat Panel */}
-            <div className="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
               {selectedInquiry ? (
                 <>
                   {/* Header */}
-                  <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                  <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                     <div>
                       <h2 className="font-semibold">{selectedInquiry.senderName}</h2>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {selectedInquiry.senderEmail || selectedInquiry.channel}
                       </p>
                     </div>
@@ -279,7 +295,7 @@ export default function InquiriesPage() {
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     {/* Initial message */}
                     <div className="flex justify-start">
-                      <div className="max-w-[70%] rounded-lg p-3 bg-gray-100 text-gray-900">
+                      <div className="max-w-[70%] rounded-lg p-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white">
                         <p className="text-xs font-medium text-gray-500 mb-1">
                           {selectedInquiry.senderName}
                         </p>
@@ -304,7 +320,7 @@ export default function InquiriesPage() {
                               ? 'bg-blue-600 text-white'
                               : msg.role === 'AI'
                                 ? 'bg-cyan-100 text-cyan-900'
-                                : 'bg-gray-100 text-gray-900'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-900'
                           }`}
                         >
                           <p className="text-xs font-medium mb-1 opacity-75">
@@ -325,10 +341,10 @@ export default function InquiriesPage() {
 
                   {/* Similar Inquiries */}
                   {(similarInquiries.length > 0 || isLoadingSimilar) && (
-                    <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                    <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm">🔗</span>
-                        <h4 className="text-sm font-semibold text-gray-700">유사 문의</h4>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">유사 문의</h4>
                       </div>
                       {isLoadingSimilar ? (
                         <p className="text-xs text-gray-400">유사 문의를 검색하는 중...</p>
@@ -337,7 +353,7 @@ export default function InquiriesPage() {
                           {similarInquiries.map((sim) => (
                             <div
                               key={sim.inquiryId}
-                              className="flex items-center justify-between bg-white rounded px-3 py-2 border border-gray-200 cursor-pointer hover:bg-blue-50"
+                              className="flex items-center justify-between bg-white dark:bg-gray-800 rounded px-3 py-2 border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-blue-50"
                               onClick={() => {
                                 const target = inquiries.find((i) => i.id === sim.inquiryId);
                                 if (target) handleSelectInquiry(target);
@@ -360,7 +376,7 @@ export default function InquiriesPage() {
                   )}
 
                   {/* Input */}
-                  <div className="p-4 border-t border-gray-200">
+                  <div className="p-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex gap-2">
                       <input
                         type="text"

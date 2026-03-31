@@ -56,17 +56,17 @@ export default function DashboardPage() {
   };
 
   const getComplianceColor = (rate: number) => {
-    if (rate >= 90) return 'text-green-600';
-    if (rate >= 70) return 'text-yellow-600';
-    return 'text-red-600';
+    if (rate >= 90) return 'text-green-600 dark:text-green-400';
+    if (rate >= 70) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
   };
 
   return (
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">팀 현황 대시보드</h1>
-          <p className="text-gray-600 mt-1">실시간 문의 및 업무 현황을 확인하세요</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">팀 현황 대시보드</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">실시간 문의 및 업무 현황을 확인하세요</p>
         </div>
 
         {isLoading && <LoadingSpinner text="대시보드를 불러오는 중..." />}
@@ -75,52 +75,52 @@ export default function DashboardPage() {
         {stats && (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                 <div className="text-3xl mb-2">📊</div>
-                <div className="text-2xl font-bold text-gray-900">{stats.totalInquiries}</div>
-                <div className="text-sm text-gray-600 mt-1">총 문의</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalInquiries}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">총 문의</div>
               </div>
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                 <div className="text-3xl mb-2">⏳</div>
-                <div className="text-2xl font-bold text-orange-600">{stats.unresolvedInquiries}</div>
-                <div className="text-sm text-gray-600 mt-1">미해결</div>
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats.unresolvedInquiries}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">미해결</div>
               </div>
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                 <div className="text-3xl mb-2">📥</div>
-                <div className="text-2xl font-bold text-blue-600">{stats.todayInquiries}</div>
-                <div className="text-sm text-gray-600 mt-1">오늘 접수</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.todayInquiries}</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">오늘 접수</div>
               </div>
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                 <div className="text-3xl mb-2">🤖</div>
-                <div className="text-2xl font-bold text-green-600">{Math.round(stats.aiResolutionRate)}%</div>
-                <div className="text-sm text-gray-600 mt-1">AI 해결률</div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{Math.round(stats.aiResolutionRate)}%</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">AI 해결률</div>
               </div>
             </div>
 
             {/* SLA Stats */}
             {slaStats && (
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">📋 SLA 현황</h2>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📋 SLA 현황</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="text-3xl mb-2">✅</div>
                     <div className={`text-2xl font-bold ${getComplianceColor(slaStats.overallResponseComplianceRate)}`}>{Math.round(slaStats.overallResponseComplianceRate)}%</div>
                     <div className="text-sm text-gray-600 mt-1">응답 SLA 준수율</div>
                   </div>
-                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="text-3xl mb-2">📅</div>
                     <div className={`text-2xl font-bold ${getComplianceColor(slaStats.overallResolveComplianceRate)}`}>{Math.round(slaStats.overallResolveComplianceRate)}%</div>
                     <div className="text-sm text-gray-600 mt-1">해결 SLA 준수율</div>
                   </div>
-                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="text-3xl mb-2">🚨</div>
-                    <div className="text-2xl font-bold text-red-600">{slaStats.totalResponseBreaches + slaStats.totalResolveBreaches}</div>
+                    <div className="text-2xl font-bold text-red-600 dark:text-red-400">{slaStats.totalResponseBreaches + slaStats.totalResolveBreaches}</div>
                     <div className="text-sm text-gray-600 mt-1">SLA 위반 건수</div>
                   </div>
-                  <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="text-3xl mb-2">⏱️</div>
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
                       {slaStats.avgResponseMinutes !== null ? (slaStats.avgResponseMinutes / 60).toFixed(1) : '-'}h
                     </div>
                     <div className="text-sm text-gray-600 mt-1">평균 응답 시간</div>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
 
                 <div className="mt-4 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700">SLA 준수/위반 비율</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">SLA 준수/위반 비율</span>
                     <span className="text-sm text-gray-500">응답: {slaStats.totalResponseBreaches}건 위반 / 해결: {slaStats.totalResolveBreaches}건 위반</span>
                   </div>
                   <div className="flex gap-1 h-4 rounded-full overflow-hidden bg-gray-200">
@@ -158,10 +158,10 @@ export default function DashboardPage() {
                       return (
                         <div key={status}>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">{getStatusLabel(status)}</span>
-                            <span className="text-sm font-bold text-gray-900">{count}</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{getStatusLabel(status)}</span>
+                            <span className="text-sm font-bold text-gray-900 dark:text-white">{count}</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                             <div className={`h-2 rounded-full ${getStatusColor(status)}`} style={{ width: `${total > 0 ? (count / total) * 100 : 0}%` }} />
                           </div>
                         </div>
@@ -180,10 +180,10 @@ export default function DashboardPage() {
                       return (
                         <div key={status}>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">{getStatusLabel(status)}</span>
-                            <span className="text-sm font-bold text-gray-900">{count}</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{getStatusLabel(status)}</span>
+                            <span className="text-sm font-bold text-gray-900 dark:text-white">{count}</span>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                             <div className={`h-2 rounded-full ${getStatusColor(status)}`} style={{ width: `${total > 0 ? (count / total) * 100 : 0}%` }} />
                           </div>
                         </div>
@@ -195,8 +195,8 @@ export default function DashboardPage() {
 
               {(!stats.inquiriesByStatus || Object.keys(stats.inquiriesByStatus).length === 0) &&
                 (!stats.tasksByStatus || Object.keys(stats.tasksByStatus).length === 0) && (
-                  <div className="lg:col-span-2 bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                    <p className="text-blue-800">상세 현황 데이터가 없습니다. 문의와 업무가 쌓이면 여기에 표시됩니다.</p>
+                  <div className="lg:col-span-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 text-center">
+                    <p className="text-blue-800 dark:text-blue-200">상세 현황 데이터가 없습니다. 문의와 업무가 쌓이면 여기에 표시됩니다.</p>
                   </div>
                 )}
             </div>

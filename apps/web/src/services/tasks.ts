@@ -15,6 +15,10 @@ import type {
   TaskLogResponse,
   TaskHoldRequest,
   TaskTransferRequest,
+  TaskRelationResponse,
+  TaskRelationRequest,
+  TaskWatchResponse,
+  AssigneeRecommendation,
 } from '@/types';
 
 export async function getTasks(page = 0, size = 20): Promise<Page<TaskResponse>> {
@@ -136,4 +140,59 @@ export async function resumeTask(taskId: number): Promise<void> {
 
 export async function transferTask(taskId: number, req: TaskTransferRequest): Promise<void> {
   await api.post(`/tasks/${taskId}/transfer`, req);
+}
+
+// ── Task Relations ──
+export async function getTaskRelations(taskId: number): Promise<TaskRelationResponse[]> {
+  const { data } = await api.get<ApiResponse<TaskRelationResponse[]>>(
+    `/tasks/${taskId}/relations`,
+  );
+  return data.data;
+}
+
+export async function addTaskRelation(
+  taskId: number,
+  req: TaskRelationRequest,
+): Promise<TaskRelationResponse> {
+  const { data } = await api.post<ApiResponse<TaskRelationResponse>>(
+    `/tasks/${taskId}/relations`,
+    req,
+  );
+  return data.data;
+}
+
+export async function deleteTaskRelation(taskId: number, relationId: number): Promise<void> {
+  await api.delete(`/tasks/${taskId}/relations/${relationId}`);
+}
+
+// ── Task Watching ──
+export async function watchTask(taskId: number): Promise<void> {
+  await api.post(`/tasks/${taskId}/watch`);
+}
+
+export async function unwatchTask(taskId: number): Promise<void> {
+  await api.delete(`/tasks/${taskId}/watch`);
+}
+
+export async function isWatching(taskId: number): Promise<boolean> {
+  const { data } = await api.get<ApiResponse<boolean>>(`/tasks/${taskId}/watching`);
+  return data.data;
+}
+
+// ── Assignee Recommendation ──
+export async function getAssigneeRecommendations(
+  taskId: number,
+): Promise<AssigneeRecommendation[]> {
+  const { data } = await api.get<ApiResponse<AssigneeRecommendation[]>>(
+    `/tasks/${taskId}/recommend-assignee`,
+  );
+  return data.data;
+}
+
+// ── Internal Comments ──
+export async function getInternalComments(taskId: number): Promise<TaskCommentResponse[]> {
+  const { data } = await api.get<ApiResponse<TaskCommentResponse[]>>(
+    `/tasks/${taskId}/comments/internal`,
+  );
+  return data.data;
 }

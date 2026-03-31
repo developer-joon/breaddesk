@@ -52,6 +52,9 @@ class InquiryControllerTest {
     @MockBean
     private UserDetailsService userDetailsService;
 
+    @MockBean
+    private com.breadlab.breaddesk.config.RateLimitInterceptor rateLimitInterceptor;
+
     private InquiryResponse sampleResponse() {
         return InquiryResponse.builder()
                 .id(1L)
