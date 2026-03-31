@@ -1,6 +1,7 @@
 package com.breadlab.breaddesk.template.controller;
 
 import com.breadlab.breaddesk.common.dto.ApiResponse;
+import com.breadlab.breaddesk.auth.AuthUtils;
 import com.breadlab.breaddesk.template.dto.ReplyTemplateRequest;
 import com.breadlab.breaddesk.template.dto.ReplyTemplateResponse;
 import com.breadlab.breaddesk.template.service.ReplyTemplateService;
@@ -23,12 +24,13 @@ import java.util.Map;
 public class ReplyTemplateController {
 
     private final ReplyTemplateService replyTemplateService;
+    private final AuthUtils authUtils;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ReplyTemplateResponse>> createTemplate(
             @Valid @RequestBody ReplyTemplateRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long createdBy = Long.parseLong(userDetails.getUsername());
+        Long createdBy = authUtils.getMemberId(userDetails);
         ReplyTemplateResponse response = replyTemplateService.createTemplate(request, createdBy);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }

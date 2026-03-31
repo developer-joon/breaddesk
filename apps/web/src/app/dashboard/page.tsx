@@ -218,31 +218,31 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {weeklyReport.totalInquiries}
+                        {(weeklyReport as any).newInquiries ?? weeklyReport.totalInquiries ?? 0}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">총 문의</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">신규 문의</div>
                     </div>
                     <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        {weeklyReport.totalTasks}
+                        {(weeklyReport as any).newTasks ?? weeklyReport.totalTasks ?? 0}
                       </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">총 업무</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">신규 업무</div>
                     </div>
                     <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {weeklyReport.completedTasks}
+                        {weeklyReport.completedTasks ?? 0}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">완료 업무</div>
                     </div>
                     <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                        {(weeklyReport.slaComplianceRate * 100).toFixed(1)}%
+                        {Math.round(weeklyReport.slaComplianceRate ?? 0)}%
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">SLA 준수율</div>
                     </div>
                   </div>
 
-                  {weeklyReport.topIssues.length > 0 && (
+                  {weeklyReport.topIssues && weeklyReport.topIssues.length > 0 && (
                     <div>
                       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                         주요 이슈

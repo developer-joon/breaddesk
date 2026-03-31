@@ -1,6 +1,7 @@
 package com.breadlab.breaddesk.personal.controller;
 
 import com.breadlab.breaddesk.common.dto.ApiResponse;
+import com.breadlab.breaddesk.auth.AuthUtils;
 import com.breadlab.breaddesk.personal.dto.PersonalNoteRequest;
 import com.breadlab.breaddesk.personal.dto.PersonalNoteResponse;
 import com.breadlab.breaddesk.personal.service.PersonalNoteService;
@@ -20,12 +21,13 @@ import org.springframework.web.bind.annotation.*;
 public class PersonalNoteController {
 
     private final PersonalNoteService personalNoteService;
+    private final AuthUtils authUtils;
 
     @PostMapping
     public ResponseEntity<ApiResponse<PersonalNoteResponse>> createNote(
             @Valid @RequestBody PersonalNoteRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long memberId = Long.parseLong(userDetails.getUsername());
+        Long memberId = authUtils.getMemberId(userDetails);
         PersonalNoteResponse response = personalNoteService.createNote(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
@@ -34,7 +36,7 @@ public class PersonalNoteController {
     public ResponseEntity<ApiResponse<Page<PersonalNoteResponse>>> getMyNotes(
             @AuthenticationPrincipal UserDetails userDetails,
             Pageable pageable) {
-        Long memberId = Long.parseLong(userDetails.getUsername());
+        Long memberId = authUtils.getMemberId(userDetails);
         Page<PersonalNoteResponse> responses = personalNoteService.getNotesByMember(memberId, pageable);
         return ResponseEntity.ok(ApiResponse.success(responses));
     }

@@ -1,5 +1,6 @@
 package com.breadlab.breaddesk.notification.controller;
 
+import com.breadlab.breaddesk.auth.AuthUtils;
 import com.breadlab.breaddesk.common.dto.ApiResponse;
 import com.breadlab.breaddesk.notification.dto.NotificationResponse;
 import com.breadlab.breaddesk.notification.service.NotificationService;
@@ -19,13 +20,14 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final AuthUtils authUtils;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getMyNotifications(
             @RequestParam(defaultValue = "false") boolean unreadOnly,
             @AuthenticationPrincipal UserDetails userDetails,
             Pageable pageable) {
-        Long memberId = Long.parseLong(userDetails.getUsername());
+        Long memberId = authUtils.getMemberId(userDetails);
         Page<NotificationResponse> responses = unreadOnly
                 ? notificationService.getUnreadNotifications(memberId, pageable)
                 : notificationService.getNotificationsByMember(memberId, pageable);
@@ -35,7 +37,7 @@ public class NotificationController {
     @GetMapping("/unread-count")
     public ResponseEntity<ApiResponse<Long>> getUnreadCount(
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long memberId = Long.parseLong(userDetails.getUsername());
+        Long memberId = authUtils.getMemberId(userDetails);
         long count = notificationService.getUnreadCount(memberId);
         return ResponseEntity.ok(ApiResponse.success(count));
     }
@@ -49,7 +51,7 @@ public class NotificationController {
     @PatchMapping("/read-all")
     public ResponseEntity<ApiResponse<Void>> markAllAsRead(
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long memberId = Long.parseLong(userDetails.getUsername());
+        Long memberId = authUtils.getMemberId(userDetails);
         notificationService.markAllAsRead(memberId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }

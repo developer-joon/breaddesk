@@ -1,6 +1,7 @@
 package com.breadlab.breaddesk.task.controller;
 
 import com.breadlab.breaddesk.ai.AIAssignmentService;
+import com.breadlab.breaddesk.auth.AuthUtils;
 import com.breadlab.breaddesk.common.dto.ApiResponse;
 import com.breadlab.breaddesk.task.dto.*;
 import com.breadlab.breaddesk.task.service.TaskRelationService;
@@ -26,6 +27,7 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
+    private final AuthUtils authUtils;
     private final TaskWatcherService watcherService;
     private final TaskRelationService relationService;
     private final AIAssignmentService aiAssignmentService;
@@ -122,7 +124,7 @@ public class TaskController {
             @PathVariable Long taskId,
             @Valid @RequestBody TaskCommentRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long authorId = Long.parseLong(userDetails.getUsername());
+        Long authorId = authUtils.getMemberId(userDetails);
         TaskCommentResponse response = taskService.addComment(taskId, request, authorId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
@@ -167,7 +169,7 @@ public class TaskController {
     public ResponseEntity<ApiResponse<Void>> watchTask(
             @PathVariable Long taskId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long memberId = Long.parseLong(userDetails.getUsername());
+        Long memberId = authUtils.getMemberId(userDetails);
         watcherService.watch(taskId, memberId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
@@ -176,7 +178,7 @@ public class TaskController {
     public ResponseEntity<ApiResponse<Void>> unwatchTask(
             @PathVariable Long taskId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long memberId = Long.parseLong(userDetails.getUsername());
+        Long memberId = authUtils.getMemberId(userDetails);
         watcherService.unwatch(taskId, memberId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
@@ -185,7 +187,7 @@ public class TaskController {
     public ResponseEntity<ApiResponse<Boolean>> isWatching(
             @PathVariable Long taskId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long memberId = Long.parseLong(userDetails.getUsername());
+        Long memberId = authUtils.getMemberId(userDetails);
         return ResponseEntity.ok(ApiResponse.success(watcherService.isWatching(taskId, memberId)));
     }
 

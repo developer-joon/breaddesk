@@ -20,7 +20,13 @@ export const useFeaturesStore = create<FeaturesState>((set, get) => ({
       const features = await featuresService.getFeatures();
       set({ features, isLoading: false });
     } catch (error) {
-      set({ error: (error as Error).message, isLoading: false });
+      // Feature flag 로딩 실패 시 기본값 사용 (앱 크래시 방지)
+      console.warn('Feature flags load failed, using defaults:', error);
+      set({ 
+        features: { kanbanTasks: false, internalNotes: true, aiAssignment: false, jiraIntegration: false },
+        error: (error as Error).message, 
+        isLoading: false 
+      });
     }
   },
 

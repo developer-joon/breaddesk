@@ -1,6 +1,7 @@
 package com.breadlab.breaddesk.attachment.controller;
 
 import com.breadlab.breaddesk.attachment.dto.AttachmentResponse;
+import com.breadlab.breaddesk.auth.AuthUtils;
 import com.breadlab.breaddesk.attachment.entity.AttachmentEntityType;
 import com.breadlab.breaddesk.attachment.service.AttachmentService;
 import com.breadlab.breaddesk.common.dto.ApiResponse;
@@ -24,6 +25,7 @@ import java.util.List;
 public class AttachmentController {
 
     private final AttachmentService attachmentService;
+    private final AuthUtils authUtils;
 
     @PostMapping
     public ResponseEntity<ApiResponse<AttachmentResponse>> uploadFile(
@@ -31,7 +33,7 @@ public class AttachmentController {
             @RequestParam Long entityId,
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long uploadedBy = Long.parseLong(userDetails.getUsername());
+        Long uploadedBy = authUtils.getMemberId(userDetails);
         AttachmentResponse response = attachmentService.uploadFile(entityType, entityId, file, uploadedBy);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
