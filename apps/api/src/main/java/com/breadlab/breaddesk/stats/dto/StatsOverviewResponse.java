@@ -9,9 +9,10 @@ import lombok.Getter;
 public class StatsOverviewResponse {
     private final long totalInquiries;
     private final long totalTasks;
-    private final double aiSuccessRate;
-    private final double avgResponseTimeHours;
-    private final double avgResolveTimeHours;
+    private final long totalMembers;
+    private final double aiResolutionRate;
+    private final double avgResponseTime;
+    private final double avgResolveTime;
     private final Map<String, Long> inquiriesByChannel;
     private final Map<String, Long> tasksByUrgency;
     private final double slaResponseComplianceRate;

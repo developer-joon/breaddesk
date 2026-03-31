@@ -4,11 +4,16 @@ import React, { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Modal } from '@/components/ui/Modal';
 import { KnowledgeConnector, KnowledgeDocument } from '@/types';
+import toast from 'react-hot-toast';
 
 export default function KnowledgePage() {
   const [connectors, setConnectors] = useState<KnowledgeConnector[]>([]);
   const [documents, setDocuments] = useState<KnowledgeDocument[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newConnectorName, setNewConnectorName] = useState('');
+  const [newConnectorType, setNewConnectorType] = useState<'NOTION' | 'CONFLUENCE' | 'GOOGLE_DRIVE' | 'LOCAL'>('NOTION');
 
   useEffect(() => {
     fetchKnowledge();
@@ -82,6 +87,20 @@ export default function KnowledgePage() {
     }
   };
 
+  const handleAddConnector = () => {
+    if (!newConnectorName.trim()) {
+      toast.error('커넥터 이름을 입력해주세요');
+      return;
+    }
+    toast('커넥터 추가 기능은 Phase 2에서 구현됩니다', { icon: 'ℹ️' });
+    setShowAddModal(false);
+    setNewConnectorName('');
+  };
+
+  const handleSync = (connectorId: string) => {
+    toast('동기화 기능은 Phase 2에서 구현됩니다', { icon: 'ℹ️' });
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -95,7 +114,10 @@ export default function KnowledgePage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">커넥터</h2>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
               + 커넥터 추가
             </button>
           </div>
@@ -135,10 +157,16 @@ export default function KnowledgePage() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <button className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                  <button 
+                    onClick={() => handleSync(connector.id)}
+                    className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                  >
                     동기화
                   </button>
-                  <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm">
+                  <button 
+                    onClick={() => toast('커넥터 설정 기능은 Phase 2에서 구현됩니다', { icon: 'ℹ️' })}
+                    className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+                  >
                     설정
                   </button>
                 </div>
@@ -219,6 +247,66 @@ export default function KnowledgePage() {
           </div>
         </div>
       </div>
+
+      {/* Add Connector Modal */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="커넥터 추가"
+        size="md"
+      >
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              커넥터 이름 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={newConnectorName}
+              onChange={(e) => setNewConnectorName(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="예: 회사 문서함"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              커넥터 타입 <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={newConnectorType}
+              onChange={(e) => setNewConnectorType(e.target.value as any)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="NOTION">Notion</option>
+              <option value="CONFLUENCE">Confluence</option>
+              <option value="GOOGLE_DRIVE">Google Drive</option>
+              <option value="LOCAL">로컬 파일</option>
+            </select>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p className="text-xs text-yellow-800">
+              ℹ️ 커넥터 추가 기능은 Phase 2에서 구현됩니다. 현재는 UI 미리보기만 제공됩니다.
+            </p>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleAddConnector}
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              추가
+            </button>
+            <button
+              onClick={() => setShowAddModal(false)}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      </Modal>
     </AppLayout>
   );
 }

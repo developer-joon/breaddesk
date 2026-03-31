@@ -234,7 +234,15 @@ export function Header({ onMenuClick }: HeaderProps) {
 
         {/* User Menu */}
         <div className="flex items-center gap-2">
-          {user && <Avatar name={user.name} src={user.avatar} size="sm" />}
+          {user && (
+            <button
+              onClick={() => router.push('/my')}
+              className="hover:opacity-80 transition-opacity"
+              title="내 프로필"
+            >
+              <Avatar name={user.name} src={user.avatar} size="sm" />
+            </button>
+          )}
           <button
             onClick={logout}
             className="hidden md:block text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"

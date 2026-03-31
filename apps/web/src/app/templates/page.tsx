@@ -120,6 +120,22 @@ export default function TemplatesPage() {
           </button>
         </div>
 
+        {/* Template Variables Guide */}
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">💡</span>
+            <div>
+              <h3 className="font-semibold text-purple-900 mb-1">템플릿 변수 사용법</h3>
+              <p className="text-sm text-purple-800 mb-2">
+                템플릿에 <code className="bg-purple-100 px-1 rounded">{'{{변수명}}'}</code> 형식으로 변수를 넣으면, 사용 시 실제 값으로 대체됩니다.
+              </p>
+              <p className="text-sm text-purple-800">
+                <strong>예시:</strong> &quot;안녕하세요 {'{{고객명}}'} 님, 문의하신 {'{{제품명}}'} 관련 답변입니다.&quot;
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Category Filter */}
         <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
           <div className="flex flex-wrap gap-2">
@@ -199,8 +215,9 @@ export default function TemplatesPage() {
                           <button
                             onClick={() => setSelectedTemplate(template)}
                             className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                            title="미리보기 및 변수 입력"
                           >
-                            사용
+                            📝 미리보기
                           </button>
                           <button
                             onClick={() => handleDeleteTemplate(template.id)}
@@ -244,7 +261,7 @@ export default function TemplatesPage() {
                 </div>
               </div>
 
-              {appliedContent && (
+              {appliedContent ? (
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(appliedContent);
@@ -254,6 +271,12 @@ export default function TemplatesPage() {
                 >
                   📋 복사하기
                 </button>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-xs text-blue-800">
+                    💡 <strong>사용 방법:</strong> 아래 &quot;적용&quot; 버튼을 클릭하면 변수가 채워진 최종 답변을 복사할 수 있습니다.
+                  </p>
+                </div>
               )}
 
               <div className="flex gap-2">

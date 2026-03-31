@@ -86,7 +86,13 @@ export function NotificationDropdown({ onClose }: NotificationDropdownProps) {
 
       {/* Footer */}
       <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
-        <button className="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:underline">
+        <button 
+          onClick={() => {
+            onClose();
+            window.location.href = '/my';
+          }}
+          className="w-full text-center text-sm text-blue-600 dark:text-blue-400 hover:underline"
+        >
           모든 알림 보기
         </button>
       </div>

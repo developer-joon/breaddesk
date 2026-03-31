@@ -238,7 +238,7 @@ function JiraIntegrationCard() {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels' | 'features' | 'integrations'>('sla');
+  const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels' | 'features' | 'integrations' | 'teams'>('sla');
   const [slaRules, setSlaRules] = useState<SlaRuleResponse[]>([]);
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [channels, setChannels] = useState<ChannelConfigResponse[]>([]);
@@ -533,6 +533,16 @@ export default function SettingsPage() {
               >
                 🔗 연동
               </button>
+              <button
+                onClick={() => setActiveTab('teams')}
+                className={`px-6 py-3 font-medium transition-colors ${
+                  activeTab === 'teams'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                🏢 팀 관리
+              </button>
             </div>
           </div>
 
@@ -595,10 +605,16 @@ export default function SettingsPage() {
                     <span className="text-xl">ℹ️</span>
                     <div className="text-sm text-blue-800">
                       <p className="font-semibold mb-1">SLA란?</p>
-                      <p>
+                      <p className="mb-2">
                         Service Level Agreement의 약자로, 서비스 제공자와 고객 간의 서비스 수준에
                         대한 약속입니다. 응답 시간과 해결 시간을 설정하여 팀의 목표를 관리하세요.
                       </p>
+                      <p className="font-semibold mb-1">SLA 동작 방식:</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>업무 생성 시 긴급도에 따라 SLA 마감시간이 자동 설정됩니다</li>
+                        <li>마감시간을 넘기면 <code className="bg-blue-100 px-1 rounded">sla_response_breached</code> 또는 <code className="bg-blue-100 px-1 rounded">sla_resolve_breached</code> 플래그가 설정됩니다</li>
+                        <li>통계 페이지에서 SLA 준수율을 확인할 수 있습니다</li>
+                      </ul>
                     </div>
                   </div>
                 </div>
@@ -819,6 +835,58 @@ export default function SettingsPage() {
                 </div>
 
                 <JiraIntegrationCard />
+              </div>
+            )}
+
+            {/* Teams Tab */}
+            {!isLoading && !error && activeTab === 'teams' && (
+              <div className="space-y-4">
+                <div className="mb-4">
+                  <h2 className="text-lg font-semibold">🏢 팀 관리 (멀티 테넌트)</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    여러 팀/테넌트를 관리합니다. (Phase 2 기능 예정)
+                  </p>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                  <div className="flex items-start gap-3">
+                    <span className="text-3xl">🚧</span>
+                    <div>
+                      <h3 className="font-semibold text-yellow-900 mb-2">Phase 2 기능 안내</h3>
+                      <p className="text-sm text-yellow-800 mb-3">
+                        멀티 테넌트/팀 기능은 Phase 2에서 구현될 예정입니다. 다음 기능이 포함됩니다:
+                      </p>
+                      <ul className="list-disc list-inside text-sm text-yellow-800 space-y-1">
+                        <li><code className="bg-yellow-100 px-1 rounded">teams</code> 테이블 추가 (team_id, team_name, settings)</li>
+                        <li>멤버, 문의, 업무에 <code className="bg-yellow-100 px-1 rounded">team_id</code> 컬럼 추가</li>
+                        <li>팀별 데이터 격리 (Row-Level Security)</li>
+                        <li>팀 전환 UI (헤더 드롭다운)</li>
+                        <li>팀별 통계 및 설정 관리</li>
+                      </ul>
+                      <p className="text-sm text-yellow-800 mt-3">
+                        현재는 단일 팀(테넌트)만 지원하며, 모든 데이터는 기본 팀에 속합니다.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border border-gray-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4">현재 팀 정보</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">팀 이름:</span>
+                      <span className="font-medium">기본 팀 (Default)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">팀원 수:</span>
+                      <span className="font-medium">{teamMembers.length}명</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">테넌트 ID:</span>
+                      <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">default-tenant-001</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

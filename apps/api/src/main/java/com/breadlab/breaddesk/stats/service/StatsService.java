@@ -31,13 +31,15 @@ public class StatsService {
                 "SELECT COUNT(*) FROM inquiries WHERE created_at BETWEEN ?1 AND ?2", start, end);
         long totalTasks = countScalar(
                 "SELECT COUNT(*) FROM tasks WHERE created_at BETWEEN ?1 AND ?2", start, end);
+        long totalMembers = countScalarSimple(
+                "SELECT COUNT(*) FROM members WHERE is_active = true");
 
         // AI success rate = AI resolved / total inquiries with AI response
         long aiAnswered = countScalar(
                 "SELECT COUNT(*) FROM inquiries WHERE ai_response IS NOT NULL AND created_at BETWEEN ?1 AND ?2", start, end);
         long aiResolved = countScalar(
                 "SELECT COUNT(*) FROM inquiries WHERE resolved_by = 'AI' AND created_at BETWEEN ?1 AND ?2", start, end);
-        double aiSuccessRate = aiAnswered > 0 ? (double) aiResolved / aiAnswered * 100 : 0;
+        double aiResolutionRate = aiAnswered > 0 ? (double) aiResolved / aiAnswered * 100 : 0;
 
         // Avg response time (hours)
         Double avgResponseHours = doubleScalar(
@@ -71,9 +73,10 @@ public class StatsService {
         return StatsOverviewResponse.builder()
                 .totalInquiries(totalInquiries)
                 .totalTasks(totalTasks)
-                .aiSuccessRate(round2(aiSuccessRate))
-                .avgResponseTimeHours(round2(avgResponseHours != null ? avgResponseHours : 0))
-                .avgResolveTimeHours(round2(avgResolveHours != null ? avgResolveHours : 0))
+                .totalMembers(totalMembers)
+                .aiResolutionRate(aiResolutionRate / 100.0)
+                .avgResponseTime((avgResponseHours != null ? avgResponseHours : 0) * 60)
+                .avgResolveTime((avgResolveHours != null ? avgResolveHours : 0) * 60)
                 .inquiriesByChannel(byChannel)
                 .tasksByUrgency(byUrgency)
                 .slaResponseComplianceRate(round2(slaResponseRate))
@@ -236,5 +239,10 @@ public class StatsService {
 
     private double round2(double value) {
         return Math.round(value * 100.0) / 100.0;
+    }
+
+    private long countScalarSimple(String sql) {
+        Object result = em.createNativeQuery(sql).getSingleResult();
+        return result != null ? ((Number) result).longValue() : 0;
     }
 }

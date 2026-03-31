@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import {
   getInquiries,
   getInquiryById,
+  createInquiry,
   addInquiryMessage,
   updateInquiryStatus,
   getSimilarInquiries,
@@ -35,6 +36,13 @@ export default function InquiriesPage() {
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [convertTaskTitle, setConvertTaskTitle] = useState('');
   const [isConverting, setIsConverting] = useState(false);
+  
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newInquiryChannel, setNewInquiryChannel] = useState('manual');
+  const [newInquirySender, setNewInquirySender] = useState('');
+  const [newInquiryEmail, setNewInquiryEmail] = useState('');
+  const [newInquiryMessage, setNewInquiryMessage] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   const fetchInquiries = useCallback(async () => {
     setIsLoading(true);
@@ -198,17 +206,53 @@ export default function InquiriesPage() {
     }
   };
 
+  const handleCreateInquiry = async () => {
+    if (!newInquirySender.trim() || !newInquiryMessage.trim()) {
+      toast.error('발신자와 메시지를 입력하세요');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      await createInquiry({
+        channel: newInquiryChannel,
+        senderName: newInquirySender,
+        senderEmail: newInquiryEmail || undefined,
+        message: newInquiryMessage,
+      });
+      toast.success('문의가 생성되었습니다');
+      setShowCreateModal(false);
+      setNewInquiryChannel('manual');
+      setNewInquirySender('');
+      setNewInquiryEmail('');
+      setNewInquiryMessage('');
+      fetchInquiries();
+    } catch (err) {
+      toast.error('문의 생성에 실패했습니다');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="h-full flex flex-col">
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">문의 관리</h1>
-          <button
-            onClick={handleExport}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
-          >
-            📥 CSV 내보내기
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              + 문의 생성
+            </button>
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+            >
+              📥 CSV 내보내기
+            </button>
+          </div>
         </div>
 
         {isLoading && <LoadingSpinner text="문의 목록을 불러오는 중..." />}
@@ -480,6 +524,88 @@ export default function InquiriesPage() {
               </button>
               <button
                 onClick={() => setShowConvertModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Create Inquiry Modal */}
+        <Modal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          title="문의 생성"
+          size="md"
+        >
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                채널
+              </label>
+              <select
+                value={newInquiryChannel}
+                onChange={(e) => setNewInquiryChannel(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="manual">수동 입력</option>
+                <option value="email">이메일</option>
+                <option value="chat">채팅</option>
+                <option value="phone">전화</option>
+                <option value="form">폼</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                발신자 이름 <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={newInquirySender}
+                onChange={(e) => setNewInquirySender(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="예: 홍길동"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                이메일 (선택)
+              </label>
+              <input
+                type="email"
+                value={newInquiryEmail}
+                onChange={(e) => setNewInquiryEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="예: user@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                문의 내용 <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                rows={5}
+                value={newInquiryMessage}
+                onChange={(e) => setNewInquiryMessage(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="고객의 문의 내용을 입력하세요..."
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleCreateInquiry}
+                disabled={isCreating || !newInquirySender.trim() || !newInquiryMessage.trim()}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                {isCreating ? '생성 중...' : '생성'}
+              </button>
+              <button
+                onClick={() => setShowCreateModal(false)}
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
               >
                 취소
