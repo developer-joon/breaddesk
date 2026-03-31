@@ -18,6 +18,7 @@ COPY apps/web/ ./apps/web/
 
 # Build Next.js application
 WORKDIR /monorepo/apps/web
+ENV NEXT_PUBLIC_API_URL=""
 RUN npm run build
 
 # Runtime stage
