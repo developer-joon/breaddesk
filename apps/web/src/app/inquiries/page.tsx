@@ -17,6 +17,7 @@ import {
   convertInquiryToTask,
 } from '@/services/inquiries';
 import { exportInquiries } from '@/services/export';
+import { aiService } from '@/services/ai';
 import type { InquiryResponse, InquiryMessageResponse, InquiryStatus, SimilarInquiryResponse } from '@/types';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -43,6 +44,10 @@ export default function InquiriesPage() {
   const [newInquiryEmail, setNewInquiryEmail] = useState('');
   const [newInquiryMessage, setNewInquiryMessage] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+
+  // AI 기능 상태
+  const [isLoadingAISuggestion, setIsLoadingAISuggestion] = useState(false);
+  const [showRewriteMenu, setShowRewriteMenu] = useState(false);
 
   const fetchInquiries = useCallback(async () => {
     setIsLoading(true);
@@ -231,6 +236,39 @@ export default function InquiriesPage() {
       toast.error('문의 생성에 실패했습니다');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  // AI 응답 추천 (Copilot)
+  const handleAISuggest = async () => {
+    if (!selectedInquiry) return;
+
+    setIsLoadingAISuggestion(true);
+    try {
+      const suggestion = await aiService.suggestReply(selectedInquiry.id);
+      setNewMessage(suggestion.suggestion);
+      toast.success(`AI 추천 답변 (신뢰도: ${Math.round(suggestion.confidence * 100)}%)`);
+    } catch (err) {
+      toast.error('AI 추천에 실패했습니다');
+    } finally {
+      setIsLoadingAISuggestion(false);
+    }
+  };
+
+  // 답변 리라이트
+  const handleRewrite = async (tone: 'friendly' | 'formal' | 'concise') => {
+    if (!newMessage.trim()) {
+      toast.error('리라이트할 텍스트를 입력하세요');
+      return;
+    }
+
+    try {
+      const result = await aiService.rewriteReply({ originalReply: newMessage, tone });
+      setNewMessage(result.rewritten);
+      setShowRewriteMenu(false);
+      toast.success(`${tone === 'friendly' ? '친절하게' : tone === 'formal' ? '공식적으로' : '간결하게'} 리라이트 완료`);
+    } catch (err) {
+      toast.error('리라이트에 실패했습니다');
     }
   };
 
@@ -462,6 +500,49 @@ export default function InquiriesPage() {
 
                   {/* Input */}
                   <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                    {/* AI 기능 버튼 */}
+                    <div className="flex gap-2 mb-2">
+                      <button
+                        onClick={handleAISuggest}
+                        disabled={isLoadingAISuggestion}
+                        className="px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-400 text-sm flex items-center gap-1"
+                      >
+                        <span>🤖</span>
+                        <span>{isLoadingAISuggestion ? '생성 중...' : 'AI 추천'}</span>
+                      </button>
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowRewriteMenu(!showRewriteMenu)}
+                          disabled={!newMessage.trim()}
+                          className="px-3 py-1 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:bg-gray-400 text-sm flex items-center gap-1"
+                        >
+                          <span>✨</span>
+                          <span>리라이트</span>
+                        </button>
+                        {showRewriteMenu && (
+                          <div className="absolute bottom-full left-0 mb-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg py-1 z-10">
+                            <button
+                              onClick={() => handleRewrite('friendly')}
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              😊 친절하게
+                            </button>
+                            <button
+                              onClick={() => handleRewrite('formal')}
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              📄 공식적으로
+                            </button>
+                            <button
+                              onClick={() => handleRewrite('concise')}
+                              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              📝 간결하게
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                     <div className="flex gap-2">
                       <input
                         type="text"
