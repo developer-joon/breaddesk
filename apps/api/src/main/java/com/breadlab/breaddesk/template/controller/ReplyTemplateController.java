@@ -4,6 +4,7 @@ import com.breadlab.breaddesk.common.dto.ApiResponse;
 import com.breadlab.breaddesk.template.dto.ReplyTemplateRequest;
 import com.breadlab.breaddesk.template.dto.ReplyTemplateResponse;
 import com.breadlab.breaddesk.template.service.ReplyTemplateService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
+@Tag(name = "Reply Template", description = "답변 템플릿 관리 API")
 @RestController
 @RequestMapping("/api/v1/reply-templates")
 @RequiredArgsConstructor

@@ -74,3 +74,13 @@ security:
     secret: ${JWT_SECRET:breaddesk-secret-key-for-jwt-token-signature-min-32-bytes}
     access-token-expiration-minutes: 15
     refresh-token-expiration-days: 7
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

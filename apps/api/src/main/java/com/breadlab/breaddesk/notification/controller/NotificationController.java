@@ -3,6 +3,7 @@ package com.breadlab.breaddesk.notification.controller;
 import com.breadlab.breaddesk.common.dto.ApiResponse;
 import com.breadlab.breaddesk.notification.dto.NotificationResponse;
 import com.breadlab.breaddesk.notification.service.NotificationService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Notification", description = "알림 API")
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor

@@ -27,6 +27,9 @@ dependencies {
     // implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
+    // OpenAPI/Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+
     // Database
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.flywaydb:flyway-core'
@@ -45,6 +48,9 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // Logging (JSON format for Loki)
+    implementation 'net.logstash.logback:logstash-logback-encoder:8.0'
 
     // Dev
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
