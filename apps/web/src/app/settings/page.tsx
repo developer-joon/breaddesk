@@ -59,7 +59,7 @@ export default function SettingsPage() {
     try {
       const [membersResult, slaResult, channelsResult] = await Promise.allSettled([
         getMembers(),
-        api.get<ApiResponse<SlaRuleResponse[]>>('/sla-rules'),
+        api.get<ApiResponse<SlaRuleResponse[]>>('/sla/rules'),
         getChannels(),
       ]);
 

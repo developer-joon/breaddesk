@@ -449,14 +449,12 @@ export interface SlaRuleUpdateRequest {
 }
 
 export interface SlaStatsResponse {
-  totalTasks: number;
-  responseComplianceRate: number;
-  resolveComplianceRate: number;
-  overallComplianceRate: number;
-  responseBreachedCount: number;
-  resolveBreachedCount: number;
-  averageResponseTimeHours: number;
-  averageResolveTimeHours: number;
-  weeklyComplianceRate?: number;
-  weeklyBreachedCount?: number;
+  overallResponseComplianceRate: number;
+  overallResolveComplianceRate: number;
+  responseComplianceByUrgency: Record<string, number>;
+  resolveComplianceByUrgency: Record<string, number>;
+  avgResponseMinutes: number | null;
+  avgResolveMinutes: number | null;
+  totalResponseBreaches: number;
+  totalResolveBreaches: number;
 }

@@ -40,6 +40,12 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
+    // Handle 403 (Forbidden) - likely expired or invalid auth
+    if (error.response?.status === 403) {
+      clearAuth();
+      return Promise.reject(error);
+    }
+
     // Only try refresh on 401 and if not already retrying
     if (error.response?.status !== 401 || originalRequest._retry) {
       return Promise.reject(error);

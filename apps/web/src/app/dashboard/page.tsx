@@ -105,43 +105,43 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                     <div className="text-3xl mb-2">✅</div>
-                    <div className={`text-2xl font-bold ${getComplianceColor(slaStats.overallComplianceRate)}`}>{Math.round(slaStats.overallComplianceRate)}%</div>
-                    <div className="text-sm text-gray-600 mt-1">전체 SLA 준수율</div>
+                    <div className={`text-2xl font-bold ${getComplianceColor(slaStats.overallResponseComplianceRate)}`}>{Math.round(slaStats.overallResponseComplianceRate)}%</div>
+                    <div className="text-sm text-gray-600 mt-1">응답 SLA 준수율</div>
                   </div>
                   <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                     <div className="text-3xl mb-2">📅</div>
-                    <div className={`text-2xl font-bold ${getComplianceColor(slaStats.weeklyComplianceRate ?? slaStats.overallComplianceRate)}`}>{Math.round(slaStats.weeklyComplianceRate ?? slaStats.overallComplianceRate)}%</div>
-                    <div className="text-sm text-gray-600 mt-1">이번 주 준수율</div>
+                    <div className={`text-2xl font-bold ${getComplianceColor(slaStats.overallResolveComplianceRate)}`}>{Math.round(slaStats.overallResolveComplianceRate)}%</div>
+                    <div className="text-sm text-gray-600 mt-1">해결 SLA 준수율</div>
                   </div>
                   <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                     <div className="text-3xl mb-2">🚨</div>
-                    <div className="text-2xl font-bold text-red-600">{slaStats.responseBreachedCount + slaStats.resolveBreachedCount}</div>
+                    <div className="text-2xl font-bold text-red-600">{slaStats.totalResponseBreaches + slaStats.totalResolveBreaches}</div>
                     <div className="text-sm text-gray-600 mt-1">SLA 위반 건수</div>
                   </div>
                   <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
                     <div className="text-3xl mb-2">⏱️</div>
-                    <div className="text-2xl font-bold text-gray-900">{slaStats.averageResponseTimeHours.toFixed(1)}h</div>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {slaStats.avgResponseMinutes !== null ? (slaStats.avgResponseMinutes / 60).toFixed(1) : '-'}h
+                    </div>
                     <div className="text-sm text-gray-600 mt-1">평균 응답 시간</div>
-                    <div className="text-xs text-gray-400 mt-0.5">해결: {slaStats.averageResolveTimeHours.toFixed(1)}h</div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      해결: {slaStats.avgResolveMinutes !== null ? (slaStats.avgResolveMinutes / 60).toFixed(1) : '-'}h
+                    </div>
                   </div>
                 </div>
 
                 <div className="mt-4 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-700">SLA 준수/위반 비율</span>
-                    <span className="text-sm text-gray-500">총 {slaStats.totalTasks}건</span>
+                    <span className="text-sm text-gray-500">응답: {slaStats.totalResponseBreaches}건 위반 / 해결: {slaStats.totalResolveBreaches}건 위반</span>
                   </div>
                   <div className="flex gap-1 h-4 rounded-full overflow-hidden bg-gray-200">
-                    {slaStats.totalTasks > 0 && (
-                      <>
-                        <div className="bg-green-500 rounded-l-full" style={{ width: `${slaStats.overallComplianceRate}%` }} />
-                        <div className="bg-red-500 rounded-r-full" style={{ width: `${100 - slaStats.overallComplianceRate}%` }} />
-                      </>
-                    )}
+                    <div className="bg-green-500 rounded-l-full" style={{ width: `${slaStats.overallResponseComplianceRate}%` }} />
+                    <div className="bg-red-500 rounded-r-full" style={{ width: `${100 - slaStats.overallResponseComplianceRate}%` }} />
                   </div>
                   <div className="flex justify-between mt-1 text-xs text-gray-500">
-                    <span>준수: {Math.round(slaStats.overallComplianceRate)}%</span>
-                    <span>위반: {Math.round(100 - slaStats.overallComplianceRate)}%</span>
+                    <span>응답 준수: {Math.round(slaStats.overallResponseComplianceRate)}%</span>
+                    <span>해결 준수: {Math.round(slaStats.overallResolveComplianceRate)}%</span>
                   </div>
                 </div>
               </div>
