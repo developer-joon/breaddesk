@@ -12,6 +12,7 @@ export async function getAIStats(): Promise<AIStats> {
 }
 
 export async function getTeamStats(): Promise<TeamStats> {
+  // TeamStats is now directly an array, not wrapped in an object
   const { data } = await api.get<ApiResponse<TeamStats>>('/stats/team');
   return data.data;
 }
