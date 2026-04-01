@@ -53,7 +53,7 @@ export default function InquiriesPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await getInquiries(page, 20);
+      const result = await getInquiries({ page, size: 20 });
       setInquiries(result.content);
       setTotalPages(result.totalPages);
     } catch (err) {

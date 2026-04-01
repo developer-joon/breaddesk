@@ -106,8 +106,9 @@ public class TaskService {
         return toResponse(saved);
     }
 
-    public Page<TaskResponse> getAllTasks(Pageable pageable) {
-        return taskRepository.findAll(pageable).map(this::toResponse);
+    public Page<TaskResponse> getAllTasks(String status, Long assigneeId, String priority, Long teamId, String dueDateFrom, String dueDateTo, Pageable pageable) {
+        return taskRepository.findWithFilters(status, priority, assigneeId, teamId, dueDateFrom, dueDateTo, pageable)
+                .map(this::toResponse);
     }
 
     public TaskResponse getTaskById(Long id) {

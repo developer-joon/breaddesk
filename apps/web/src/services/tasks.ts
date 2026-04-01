@@ -21,9 +21,29 @@ import type {
   AssigneeRecommendation,
 } from '@/types';
 
-export async function getTasks(page = 0, size = 20): Promise<Page<TaskResponse>> {
+export interface TaskFilterParams {
+  status?: string;
+  assigneeId?: number;
+  priority?: string;
+  teamId?: number;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+  page?: number;
+  size?: number;
+}
+
+export async function getTasks(filters?: TaskFilterParams): Promise<Page<TaskResponse>> {
   const { data } = await api.get<ApiResponse<Page<TaskResponse>>>('/tasks', {
-    params: { page, size },
+    params: {
+      page: filters?.page || 0,
+      size: filters?.size || 20,
+      ...(filters?.status && { status: filters.status }),
+      ...(filters?.assigneeId && { assigneeId: filters.assigneeId }),
+      ...(filters?.priority && { priority: filters.priority }),
+      ...(filters?.teamId && { teamId: filters.teamId }),
+      ...(filters?.dueDateFrom && { dueDateFrom: filters.dueDateFrom }),
+      ...(filters?.dueDateTo && { dueDateTo: filters.dueDateTo }),
+    },
   });
   return data.data;
 }

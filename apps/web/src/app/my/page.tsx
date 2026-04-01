@@ -33,7 +33,7 @@ export default function MyPage() {
     setError(null);
     try {
       const [tasksResult, notifResult] = await Promise.allSettled([
-        getTasks(0, 50),
+        getTasks({ page: 0, size: 50 }),
         getNotifications(0, 10, true),
       ]);
 

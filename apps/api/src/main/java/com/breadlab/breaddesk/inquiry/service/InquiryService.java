@@ -77,8 +77,9 @@ public class InquiryService {
         return toResponse(saved);
     }
 
-    public Page<InquiryResponse> getAllInquiries(Pageable pageable) {
-        return inquiryRepository.findAll(pageable).map(this::toResponse);
+    public Page<InquiryResponse> getAllInquiries(String status, String category, Long assigneeId, Long teamId, Pageable pageable) {
+        return inquiryRepository.findWithFilters(status, category, assigneeId, teamId, pageable)
+                .map(this::toResponse);
     }
 
     public InquiryResponse getInquiryById(Long id) {

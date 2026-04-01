@@ -51,7 +51,7 @@ export function KanbanBoard({ kanbanData, onTaskClick, onStatusChange }: KanbanB
     return kanbanData[key] || [];
   };
 
-  const getUrgencyBadgeVariant = (urgency: TaskUrgency) => {
+  const getUrgencyBadgeVariant = (urgency: TaskUrgency): 'default' | 'success' | 'warning' | 'danger' | 'info' => {
     switch (urgency) {
       case 'CRITICAL':
         return 'danger';
@@ -182,7 +182,7 @@ function DraggableTaskCard({
 }: {
   task: TaskResponse;
   onClick: () => void;
-  getUrgencyBadgeVariant: (urgency: TaskUrgency) => string;
+  getUrgencyBadgeVariant: (urgency: TaskUrgency) => 'default' | 'success' | 'warning' | 'danger' | 'info';
   getUrgencyLabel: (urgency: TaskUrgency) => string;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({

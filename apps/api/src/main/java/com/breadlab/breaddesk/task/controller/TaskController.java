@@ -46,8 +46,15 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<TaskResponse>>> getAllTasks(Pageable pageable) {
-        Page<TaskResponse> responses = taskService.getAllTasks(pageable);
+    public ResponseEntity<ApiResponse<Page<TaskResponse>>> getAllTasks(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long assigneeId,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) Long teamId,
+            @RequestParam(required = false) String dueDateFrom,
+            @RequestParam(required = false) String dueDateTo,
+            Pageable pageable) {
+        Page<TaskResponse> responses = taskService.getAllTasks(status, assigneeId, priority, teamId, dueDateFrom, dueDateTo, pageable);
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
