@@ -108,8 +108,17 @@ export default function LoginPage() {
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>데모 계정으로 체험하기</p>
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setEmail('demo@breaddesk.com');
+              setPassword('demo1234');
+            }}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
+          >
+            데모 계정으로 체험하기
+          </button>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">demo@breaddesk.com / demo1234</p>
         </div>
       </div>

@@ -492,30 +492,35 @@ export interface StatsOverview {
 }
 
 export interface AIStats {
-  totalAIResponses: number;
-  aiAcceptRate: number;
-  avgConfidence: number;
-  topResolvedCategories: Array<{ category: string; count: number }>;
+  totalAIAnswered: number;
+  autoResolvedCount: number;
+  autoResolvedRate: number;
+  escalatedCount: number;
+  escalatedRate: number;
+  confidenceDistribution: Record<string, number>;
 }
 
-export interface TeamStats {
-  members: Array<{
-    memberId: number;
-    memberName: string;
-    assignedTasks: number;
-    completedTasks: number;
-    avgCompletionHours: number;
-  }>;
+export interface TeamMemberStats {
+  memberId: number;
+  memberName: string;
+  assignedCount: number;
+  completedCount: number;
+  avgProcessingTimeHours: number;
 }
+
+export type TeamStats = TeamMemberStats[];
 
 export interface WeeklyReport {
   weekStart: string;
   weekEnd: string;
-  totalInquiries: number;
-  totalTasks: number;
+  newInquiries: number;
+  resolvedInquiries: number;
+  newTasks: number;
   completedTasks: number;
+  aiResolutionRate: number;
   slaComplianceRate: number;
-  topIssues: Array<{ issue: string; count: number }>;
+  dailyInquiryCounts?: Record<string, number>;
+  topPerformers?: Array<{ memberName: string; completedCount: number }>;
 }
 
 // ─── Task Relations ───────────────────────────────────────
