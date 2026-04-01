@@ -51,25 +51,7 @@ export default function StatsPage() {
     return <ErrorMessage message={error} onRetry={loadAllStats} />;
   }
 
-  // Calculate average confidence from distribution
-  const calculateAvgConfidence = (distribution: Record<string, number>): number => {
-    const entries = Object.entries(distribution);
-    if (entries.length === 0) return 0;
-    
-    let totalWeighted = 0;
-    let totalCount = 0;
-    
-    entries.forEach(([range, count]) => {
-      let weight = 0.5; // default medium
-      if (range.includes('0.8+') || range.includes('HIGH')) weight = 0.9;
-      else if (range.includes('<0.5') || range.includes('LOW')) weight = 0.3;
-      
-      totalWeighted += weight * count;
-      totalCount += count;
-    });
-    
-    return totalCount > 0 ? totalWeighted / totalCount : 0;
-  };
+
 
   return (
     <div className="p-6 space-y-6">
@@ -103,7 +85,7 @@ export default function StatsPage() {
       {aiStats && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">🤖 AI 성과</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
               <div className="text-sm text-gray-600 dark:text-gray-400">총 AI 응답</div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -114,12 +96,6 @@ export default function StatsPage() {
               <div className="text-sm text-gray-600 dark:text-gray-400">자동 해결률</div>
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {(aiStats.autoResolvedRate * 100).toFixed(1)}%
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">평균 신뢰도</div>
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {(calculateAvgConfidence(aiStats.confidenceDistribution) * 100).toFixed(1)}%
               </div>
             </div>
           </div>

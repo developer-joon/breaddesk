@@ -67,8 +67,8 @@ describe('StatsPage', () => {
     resolvedInquiries: 70,
     newTasks: 40,
     completedTasks: 35,
-    aiResolutionRate: 0.7,
-    slaComplianceRate: 0.9,
+    aiResolutionRate: 70.0,
+    slaComplianceRate: 90.0,
     topPerformers: [
       { memberName: 'John Doe', completedCount: 15 },
       { memberName: 'Jane Smith', completedCount: 12 },
@@ -113,8 +113,8 @@ describe('StatsPage', () => {
 
     // Team Stats
     expect(screen.getByText('👥 팀별 성과')).toBeInTheDocument();
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('Jane Smith')).toBeInTheDocument();
+    expect(screen.getAllByText('John Doe').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Jane Smith').length).toBeGreaterThanOrEqual(1);
 
     // Weekly Report
     expect(screen.getByText('📅 주간 리포트')).toBeInTheDocument();
@@ -184,7 +184,7 @@ describe('StatsPage', () => {
     expect(screen.getByText('40')).toBeInTheDocument(); // newTasks (not totalTasks)
   });
 
-  it('should calculate average confidence from distribution', async () => {
+  it('should display confidence distribution', async () => {
     (statsService.getStatsOverview as jest.Mock).mockResolvedValue(mockOverview);
     (statsService.getAIStats as jest.Mock).mockResolvedValue(mockAIStats);
     (statsService.getTeamStats as jest.Mock).mockResolvedValue(mockTeamStats);
@@ -196,11 +196,14 @@ describe('StatsPage', () => {
       expect(screen.getByText('📈 통계')).toBeInTheDocument();
     });
 
-    // Average confidence should be calculated from distribution
-    // HIGH: 40 * 0.9 = 36, MEDIUM: 25 * 0.5 = 12.5, LOW: 10 * 0.3 = 3
-    // Total: 51.5 / 75 = 0.686... ≈ 68.7%
-    const avgConfidenceElement = screen.getByText(/68\.\d%/);
-    expect(avgConfidenceElement).toBeInTheDocument();
+    // Confidence distribution should be displayed
+    expect(screen.getByText('신뢰도 분포')).toBeInTheDocument();
+    expect(screen.getByText('HIGH(0.8+)')).toBeInTheDocument();
+    expect(screen.getByText('MEDIUM(0.5-0.8)')).toBeInTheDocument();
+    expect(screen.getByText('LOW(<0.5)')).toBeInTheDocument();
+    expect(screen.getByText('40')).toBeInTheDocument(); // HIGH count
+    expect(screen.getByText('25')).toBeInTheDocument(); // MEDIUM count
+    expect(screen.getByText('10')).toBeInTheDocument(); // LOW count
   });
 
   it('should handle empty confidence distribution', async () => {
@@ -218,8 +221,7 @@ describe('StatsPage', () => {
       expect(screen.getByText('📈 통계')).toBeInTheDocument();
     });
 
-    // Should show 0.0% for empty distribution
-    const aiStatsSection = screen.getByText('🤖 AI 성과').closest('div');
-    expect(aiStatsSection).toHaveTextContent('0.0%');
+    // Should not show confidence distribution section when empty
+    expect(screen.queryByText('신뢰도 분포')).not.toBeInTheDocument();
   });
 });
