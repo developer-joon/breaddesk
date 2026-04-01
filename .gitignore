@@ -29,6 +29,7 @@ Thumbs.db
 # Java
 *.class
 *.jar
+!**/gradle-wrapper.jar
 *.war
 *.log
 
