@@ -9,6 +9,7 @@ import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { Modal } from '@/components/ui/Modal';
 import { useFeaturesStore } from '@/stores/features';
 import { getMembers, createMember, updateMember, deleteMember } from '@/services/members';
+import { TeamsManagement } from '@/components/settings/TeamsManagement';
 import {
   getChannels,
   updateChannel,
@@ -840,54 +841,7 @@ export default function SettingsPage() {
 
             {/* Teams Tab */}
             {!isLoading && !error && activeTab === 'teams' && (
-              <div className="space-y-4">
-                <div className="mb-4">
-                  <h2 className="text-lg font-semibold">🏢 팀 관리 (멀티 테넌트)</h2>
-                  <p className="text-sm text-gray-600 mt-1">
-                    여러 팀/테넌트를 관리합니다. (Phase 2 기능 예정)
-                  </p>
-                </div>
-
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                  <div className="flex items-start gap-3">
-                    <span className="text-3xl">🚧</span>
-                    <div>
-                      <h3 className="font-semibold text-yellow-900 mb-2">Phase 2 기능 안내</h3>
-                      <p className="text-sm text-yellow-800 mb-3">
-                        멀티 테넌트/팀 기능은 Phase 2에서 구현될 예정입니다. 다음 기능이 포함됩니다:
-                      </p>
-                      <ul className="list-disc list-inside text-sm text-yellow-800 space-y-1">
-                        <li><code className="bg-yellow-100 px-1 rounded">teams</code> 테이블 추가 (team_id, team_name, settings)</li>
-                        <li>멤버, 문의, 업무에 <code className="bg-yellow-100 px-1 rounded">team_id</code> 컬럼 추가</li>
-                        <li>팀별 데이터 격리 (Row-Level Security)</li>
-                        <li>팀 전환 UI (헤더 드롭다운)</li>
-                        <li>팀별 통계 및 설정 관리</li>
-                      </ul>
-                      <p className="text-sm text-yellow-800 mt-3">
-                        현재는 단일 팀(테넌트)만 지원하며, 모든 데이터는 기본 팀에 속합니다.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold mb-4">현재 팀 정보</h3>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">팀 이름:</span>
-                      <span className="font-medium">기본 팀 (Default)</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">팀원 수:</span>
-                      <span className="font-medium">{teamMembers.length}명</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">테넌트 ID:</span>
-                      <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">default-tenant-001</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <TeamsManagement />
             )}
           </div>
         </div>

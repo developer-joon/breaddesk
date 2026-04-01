@@ -66,6 +66,10 @@ public class Task {
     @JoinColumn(name = "assignee_id")
     private Member assignee;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private com.breadlab.breaddesk.team.entity.Team team;
+
     @OneToOne(mappedBy = "task", fetch = FetchType.LAZY)
     private Inquiry inquiry;
 

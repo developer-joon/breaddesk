@@ -31,4 +31,16 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
 
     @Query("SELECT i FROM Inquiry i WHERE i.message LIKE %:keyword% OR i.senderName LIKE %:keyword%")
     List<Inquiry> searchByKeyword(@Param("keyword") String keyword);
+
+    @Query("SELECT i FROM Inquiry i WHERE "
+            + "(:status IS NULL OR i.status = CAST(:status AS com.breadlab.breaddesk.inquiry.entity.InquiryStatus)) "
+            + "AND (:category IS NULL OR i.category = :category) "
+            + "AND (:assigneeId IS NULL OR i.assignee.id = :assigneeId) "
+            + "AND (:teamId IS NULL OR i.team.id = :teamId)")
+    Page<Inquiry> findWithFilters(
+            @Param("status") String status,
+            @Param("category") String category,
+            @Param("assigneeId") Long assigneeId,
+            @Param("teamId") Long teamId,
+            Pageable pageable);
 }

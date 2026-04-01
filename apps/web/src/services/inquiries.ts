@@ -10,9 +10,25 @@ import type {
   ConvertToTaskRequest,
 } from '@/types';
 
-export async function getInquiries(page = 0, size = 20): Promise<Page<InquiryResponse>> {
+export interface InquiryFilterParams {
+  status?: string;
+  category?: string;
+  assigneeId?: number;
+  teamId?: number;
+  page?: number;
+  size?: number;
+}
+
+export async function getInquiries(filters?: InquiryFilterParams): Promise<Page<InquiryResponse>> {
   const { data } = await api.get<ApiResponse<Page<InquiryResponse>>>('/inquiries', {
-    params: { page, size },
+    params: {
+      page: filters?.page || 0,
+      size: filters?.size || 20,
+      ...(filters?.status && { status: filters.status }),
+      ...(filters?.category && { category: filters.category }),
+      ...(filters?.assigneeId && { assigneeId: filters.assigneeId }),
+      ...(filters?.teamId && { teamId: filters.teamId }),
+    },
   });
   return data.data;
 }
@@ -48,11 +64,10 @@ export async function addInquiryMessage(
 
 export async function convertInquiryToTask(
   id: number,
-  req: ConvertToTaskRequest,
-): Promise<InquiryResponse> {
-  const { data } = await api.post<ApiResponse<InquiryResponse>>(
-    `/inquiries/${id}/convert-to-task`,
-    req,
+): Promise<any> {
+  // 백엔드 엔드포인트: POST /api/v1/tasks/from-inquiry/{inquiryId}
+  const { data } = await api.post<ApiResponse<any>>(
+    `/tasks/from-inquiry/${id}`,
   );
   return data.data;
 }

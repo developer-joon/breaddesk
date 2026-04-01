@@ -34,8 +34,13 @@ public class InquiryController {
 
     @Operation(summary = "문의 목록 조회", description = "모든 문의를 페이지네이션으로 조회합니다.")
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<InquiryResponse>>> getAllInquiries(Pageable pageable) {
-        Page<InquiryResponse> responses = inquiryService.getAllInquiries(pageable);
+    public ResponseEntity<ApiResponse<Page<InquiryResponse>>> getAllInquiries(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Long assigneeId,
+            @RequestParam(required = false) Long teamId,
+            Pageable pageable) {
+        Page<InquiryResponse> responses = inquiryService.getAllInquiries(status, category, assigneeId, teamId, pageable);
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 

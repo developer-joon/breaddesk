@@ -33,4 +33,20 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     @Query("SELECT t FROM Task t WHERE t.slaResponseDeadline IS NOT NULL OR t.slaResolveDeadline IS NOT NULL")
     java.util.List<Task> findAllWithSlaDeadlines();
+
+    @Query("SELECT t FROM Task t WHERE "
+            + "(:status IS NULL OR t.status = CAST(:status AS com.breadlab.breaddesk.task.entity.TaskStatus)) "
+            + "AND (:priority IS NULL OR t.urgency = CAST(:priority AS com.breadlab.breaddesk.task.entity.TaskUrgency)) "
+            + "AND (:assigneeId IS NULL OR t.assignee.id = :assigneeId) "
+            + "AND (:teamId IS NULL OR t.team.id = :teamId) "
+            + "AND (CAST(:dueDateFrom AS timestamp) IS NULL OR t.dueDate >= CAST(:dueDateFrom AS timestamp)) "
+            + "AND (CAST(:dueDateTo AS timestamp) IS NULL OR t.dueDate <= CAST(:dueDateTo AS timestamp))")
+    Page<Task> findWithFilters(
+            @Param("status") String status,
+            @Param("priority") String priority,
+            @Param("assigneeId") Long assigneeId,
+            @Param("teamId") Long teamId,
+            @Param("dueDateFrom") String dueDateFrom,
+            @Param("dueDateTo") String dueDateTo,
+            Pageable pageable);
 }

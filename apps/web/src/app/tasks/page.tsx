@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
+import { KanbanBoard } from '@/components/tasks/KanbanBoard';
 import { useFeaturesStore } from '@/stores/features';
 import {
   getKanbanView,
@@ -238,71 +239,11 @@ export default function TasksPage() {
 
         {!isLoading && !error && (
           <div className="flex-1 overflow-x-auto custom-scrollbar">
-            <div className="flex gap-4 h-full pb-4" style={{ minWidth: '1000px' }}>
-              {COLUMNS.map((column) => {
-                const columnTasks = getTasksByStatus(column.status);
-                return (
-                  <div
-                    key={column.status}
-                    className="flex-1 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 flex flex-col min-w-[280px] snap-start"
-                  >
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900 dark:text-white">{column.label}</h3>
-                        <span className="px-2 py-1 bg-white dark:bg-gray-800 rounded-full text-sm font-medium">
-                          {columnTasks.length}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3 overflow-y-auto flex-1">
-                      {columnTasks.length === 0 ? (
-                        <p className="text-center text-sm text-gray-400 py-4">없음</p>
-                      ) : (
-                        columnTasks.map((task) => (
-                          <div
-                            key={task.id}
-                            onClick={() => setSelectedTask(task)}
-                            className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
-                          >
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge variant={getUrgencyBadgeVariant(task.urgency)}>
-                                {getUrgencyLabel(task.urgency)}
-                              </Badge>
-                              <span className="text-xs text-gray-500">{task.type}</span>
-                            </div>
-                            <h4 className="font-medium text-gray-900 mb-2 line-clamp-2">
-                              {task.title}
-                            </h4>
-                            {task.tags && task.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {task.tags.map((t) => (
-                                  <span
-                                    key={t.id}
-                                    className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 text-xs rounded"
-                                  >
-                                    {t.tag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                              {task.assigneeId && <span>👤 #{task.assigneeId}</span>}
-                              {task.dueDate && <span>⏰ {task.dueDate}</span>}
-                            </div>
-                            {(task.slaResponseBreached || task.slaResolveBreached) && (
-                              <div className="mt-2">
-                                <Badge variant="danger">SLA 위반</Badge>
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <KanbanBoard
+              kanbanData={kanbanData}
+              onTaskClick={setSelectedTask}
+              onStatusChange={handleStatusChange}
+            />
           </div>
         )}
 
