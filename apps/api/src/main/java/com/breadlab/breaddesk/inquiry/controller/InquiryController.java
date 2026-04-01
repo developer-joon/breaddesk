@@ -36,11 +36,9 @@ public class InquiryController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<InquiryResponse>>> getAllInquiries(
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String category,
-            @RequestParam(required = false) Long assigneeId,
             @RequestParam(required = false) Long teamId,
             Pageable pageable) {
-        Page<InquiryResponse> responses = inquiryService.getAllInquiries(status, category, assigneeId, teamId, pageable);
+        Page<InquiryResponse> responses = inquiryService.getAllInquiries(status, teamId, pageable);
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
@@ -68,6 +66,13 @@ public class InquiryController {
         InquiryMessageResponse response = inquiryService.addMessage(id, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "AI 태스크 생성 미리보기", description = "AI가 자동 생성한 태스크 내용을 미리 확인합니다.")
+    @GetMapping("/{id}/generate-task-preview")
+    public ResponseEntity<ApiResponse<TaskPreviewResponse>> generateTaskPreview(@PathVariable Long id) {
+        TaskPreviewResponse response = inquiryService.generateTaskPreview(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @Operation(summary = "문의를 태스크로 전환", description = "문의를 태스크로 전환합니다.")
