@@ -20,4 +20,6 @@ public interface KnowledgeDocumentRepository extends JpaRepository<KnowledgeDocu
             "ORDER BY embedding <=> cast(:queryVector as vector) LIMIT :limit",
             nativeQuery = true)
     List<Object[]> findSimilarDocuments(@Param("queryVector") String queryVector, @Param("limit") int limit);
+
+    boolean existsBySourceAndSourceId(String source, String sourceId);
 }
