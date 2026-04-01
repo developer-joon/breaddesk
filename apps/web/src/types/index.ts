@@ -394,4 +394,43 @@ export interface SLARule {
 }
 
 // ─── Team ─────────────────────────────────────────────────
-export * from './team';
+export type TeamMemberRole = 'LEADER' | 'MEMBER';
+
+export interface TeamResponse {
+  id: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  memberCount?: number;
+}
+
+export interface TeamRequest {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface TeamMemberResponse {
+  id: number;
+  teamId: number;
+  memberId: number;
+  memberName?: string;
+  memberEmail?: string;
+  role: TeamMemberRole;
+  joinedAt: string;
+}
+
+export interface AddTeamMemberRequest {
+  memberId: number;
+  role: TeamMemberRole;
+}
+
+// AI Task Generation
+export interface GeneratedTaskData {
+  title: string;
+  description: string;
+  checklist: string[];
+  urgency?: TaskUrgency;
+}
