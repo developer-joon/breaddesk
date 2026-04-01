@@ -75,15 +75,9 @@ public class AssignmentRecommendationService {
 
         score -= (currentTasks * 10); // Penalty for each active task
 
-        // Factor 2: Team match (bonus if same team)
-        if (task.getTeam() != null && member.getTeam() != null && 
-            task.getTeam().getId().equals(member.getTeam().getId())) {
-            score += 20;
-        }
-
-        // Factor 3: Role match (simple heuristic - could use AI)
-        if (member.getRole() != null && member.getRole().contains("MANAGER")) {
-            score += 10; // Managers get slight boost
+        // Factor 2: Role-based boost
+        if (member.getRole() != null && member.getRole() == com.breadlab.breaddesk.member.entity.MemberRole.ADMIN) {
+            score += 10; // Admins get slight boost
         }
 
         // Ensure score is positive
@@ -110,15 +104,9 @@ public class AssignmentRecommendationService {
             reasons.add("Moderate workload (" + workload + " tasks)");
         }
 
-        // Team match
-        if (task.getTeam() != null && member.getTeam() != null && 
-            task.getTeam().getId().equals(member.getTeam().getId())) {
-            reasons.add("Same team");
-        }
-
         // Role
-        if (member.getRole() != null && member.getRole().contains("MANAGER")) {
-            reasons.add("Experienced manager");
+        if (member.getRole() != null && member.getRole() == com.breadlab.breaddesk.member.entity.MemberRole.ADMIN) {
+            reasons.add("Admin privileges");
         }
 
         return String.join(" • ", reasons);

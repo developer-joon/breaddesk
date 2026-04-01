@@ -53,7 +53,7 @@ public class PortalController {
                 return ResponseEntity.status(403).body("Invalid or expired token");
             }
 
-            List<InquiryMessage> messages = inquiryMessageRepository.findByInquiryId(inquiryId);
+            List<InquiryMessage> messages = inquiryMessageRepository.findByInquiryIdOrderByCreatedAtAsc(inquiryId);
 
             PortalInquiryView view = buildPortalView(inquiry, messages);
             return ResponseEntity.ok(view);
@@ -88,8 +88,8 @@ public class PortalController {
             }
 
             InquiryMessage msg = InquiryMessage.builder()
-                    .inquiryId(inquiryId)
-                    .senderType("CUSTOMER")
+                    .inquiry(inquiry)
+                    .role(com.breadlab.breaddesk.inquiry.entity.InquiryMessageRole.USER)
                     .message(message)
                     .createdAt(LocalDateTime.now())
                     .build();
@@ -145,7 +145,7 @@ public class PortalController {
                 inquiry.getAiResponse(),
                 messages.stream()
                         .map(m -> new MessageView(
-                                m.getSenderType(),
+                                m.getRole() != null ? m.getRole().toString() : "UNKNOWN",
                                 m.getMessage(),
                                 m.getCreatedAt()
                         ))

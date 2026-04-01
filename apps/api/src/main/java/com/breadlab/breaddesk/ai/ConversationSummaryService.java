@@ -34,11 +34,12 @@ public class ConversationSummaryService {
         Inquiry inquiry = inquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new IllegalArgumentException("Inquiry not found: " + inquiryId));
 
-        List<InquiryMessage> messages = inquiryMessageRepository.findByInquiryId(inquiryId);
+        List<InquiryMessage> messages = inquiryMessageRepository.findByInquiryIdOrderByCreatedAtAsc(inquiryId);
 
         try {
-            String prompt = buildSummaryPrompt(inquiry, messages);
-            LLMResponse response = llmProvider.chat(prompt);
+            String systemPrompt = "You are a concise conversation summarizer for customer support.";
+            String userMessage = buildSummaryPrompt(inquiry, messages);
+            LLMResponse response = llmProvider.chat(systemPrompt, userMessage, List.of());
             
             return response.content();
         } catch (Exception e) {
@@ -55,7 +56,7 @@ public class ConversationSummaryService {
         if (!messages.isEmpty()) {
             conversation.append("Follow-up messages:\n");
             for (InquiryMessage msg : messages) {
-                String sender = msg.getSenderType() != null ? msg.getSenderType() : "Unknown";
+                String sender = msg.getRole() != null ? msg.getRole().toString() : "Unknown";
                 conversation.append(String.format("[%s] %s\n", sender, msg.getMessage()));
             }
         }
@@ -85,11 +86,12 @@ public class ConversationSummaryService {
         Inquiry inquiry = inquiryRepository.findById(inquiryId)
                 .orElseThrow(() -> new IllegalArgumentException("Inquiry not found: " + inquiryId));
 
-        List<InquiryMessage> messages = inquiryMessageRepository.findByInquiryId(inquiryId);
+        List<InquiryMessage> messages = inquiryMessageRepository.findByInquiryIdOrderByCreatedAtAsc(inquiryId);
 
         try {
-            String prompt = buildBulletPrompt(inquiry, messages);
-            LLMResponse response = llmProvider.chat(prompt);
+            String systemPrompt = "You are a bullet-point summarizer for customer support conversations.";
+            String userMessage = buildBulletPrompt(inquiry, messages);
+            LLMResponse response = llmProvider.chat(systemPrompt, userMessage, List.of());
             
             return response.content();
         } catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.breadlab.breaddesk.ai;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,8 +28,9 @@ public class SentimentAnalysisService {
         }
 
         try {
-            String prompt = buildSentimentPrompt(text);
-            LLMResponse response = llmProvider.chat(prompt);
+            String systemPrompt = "You are a sentiment analysis assistant. Respond with ONLY ONE WORD.";
+            String userMessage = buildSentimentPrompt(text);
+            LLMResponse response = llmProvider.chat(systemPrompt, userMessage, List.of());
             
             String sentiment = response.content().trim().toUpperCase();
             
@@ -68,8 +70,6 @@ public class SentimentAnalysisService {
                 - POSITIVE: Customer is satisfied, grateful, or complimentary
                 
                 Customer message:
-                "%s"
-                
-                Sentiment:""", text);
+                %s""", text);
     }
 }
