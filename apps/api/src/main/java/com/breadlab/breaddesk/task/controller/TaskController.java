@@ -229,6 +229,16 @@ public class TaskController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
+    // ── Calendar API ──
+
+    @GetMapping("/calendar")
+    public ResponseEntity<ApiResponse<List<TaskResponse>>> getCalendar(
+            @RequestParam String start,
+            @RequestParam String end) {
+        List<TaskResponse> tasks = taskService.getTasksByDueDateRange(start, end);
+        return ResponseEntity.ok(ApiResponse.success(tasks));
+    }
+
     // ── AI Assignee Recommendation ──
 
     @GetMapping("/{taskId}/recommend-assignee")

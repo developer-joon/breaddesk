@@ -410,4 +410,22 @@ public class TaskService {
                 .createdAt(log.getCreatedAt())
                 .build();
     }
+
+    /**
+     * Get tasks by due date range for calendar view
+     */
+    public List<TaskResponse> getTasksByDueDateRange(String start, String end) {
+        try {
+            LocalDateTime startDate = LocalDateTime.parse(start + "T00:00:00");
+            LocalDateTime endDate = LocalDateTime.parse(end + "T23:59:59");
+            
+            return taskRepository.findAll().stream()
+                    .filter(t -> t.getDueDate() != null)
+                    .filter(t -> !t.getDueDate().isBefore(startDate) && !t.getDueDate().isAfter(endDate))
+                    .map(this::toResponse)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD");
+        }
+    }
 }

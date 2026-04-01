@@ -38,6 +38,12 @@ dependencies {
     // AI/HTTP
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
+    // Email support (IMAP/SMTP)
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // WebSocket support
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
     // HTML parsing
     implementation 'org.jsoup:jsoup:1.18.3'
 

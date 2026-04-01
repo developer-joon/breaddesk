@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
     long countByStatus(TaskStatus status);
@@ -49,4 +51,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("dueDateFrom") String dueDateFrom,
             @Param("dueDateTo") String dueDateTo,
             Pageable pageable);
+    
+    java.util.List<Task> findAllByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 }
