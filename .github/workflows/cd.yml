@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ghcr.io/botjoonwoo
+  IMAGE_PREFIX: ghcr.io/developer-joon
 
 jobs:
   build-and-push:
@@ -104,17 +104,17 @@ jobs:
         run: |
           kubectl set image deployment/breaddesk-api \
             breaddesk-api=${{ env.IMAGE_PREFIX }}/breaddesk-api:${{ needs.build-and-push.outputs.image-tag }} \
-            -n breaddesk
-          kubectl rollout status deployment/breaddesk-api -n breaddesk --timeout=5m
+            -n openclaw
+          kubectl rollout status deployment/breaddesk-api -n openclaw --timeout=5m
       
       - name: Update Web deployment
         run: |
           kubectl set image deployment/breaddesk-web \
             breaddesk-web=${{ env.IMAGE_PREFIX }}/breaddesk-web:${{ needs.build-and-push.outputs.image-tag }} \
-            -n breaddesk
-          kubectl rollout status deployment/breaddesk-web -n breaddesk --timeout=5m
+            -n openclaw
+          kubectl rollout status deployment/breaddesk-web -n openclaw --timeout=5m
       
       - name: Verify deployment
         run: |
-          kubectl get pods -n breaddesk
-          kubectl get services -n breaddesk
+          kubectl get pods -n openclaw
+          kubectl get services -n openclaw
