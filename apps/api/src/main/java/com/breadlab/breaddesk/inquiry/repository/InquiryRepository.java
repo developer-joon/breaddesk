@@ -43,4 +43,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
             @Param("assigneeId") Long assigneeId,
             @Param("teamId") Long teamId,
             Pageable pageable);
+    
+    List<Inquiry> findAllByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 }

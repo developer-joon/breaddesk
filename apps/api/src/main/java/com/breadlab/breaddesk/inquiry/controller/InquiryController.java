@@ -1,5 +1,6 @@
 package com.breadlab.breaddesk.inquiry.controller;
 
+import com.breadlab.breaddesk.ai.ConversationSummaryService;
 import com.breadlab.breaddesk.common.dto.ApiResponse;
 import com.breadlab.breaddesk.inquiry.dto.*;
 import com.breadlab.breaddesk.inquiry.service.InquiryService;
@@ -23,7 +24,7 @@ public class InquiryController {
 
     private final InquiryService inquiryService;
     private final SimilarInquiryService similarInquiryService;
-    private final com.breadlab.breaddesk.inquiry.service.InquiryPatternService inquiryPatternService;
+    private final ConversationSummaryService conversationSummaryService;
 
     @Operation(summary = "문의 생성", description = "새로운 고객 문의를 생성합니다.")
     @PostMapping
@@ -94,20 +95,17 @@ public class InquiryController {
         return ResponseEntity.ok(ApiResponse.success(similar));
     }
 
+    @Operation(summary = "문의 대화 요약", description = "AI가 문의 대화를 요약합니다.")
+    @GetMapping("/{id}/summary")
+    public ResponseEntity<ApiResponse<String>> getSummary(@PathVariable Long id) {
+        String summary = conversationSummaryService.generateSummary(id);
+        return ResponseEntity.ok(ApiResponse.success(summary));
+    }
+
     @Operation(summary = "문의 삭제", description = "문의를 삭제합니다.")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteInquiry(@PathVariable Long id) {
         inquiryService.deleteInquiry(id);
         return ResponseEntity.ok(ApiResponse.success(null));
-    }
-
-    @Operation(summary = "반복 문의 패턴 감지", description = "벡터 클러스터링으로 반복되는 문의 패턴을 찾습니다.")
-    @GetMapping("/patterns")
-    public ResponseEntity<ApiResponse<List<com.breadlab.breaddesk.inquiry.service.InquiryPatternService.InquiryPattern>>> getRepeatedPatterns(
-            @RequestParam(defaultValue = "3") int minClusterSize,
-            @RequestParam(defaultValue = "0.85") float similarityThreshold,
-            @RequestParam(defaultValue = "10") int limit) {
-        var patterns = inquiryPatternService.findRepeatedPatterns(minClusterSize, similarityThreshold, limit);
-        return ResponseEntity.ok(ApiResponse.success(patterns));
     }
 }

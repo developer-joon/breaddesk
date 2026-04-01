@@ -62,38 +62,4 @@ public class EmbeddingService {
     public List<String> chunk(String text) {
         return chunk(text, 500, 100);
     }
-
-    /**
-     * Convert float array to PostgreSQL vector format string
-     * Example: [0.1, 0.2, 0.3] -> "[0.1,0.2,0.3]"
-     */
-    public String floatArrayToString(float[] array) {
-        if (array == null || array.length == 0) {
-            return "[]";
-        }
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < array.length; i++) {
-            if (i > 0) sb.append(",");
-            sb.append(array[i]);
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
-    /**
-     * Parse PostgreSQL vector format string to float array
-     * Example: "[0.1,0.2,0.3]" -> [0.1, 0.2, 0.3]
-     */
-    public float[] stringToFloatArray(String vectorStr) {
-        if (vectorStr == null || vectorStr.isEmpty() || vectorStr.equals("[]")) {
-            return new float[0];
-        }
-        String cleaned = vectorStr.replace("[", "").replace("]", "").trim();
-        String[] parts = cleaned.split(",");
-        float[] result = new float[parts.length];
-        for (int i = 0; i < parts.length; i++) {
-            result[i] = Float.parseFloat(parts[i].trim());
-        }
-        return result;
-    }
 }

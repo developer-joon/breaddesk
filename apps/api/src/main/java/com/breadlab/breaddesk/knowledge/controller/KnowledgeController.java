@@ -21,7 +21,6 @@ public class KnowledgeController {
 
     private final KnowledgeService knowledgeService;
     private final VectorSearchService vectorSearchService;
-    private final com.breadlab.breaddesk.knowledge.service.ConnectorSyncService connectorSyncService;
 
     @GetMapping("/documents")
     public ResponseEntity<ApiResponse<Page<KnowledgeDocumentEntity>>> getDocuments(
@@ -56,11 +55,5 @@ public class KnowledgeController {
     public ResponseEntity<ApiResponse<KnowledgeConnectorEntity>> updateConnector(
             @PathVariable Long id, @RequestBody KnowledgeConnectorEntity connector) {
         return ResponseEntity.ok(ApiResponse.success(knowledgeService.updateConnector(id, connector)));
-    }
-
-    @PostMapping("/connectors/{id}/sync")
-    public ResponseEntity<ApiResponse<String>> syncConnector(@PathVariable Long id) {
-        connectorSyncService.syncConnector(id);
-        return ResponseEntity.ok(ApiResponse.success("Sync completed successfully"));
     }
 }
