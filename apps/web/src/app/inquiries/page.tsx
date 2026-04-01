@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/Badge';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConvertToTaskModal } from '@/components/inquiries/ConvertToTaskModal';
+import { TeamSelector } from '@/components/layout/TeamSelector';
+import { useCurrentTeam } from '@/components/layout/Header';
 import {
   getInquiries,
   getInquiryById,
@@ -24,6 +27,8 @@ export default function InquiriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
+  const { teamId } = useCurrentTeam();
 
   const fetchInquiries = useCallback(async () => {
     setIsLoading(true);
@@ -146,8 +151,13 @@ export default function InquiriesPage() {
   return (
     <AppLayout>
       <div className="h-full flex flex-col">
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">문의 관리</h1>
+          <TeamSelector 
+            value={teamId} 
+            onChange={() => {}} 
+            className="w-48"
+          />
         </div>
 
         {isLoading && <LoadingSpinner text="문의 목록을 불러오는 중..." />}
@@ -228,6 +238,19 @@ export default function InquiriesPage() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
+                      {!selectedInquiry.taskId && (
+                        <button
+                          onClick={() => setIsConvertModalOpen(true)}
+                          className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
+                        >
+                          📋 태스크 생성
+                        </button>
+                      )}
+                      {selectedInquiry.taskId && (
+                        <span className="text-xs text-gray-600">
+                          태스크 #{selectedInquiry.taskId}
+                        </span>
+                      )}
                       <select
                         value={selectedInquiry.status}
                         onChange={(e) =>
@@ -339,6 +362,30 @@ export default function InquiriesPage() {
           </div>
         )}
       </div>
+
+      {/* Convert to Task Modal */}
+      {selectedInquiry && (
+        <ConvertToTaskModal
+          inquiryId={selectedInquiry.id}
+          isOpen={isConvertModalOpen}
+          onClose={() => setIsConvertModalOpen(false)}
+          onSuccess={(taskId) => {
+            // Update inquiry with task link
+            setSelectedInquiry({
+              ...selectedInquiry,
+              taskId,
+              status: 'ESCALATED',
+            });
+            setInquiries(
+              inquiries.map((inq) =>
+                inq.id === selectedInquiry.id
+                  ? { ...inq, taskId, status: 'ESCALATED' as InquiryStatus }
+                  : inq
+              )
+            );
+          }}
+        />
+      )}
     </AppLayout>
   );
 }

@@ -26,8 +26,11 @@ public class InquiryController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<InquiryResponse>>> getAllInquiries(Pageable pageable) {
-        Page<InquiryResponse> responses = inquiryService.getAllInquiries(pageable);
+    public ResponseEntity<ApiResponse<Page<InquiryResponse>>> getAllInquiries(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long teamId,
+            Pageable pageable) {
+        Page<InquiryResponse> responses = inquiryService.getAllInquiries(status, teamId, pageable);
         return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
@@ -52,6 +55,12 @@ public class InquiryController {
         InquiryMessageResponse response = inquiryService.addMessage(id, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response));
+    }
+
+    @GetMapping("/{id}/generate-task-preview")
+    public ResponseEntity<ApiResponse<TaskPreviewResponse>> generateTaskPreview(@PathVariable Long id) {
+        TaskPreviewResponse response = inquiryService.generateTaskPreview(id);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/{id}/convert-to-task")

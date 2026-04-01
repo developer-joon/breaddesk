@@ -8,6 +8,8 @@ import type {
   InquiryMessageRequest,
   InquiryMessageResponse,
   ConvertToTaskRequest,
+  TaskPreviewResponse,
+  TaskResponse,
 } from '@/types';
 
 export async function getInquiries(page = 0, size = 20): Promise<Page<InquiryResponse>> {
@@ -46,11 +48,18 @@ export async function addInquiryMessage(
   return data.data;
 }
 
+export async function generateTaskPreview(id: number): Promise<TaskPreviewResponse> {
+  const { data } = await api.get<ApiResponse<TaskPreviewResponse>>(
+    `/inquiries/${id}/generate-task-preview`,
+  );
+  return data.data;
+}
+
 export async function convertInquiryToTask(
   id: number,
   req: ConvertToTaskRequest,
-): Promise<InquiryResponse> {
-  const { data } = await api.post<ApiResponse<InquiryResponse>>(
+): Promise<TaskResponse> {
+  const { data } = await api.post<ApiResponse<TaskResponse>>(
     `/inquiries/${id}/convert-to-task`,
     req,
   );

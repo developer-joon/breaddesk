@@ -7,6 +7,9 @@ import { Modal } from '@/components/ui/Modal';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { TaskListView } from '@/components/tasks/TaskListView';
+import { TeamSelector } from '@/components/layout/TeamSelector';
+import { useCurrentTeam } from '@/components/layout/Header';
 import {
   getKanbanView,
   createTask,
@@ -22,6 +25,8 @@ import type {
 } from '@/types';
 import toast from 'react-hot-toast';
 
+type ViewMode = 'kanban' | 'list';
+
 const COLUMNS: { status: TaskStatus; label: string }[] = [
   { status: 'WAITING', label: '대기' },
   { status: 'IN_PROGRESS', label: '진행중' },
@@ -36,6 +41,13 @@ export default function TasksPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
+  const { teamId } = useCurrentTeam();
+
+  // Filters
+  const [filterAssignee, setFilterAssignee] = useState<number | undefined>();
+  const [filterUrgency, setFilterUrgency] = useState<TaskUrgency[]>([]);
+  const [filterType, setFilterType] = useState<string>('');
 
   // Create form state
   const [newTitle, setNewTitle] = useState('');
@@ -46,6 +58,17 @@ export default function TasksPage() {
 
   // Comment state
   const [newComment, setNewComment] = useState('');
+
+  // Load view mode from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('taskViewMode') as ViewMode;
+    if (saved) setViewMode(saved);
+  }, []);
+
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    localStorage.setItem('taskViewMode', mode);
+  };
 
   const loadKanban = useCallback(async () => {
     setIsLoading(true);
@@ -65,9 +88,25 @@ export default function TasksPage() {
     loadKanban();
   }, [loadKanban]);
 
+  const filterTasks = (tasks: TaskResponse[]): TaskResponse[] => {
+    return tasks.filter((task) => {
+      if (teamId && task.teamId !== teamId) return false;
+      if (filterAssignee && task.assigneeId !== filterAssignee) return false;
+      if (filterUrgency.length > 0 && !filterUrgency.includes(task.urgency)) return false;
+      if (filterType && task.type !== filterType) return false;
+      return true;
+    });
+  };
+
   const getTasksByStatus = (status: TaskStatus): TaskResponse[] => {
     const column = kanbanData.find((k) => k.status === status);
-    return column?.tasks || [];
+    const tasks = column?.tasks || [];
+    return filterTasks(tasks);
+  };
+
+  const getAllTasks = (): TaskResponse[] => {
+    const allTasks = kanbanData.flatMap((k) => k.tasks);
+    return filterTasks(allTasks);
   };
 
   const getUrgencyBadgeVariant = (urgency: TaskUrgency) => {
@@ -155,22 +194,112 @@ export default function TasksPage() {
     <AppLayout>
       <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">업무 칸반</h1>
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h1 className="text-2xl font-bold text-gray-900">업무 관리</h1>
+            <div className="flex items-center gap-2">
+              {/* View Toggle */}
+              <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+                <button
+                  onClick={() => handleViewModeChange('kanban')}
+                  className={`px-4 py-2 text-sm ${
+                    viewMode === 'kanban'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📊 칸반
+                </button>
+                <button
+                  onClick={() => handleViewModeChange('list')}
+                  className={`px-4 py-2 text-sm border-l border-gray-300 ${
+                    viewMode === 'list'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  📋 목록
+                </button>
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                + 새 업무
+              </button>
+            </div>
           </div>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            + 새 업무
-          </button>
+
+          {/* Filters */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <TeamSelector value={teamId} onChange={() => {}} className="w-40" />
+            
+            <select
+              value={filterAssignee || ''}
+              onChange={(e) =>
+                setFilterAssignee(e.target.value ? Number(e.target.value) : undefined)
+              }
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">전체 담당자</option>
+              {/* TODO: Load members dynamically */}
+            </select>
+
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">전체 유형</option>
+              <option value="GENERAL">일반</option>
+              <option value="TECHNICAL">기술</option>
+              <option value="ACCOUNT">계정</option>
+            </select>
+
+            {/* Urgency multi-select (simplified) */}
+            <div className="flex items-center gap-2">
+              {['LOW', 'NORMAL', 'HIGH', 'CRITICAL'].map((urg) => (
+                <label key={urg} className="flex items-center gap-1 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={filterUrgency.includes(urg as TaskUrgency)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFilterUrgency([...filterUrgency, urg as TaskUrgency]);
+                      } else {
+                        setFilterUrgency(filterUrgency.filter((u) => u !== urg));
+                      }
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-xs">{getUrgencyLabel(urg as TaskUrgency)}</span>
+                </label>
+              ))}
+            </div>
+
+            {(teamId || filterAssignee || filterType || filterUrgency.length > 0) && (
+              <button
+                onClick={() => {
+                  setFilterAssignee(undefined);
+                  setFilterType('');
+                  setFilterUrgency([]);
+                }}
+                className="text-sm text-blue-600 hover:underline"
+              >
+                필터 초기화
+              </button>
+            )}
+          </div>
         </div>
 
-        {isLoading && <LoadingSpinner text="업무 칸반을 불러오는 중..." />}
+        {isLoading && <LoadingSpinner text="업무 목록을 불러오는 중..." />}
         {error && <ErrorMessage message={error} onRetry={loadKanban} />}
 
-        {!isLoading && !error && (
+        {!isLoading && !error && viewMode === 'list' && (
+          <TaskListView tasks={getAllTasks()} onTaskClick={setSelectedTask} />
+        )}
+
+        {!isLoading && !error && viewMode === 'kanban' && (
           <div className="flex-1 overflow-x-auto">
             <div className="flex gap-4 h-full" style={{ minWidth: '1000px' }}>
               {COLUMNS.map((column) => {

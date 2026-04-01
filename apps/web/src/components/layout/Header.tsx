@@ -1,15 +1,59 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth';
 import { Avatar } from '@/components/ui/Avatar';
+import { TeamSelector } from './TeamSelector';
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
+// Global team context (can be upgraded to React Context later)
+let currentTeamId: number | undefined;
+const teamChangeListeners: Set<(teamId: number | undefined) => void> = new Set();
+
+export function useCurrentTeam() {
+  const [teamId, setTeamId] = useState(currentTeamId);
+
+  useEffect(() => {
+    const listener = (id: number | undefined) => setTeamId(id);
+    teamChangeListeners.add(listener);
+    return () => {
+      teamChangeListeners.delete(listener);
+    };
+  }, []);
+
+  const setCurrentTeam = (id: number | undefined) => {
+    currentTeamId = id;
+    if (typeof window !== 'undefined') {
+      if (id) {
+        localStorage.setItem('currentTeamId', String(id));
+      } else {
+        localStorage.removeItem('currentTeamId');
+      }
+    }
+    teamChangeListeners.forEach((listener) => listener(id));
+  };
+
+  useEffect(() => {
+    // Load from localStorage on mount
+    if (typeof window !== 'undefined' && !currentTeamId) {
+      const stored = localStorage.getItem('currentTeamId');
+      if (stored) {
+        const id = Number(stored);
+        currentTeamId = id;
+        setTeamId(id);
+      }
+    }
+  }, []);
+
+  return { teamId, setCurrentTeam };
+}
+
 export function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuthStore();
+  const { teamId, setCurrentTeam } = useCurrentTeam();
 
   return (
     <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between safe-top">
@@ -20,6 +64,11 @@ export function Header({ onMenuClick }: HeaderProps) {
       >
         ☰
       </button>
+
+      {/* Team Selector */}
+      <div className="hidden sm:block ml-4">
+        <TeamSelector value={teamId} onChange={setCurrentTeam} />
+      </div>
 
       {/* Search Bar */}
       <div className="flex-1 max-w-xl mx-4 hidden md:block">

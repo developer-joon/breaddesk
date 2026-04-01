@@ -26,4 +26,16 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             @Param("urgency") TaskUrgency urgency,
             @Param("assigneeId") Long assigneeId,
             Pageable pageable);
+
+    @Query("SELECT t FROM Task t WHERE " +
+            "(:assigneeId IS NULL OR t.assignee.id = :assigneeId) AND " +
+            "(:teamId IS NULL OR t.team.id = :teamId) AND " +
+            "(:urgency IS NULL OR CAST(t.urgency AS string) = :urgency) AND " +
+            "(:type IS NULL OR t.type = :type)")
+    java.util.List<Task> findWithKanbanFilters(
+            @Param("assigneeId") Long assigneeId,
+            @Param("teamId") Long teamId,
+            @Param("urgency") String urgency,
+            @Param("type") String type
+    );
 }

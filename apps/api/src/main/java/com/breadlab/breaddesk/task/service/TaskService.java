@@ -112,8 +112,14 @@ public class TaskService {
         taskRepository.delete(task);
     }
 
-    public TaskKanbanResponse getKanbanView() {
-        List<Task> tasks = taskRepository.findAll();
+    public TaskKanbanResponse getKanbanView(Long assigneeId, Long teamId, String urgency, String type) {
+        List<Task> tasks;
+        
+        if (assigneeId != null || teamId != null || urgency != null || type != null) {
+            tasks = taskRepository.findWithKanbanFilters(assigneeId, teamId, urgency, type);
+        } else {
+            tasks = taskRepository.findAll();
+        }
         
         Map<TaskStatus, List<TaskResponse>> grouped = tasks.stream()
                 .collect(Collectors.groupingBy(

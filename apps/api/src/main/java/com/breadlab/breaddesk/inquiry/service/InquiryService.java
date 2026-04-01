@@ -1,8 +1,10 @@
 package com.breadlab.breaddesk.inquiry.service;
 
 import com.breadlab.breaddesk.ai.AIAnswerService;
+import com.breadlab.breaddesk.ai.AITaskGenerationService;
 import com.breadlab.breaddesk.ai.EscalationService;
 import com.breadlab.breaddesk.common.exception.ResourceNotFoundException;
+import com.breadlab.breaddesk.team.repository.TeamRepository;
 import com.breadlab.breaddesk.inquiry.dto.*;
 import com.breadlab.breaddesk.inquiry.entity.Inquiry;
 import com.breadlab.breaddesk.inquiry.entity.InquiryMessage;
@@ -31,7 +33,9 @@ public class InquiryService {
     private final InquiryMessageRepository inquiryMessageRepository;
     private final TaskRepository taskRepository;
     private final MemberRepository memberRepository;
+    private final TeamRepository teamRepository;
     private final AIAnswerService aiAnswerService;
+    private final AITaskGenerationService taskGenerationService;
     private final EscalationService escalationService;
 
     @Transactional
@@ -65,7 +69,10 @@ public class InquiryService {
         return toResponse(saved);
     }
 
-    public Page<InquiryResponse> getAllInquiries(Pageable pageable) {
+    public Page<InquiryResponse> getAllInquiries(String status, Long teamId, Pageable pageable) {
+        if (status != null || teamId != null) {
+            return inquiryRepository.findWithFilters(status, teamId, pageable).map(this::toResponse);
+        }
         return inquiryRepository.findAll(pageable).map(this::toResponse);
     }
 
@@ -101,18 +108,44 @@ public class InquiryService {
         return toMessageResponse(saved);
     }
 
+    /**
+     * AI 태스크 생성 미리보기
+     */
+    public TaskPreviewResponse generateTaskPreview(Long inquiryId) {
+        Inquiry inquiry = findInquiryOrThrow(inquiryId);
+        var generated = taskGenerationService.generateTaskFromInquiry(inquiry);
+
+        return new TaskPreviewResponse(
+                generated.title(),
+                generated.description(),
+                generated.checklist(),
+                generated.category(),
+                generated.urgency(),
+                inquiry.getSenderName(),
+                inquiry.getSenderEmail(),
+                inquiry.getId()
+        );
+    }
+
     @Transactional
     public InquiryResponse convertToTask(Long inquiryId, ConvertToTaskRequest request) {
         Inquiry inquiry = findInquiryOrThrow(inquiryId);
 
+        // Use AI-generated data if not provided in request
+        String title = request.getTitle();
+        String description = request.getDescription();
+        String type = request.getType();
+        com.breadlab.breaddesk.task.entity.TaskUrgency urgency = request.getUrgency();
+
         Task task = Task.builder()
-                .title(request.getTitle())
-                .description(request.getDescription() != null ? request.getDescription() : inquiry.getMessage())
-                .type(request.getType() != null ? request.getType() : "GENERAL")
-                .urgency(request.getUrgency() != null ? request.getUrgency() : com.breadlab.breaddesk.task.entity.TaskUrgency.NORMAL)
+                .title(title != null ? title : inquiry.getMessage().substring(0, Math.min(50, inquiry.getMessage().length())))
+                .description(description != null ? description : inquiry.getMessage())
+                .type(type != null ? type : "GENERAL")
+                .urgency(urgency != null ? urgency : com.breadlab.breaddesk.task.entity.TaskUrgency.NORMAL)
                 .status(TaskStatus.WAITING)
                 .requesterName(inquiry.getSenderName())
                 .requesterEmail(inquiry.getSenderEmail())
+                .team(inquiry.getTeam()) // Copy team from inquiry
                 .createdAt(LocalDateTime.now())
                 .transferCount(0)
                 .slaResponseBreached(false)

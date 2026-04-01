@@ -62,8 +62,12 @@ public class TaskController {
     }
 
     @GetMapping("/kanban")
-    public ResponseEntity<ApiResponse<TaskKanbanResponse>> getKanbanView() {
-        TaskKanbanResponse response = taskService.getKanbanView();
+    public ResponseEntity<ApiResponse<TaskKanbanResponse>> getKanbanView(
+            @RequestParam(required = false) Long assigneeId,
+            @RequestParam(required = false) Long teamId,
+            @RequestParam(required = false) String urgency,
+            @RequestParam(required = false) String type) {
+        TaskKanbanResponse response = taskService.getKanbanView(assigneeId, teamId, urgency, type);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

@@ -77,6 +77,7 @@ export interface InquiryResponse {
   aiConfidence?: number;
   status: InquiryStatus;
   taskId?: number;
+  teamId?: number;
   resolvedBy?: string;
   createdAt: string;
   resolvedAt?: string;
@@ -106,6 +107,18 @@ export interface ConvertToTaskRequest {
   type?: string;
   urgency?: TaskUrgency;
   assigneeId?: number;
+  teamId?: number;
+}
+
+export interface TaskPreviewResponse {
+  title: string;
+  description: string;
+  checklist: string[];
+  category?: string;
+  urgency: string;
+  requesterName?: string;
+  requesterEmail?: string;
+  inquiryId: number;
 }
 
 // Legacy types used in existing pages (kept for compat)
@@ -175,6 +188,8 @@ export interface TaskResponse {
   requesterName?: string;
   requesterEmail?: string;
   assigneeId?: number;
+  teamId?: number;
+  inquiryId?: number;
   aiSummary?: string;
   dueDate?: string;
   estimatedHours?: number;
@@ -232,6 +247,7 @@ export interface TaskHoldRequest {
 
 export interface TaskTransferRequest {
   toMemberId: number;
+  toTeamId?: number;
   reason: string;
 }
 
@@ -376,3 +392,6 @@ export interface SLARule {
   resolutionTimeHours: number;
   enabled: boolean;
 }
+
+// ─── Team ─────────────────────────────────────────────────
+export * from './team';
