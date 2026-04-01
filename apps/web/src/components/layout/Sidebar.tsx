@@ -17,6 +17,7 @@ const navItems = [
   { href: '/tasks', icon: '✅', label: '업무', requiresFeature: 'kanbanTasks' as const },
   { href: '/templates', icon: '📝', label: '템플릿' },
   { href: '/knowledge', icon: '📚', label: '지식' },
+  { href: '/analytics', icon: '📊', label: '분석' },
   { href: '/stats', icon: '📈', label: '통계' },
   { href: '/my', icon: '👤', label: '내 업무', requiresFeature: 'kanbanTasks' as const },
   { href: '/settings', icon: '⚙️', label: '설정' },
