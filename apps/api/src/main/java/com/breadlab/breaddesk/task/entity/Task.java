@@ -2,6 +2,7 @@ package com.breadlab.breaddesk.task.entity;
 
 import com.breadlab.breaddesk.inquiry.entity.Inquiry;
 import com.breadlab.breaddesk.member.entity.Member;
+import com.breadlab.breaddesk.team.entity.Team;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -65,6 +66,10 @@ public class Task {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
     private Member assignee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "team_id")
+    private Team team;
 
     @OneToOne(mappedBy = "task", fetch = FetchType.LAZY)
     private Inquiry inquiry;
