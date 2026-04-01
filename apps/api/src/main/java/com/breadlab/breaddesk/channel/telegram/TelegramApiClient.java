@@ -34,7 +34,7 @@ public class TelegramApiClient {
         ChannelConfig config = channelConfigRepository.findById(configId)
                 .orElseThrow(() -> new IllegalArgumentException("Channel config not found: " + configId));
 
-        JsonNode credentials = objectMapper.readTree(config.getCredentials());
+        JsonNode credentials = objectMapper.readTree(config.getConfig());
         String botToken = credentials.path("botToken").asText();
 
         // Build Telegram message payload
@@ -68,7 +68,7 @@ public class TelegramApiClient {
         ChannelConfig config = channelConfigRepository.findById(configId)
                 .orElseThrow(() -> new IllegalArgumentException("Channel config not found: " + configId));
 
-        JsonNode credentials = objectMapper.readTree(config.getCredentials());
+        JsonNode credentials = objectMapper.readTree(config.getConfig());
         String botToken = credentials.path("botToken").asText();
 
         var payload = objectMapper.createObjectNode();

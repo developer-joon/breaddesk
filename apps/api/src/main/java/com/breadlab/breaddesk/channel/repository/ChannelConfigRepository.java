@@ -14,5 +14,5 @@ public interface ChannelConfigRepository extends JpaRepository<ChannelConfig, Lo
 
     List<ChannelConfig> findByIsActiveTrue();
     
-    List<ChannelConfig> findByChannelTypeAndEnabledTrue(ChannelType channelType);
+    List<ChannelConfig> findByChannelTypeAndIsActiveTrue(String channelType);
 }

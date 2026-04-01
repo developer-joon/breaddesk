@@ -1,6 +1,7 @@
 package com.breadlab.breaddesk.analytics;
 
 import com.breadlab.breaddesk.inquiry.entity.Inquiry;
+import com.breadlab.breaddesk.inquiry.entity.InquiryResolvedBy;
 import com.breadlab.breaddesk.inquiry.entity.InquiryStatus;
 import com.breadlab.breaddesk.inquiry.repository.InquiryRepository;
 import com.breadlab.breaddesk.task.entity.Task;
@@ -42,7 +43,7 @@ public class AnalyticsService {
                 .count();
 
         long humanResolvedCount = inquiries.stream()
-                .filter(i -> i.getResolvedBy() != null && !i.getResolvedBy().equalsIgnoreCase("AI"))
+                .filter(i -> i.getResolvedBy() != null && i.getResolvedBy() != InquiryResolvedBy.AI)
                 .filter(i -> i.getStatus() == InquiryStatus.RESOLVED || i.getStatus() == InquiryStatus.CLOSED)
                 .count();
 

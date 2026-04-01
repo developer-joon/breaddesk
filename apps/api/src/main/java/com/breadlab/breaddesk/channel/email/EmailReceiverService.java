@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.search.FlagTerm;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -37,7 +38,7 @@ public class EmailReceiverService {
     public void pollInbox() {
         log.debug("Polling email inboxes...");
         
-        var emailConfigs = channelConfigRepository.findByChannelTypeAndEnabledTrue(ChannelType.EMAIL);
+        var emailConfigs = channelConfigRepository.findByChannelTypeAndIsActiveTrue("EMAIL");
         
         for (ChannelConfig config : emailConfigs) {
             try {
@@ -49,7 +50,7 @@ public class EmailReceiverService {
     }
 
     private void pollSingleInbox(ChannelConfig config) throws Exception {
-        JsonNode credentials = objectMapper.readTree(config.getCredentials());
+        JsonNode credentials = objectMapper.readTree(config.getConfig());
         
         String host = credentials.path("imapHost").asText();
         int port = credentials.path("imapPort").asInt(993);
@@ -78,7 +79,7 @@ public class EmailReceiverService {
             // Get unread messages
             Message[] messages = inbox.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
             
-            log.info("Found {} unread messages in {}", messages.length, config.getName());
+            log.info("Found {} unread messages in {}", messages.length, config.getChannelType());
 
             for (Message message : messages) {
                 try {

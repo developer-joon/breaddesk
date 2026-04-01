@@ -32,7 +32,7 @@ public class KakaoApiClient {
         ChannelConfig config = channelConfigRepository.findById(configId)
                 .orElseThrow(() -> new IllegalArgumentException("Channel config not found: " + configId));
 
-        JsonNode credentials = objectMapper.readTree(config.getCredentials());
+        JsonNode credentials = objectMapper.readTree(config.getConfig());
         String apiUrl = credentials.path("apiUrl").asText();
         String apiKey = credentials.path("apiKey").asText();
 

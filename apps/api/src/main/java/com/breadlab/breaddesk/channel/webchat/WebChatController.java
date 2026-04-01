@@ -30,27 +30,27 @@ public class WebChatController {
     public ResponseEntity<?> receiveMessage(@RequestBody WebChatMessageRequest request) {
         try {
             // Generate session ID if not provided
-            String sessionId = request.getSessionId() != null ? 
-                    request.getSessionId() : UUID.randomUUID().toString();
+            String sessionId = request.sessionId() != null ? 
+                    request.sessionId() : UUID.randomUUID().toString();
 
             // Create sender info
             var senderInfo = objectMapper.createObjectNode();
             senderInfo.put("sessionId", sessionId);
-            senderInfo.put("name", request.getName() != null ? request.getName() : "Anonymous");
-            if (request.getEmail() != null) {
-                senderInfo.put("email", request.getEmail());
+            senderInfo.put("name", request.name() != null ? request.name() : "Anonymous");
+            if (request.email() != null) {
+                senderInfo.put("email", request.email());
             }
 
             // Create metadata
             var metadata = objectMapper.createObjectNode();
             metadata.put("sessionId", sessionId);
-            metadata.put("userAgent", request.getUserAgent());
-            metadata.put("ipAddress", request.getIpAddress());
+            metadata.put("userAgent", request.userAgent());
+            metadata.put("ipAddress", request.ipAddress());
 
             ChannelMessage message = ChannelMessage.builder()
                     .channelType(ChannelType.WEB_CHAT)
                     .source("webchat:" + sessionId)
-                    .content(request.getMessage())
+                    .content(request.message())
                     .senderInfo(senderInfo.toString())
                     .channelMetadata(metadata.toString())
                     .createdAt(LocalDateTime.now())

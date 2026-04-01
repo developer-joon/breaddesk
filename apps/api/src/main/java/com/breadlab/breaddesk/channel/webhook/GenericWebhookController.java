@@ -45,12 +45,12 @@ public class GenericWebhookController {
             ChannelConfig config = channelConfigRepository.findById(channelId)
                     .orElseThrow(() -> new IllegalArgumentException("Channel not found: " + channelId));
 
-            if (!config.getEnabled()) {
+            if (!config.getIsActive()) {
                 return ResponseEntity.badRequest().body("Channel is disabled");
             }
 
             // Validate secret if configured
-            JsonNode credentials = objectMapper.readTree(config.getCredentials());
+            JsonNode credentials = objectMapper.readTree(config.getConfig());
             String expectedSecret = credentials.path("webhookSecret").asText(null);
             if (expectedSecret != null && !expectedSecret.equals(secret)) {
                 log.warn("Invalid webhook secret for channel {}", channelId);

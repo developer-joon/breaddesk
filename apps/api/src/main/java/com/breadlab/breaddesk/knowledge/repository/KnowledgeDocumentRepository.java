@@ -15,6 +15,8 @@ public interface KnowledgeDocumentRepository extends JpaRepository<KnowledgeDocu
 
     List<KnowledgeDocumentEntity> findBySource(String source);
 
+    boolean existsBySourceAndSourceId(String source, String sourceId);
+
     @Query(value = "SELECT *, 1 - (embedding <=> cast(:queryVector as vector)) as similarity " +
             "FROM knowledge_documents WHERE embedding IS NOT NULL " +
             "ORDER BY embedding <=> cast(:queryVector as vector) LIMIT :limit",

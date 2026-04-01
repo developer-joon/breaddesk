@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -416,8 +417,8 @@ public class TaskService {
      */
     public List<TaskResponse> getTasksByDueDateRange(String start, String end) {
         try {
-            LocalDateTime startDate = LocalDateTime.parse(start + "T00:00:00");
-            LocalDateTime endDate = LocalDateTime.parse(end + "T23:59:59");
+            LocalDate startDate = LocalDate.parse(start);
+            LocalDate endDate = LocalDate.parse(end);
             
             return taskRepository.findAll().stream()
                     .filter(t -> t.getDueDate() != null)

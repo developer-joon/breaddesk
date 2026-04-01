@@ -40,7 +40,7 @@ public class EmailSenderService {
         ChannelConfig config = channelConfigRepository.findById(configId)
                 .orElseThrow(() -> new IllegalArgumentException("Channel config not found: " + configId));
 
-        JsonNode credentials = objectMapper.readTree(config.getCredentials());
+        JsonNode credentials = objectMapper.readTree(config.getConfig());
         
         String smtpHost = credentials.path("smtpHost").asText();
         int smtpPort = credentials.path("smtpPort").asInt(587);
