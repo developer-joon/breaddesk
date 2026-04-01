@@ -218,44 +218,44 @@ export default function DashboardPage() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {(weeklyReport as any).newInquiries ?? weeklyReport.totalInquiries ?? 0}
+                        {weeklyReport?.newInquiries ?? 0}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">신규 문의</div>
                     </div>
                     <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                        {(weeklyReport as any).newTasks ?? weeklyReport.totalTasks ?? 0}
+                        {weeklyReport?.newTasks ?? 0}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">신규 업무</div>
                     </div>
                     <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {weeklyReport.completedTasks ?? 0}
+                        {weeklyReport?.completedTasks ?? 0}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">완료 업무</div>
                     </div>
                     <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                       <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                        {Math.round(weeklyReport.slaComplianceRate ?? 0)}%
+                        {Math.round(weeklyReport?.slaComplianceRate ?? 0)}%
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">SLA 준수율</div>
                     </div>
                   </div>
 
-                  {weeklyReport.topIssues && weeklyReport.topIssues.length > 0 && (
+                  {weeklyReport?.topPerformers && weeklyReport.topPerformers.length > 0 && (
                     <div>
                       <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                        주요 이슈
+                        주요 담당자
                       </h3>
                       <div className="space-y-2">
-                        {weeklyReport.topIssues.map((issue, idx) => (
+                        {weeklyReport.topPerformers.map((performer, idx) => (
                           <div
                             key={idx}
                             className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                           >
-                            <span className="text-sm text-gray-900 dark:text-white">{issue.issue}</span>
+                            <span className="text-sm text-gray-900 dark:text-white">{performer.memberName}</span>
                             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                              {issue.count}건
+                              {performer.completedCount}건 완료
                             </span>
                           </div>
                         ))}
