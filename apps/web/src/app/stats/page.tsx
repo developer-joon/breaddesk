@@ -260,13 +260,13 @@ export default function StatsPage() {
             <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
               <div className="text-sm text-blue-700 dark:text-blue-300">AI 해결률</div>
               <div className="text-xl font-bold text-blue-900 dark:text-blue-100">
-                {(weeklyReport.aiResolutionRate * 100).toFixed(1)}%
+                {weeklyReport.aiResolutionRate.toFixed(1)}%
               </div>
             </div>
             <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
               <div className="text-sm text-purple-700 dark:text-purple-300">SLA 준수율</div>
               <div className="text-xl font-bold text-purple-900 dark:text-purple-100">
-                {(weeklyReport.slaComplianceRate * 100).toFixed(1)}%
+                {weeklyReport.slaComplianceRate.toFixed(1)}%
               </div>
             </div>
           </div>
