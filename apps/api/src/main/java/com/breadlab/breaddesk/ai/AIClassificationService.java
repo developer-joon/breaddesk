@@ -3,14 +3,12 @@ package com.breadlab.breaddesk.ai;
 import com.breadlab.breaddesk.inquiry.entity.Inquiry;
 import com.breadlab.breaddesk.task.entity.Task;
 import com.breadlab.breaddesk.task.entity.TaskUrgency;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * AI 자동 분류/라우팅 서비스
@@ -44,27 +42,35 @@ public class AIClassificationService {
             - NORMAL: 일반 요청, 작은 버그, 개선 요청
             - LOW: 단순 문의, 장기 개선 사항
             
+            담당팀 (TEAM)을 추천하세요:
+            - DEV_TEAM: 개발팀 (개발, 버그 수정, 기능 개선)
+            - OPS_TEAM: 운영팀 (서버, 인프라, 배포, 장애 대응)
+            - SECURITY_TEAM: 보안팀 (권한, VPN, 방화벽)
+            - SUPPORT_TEAM: 지원팀 (일반 문의, 사용자 지원)
+            
             응답은 반드시 JSON 형식으로만 출력하세요 (설명 없이):
             {
               "category": "DEVELOPMENT",
               "urgency": "NORMAL",
-              "reason": "개발 관련 버그 수정 요청이므로 DEVELOPMENT/NORMAL"
+              "team": "DEV_TEAM",
+              "reason": "개발 관련 버그 수정 요청이므로 DEVELOPMENT/NORMAL/DEV_TEAM"
             }
             """;
 
     public record ClassificationResult(
             String category,
             TaskUrgency urgency,
+            String suggestedTeam,
             String reason
     ) {}
 
     /**
-     * 문의 내용을 기반으로 카테고리/긴급도 자동 분류
+     * 문의 내용을 기반으로 카테고리/긴급도/팀 자동 분류
      */
     public ClassificationResult classify(String message) {
         if (!llmProvider.isAvailable()) {
             log.warn("LLM 서비스 사용 불가 — 기본 분류 반환");
-            return new ClassificationResult("GENERAL", TaskUrgency.NORMAL, "AI 서비스 미사용");
+            return fallbackClassification(message);
         }
 
         try {
@@ -84,6 +90,7 @@ public class AIClassificationService {
             return new ClassificationResult(
                     parsed.category().toUpperCase(),
                     urgency,
+                    parsed.team(),
                     parsed.reason()
             );
         } catch (Exception e) {
@@ -147,35 +154,35 @@ public class AIClassificationService {
 
         if (lower.contains("장애") || lower.contains("다운") || lower.contains("먹통") ||
                 lower.contains("incident") || lower.contains("critical")) {
-            return new ClassificationResult("INCIDENT", TaskUrgency.CRITICAL, "키워드 기반 장애 감지");
+            return new ClassificationResult("INCIDENT", TaskUrgency.CRITICAL, "OPS_TEAM", "키워드 기반 장애 감지");
         }
 
         if (lower.contains("권한") || lower.contains("계정") || lower.contains("vpn") ||
                 lower.contains("access") || lower.contains("로그인")) {
-            return new ClassificationResult("ACCESS", TaskUrgency.NORMAL, "키워드 기반 권한 요청");
+            return new ClassificationResult("ACCESS", TaskUrgency.NORMAL, "SECURITY_TEAM", "키워드 기반 권한 요청");
         }
 
         if (lower.contains("서버") || lower.contains("vm") || lower.contains("네트워크") ||
                 lower.contains("infra") || lower.contains("인프라")) {
-            return new ClassificationResult("INFRA", TaskUrgency.NORMAL, "키워드 기반 인프라");
+            return new ClassificationResult("INFRA", TaskUrgency.NORMAL, "OPS_TEAM", "키워드 기반 인프라");
         }
 
         if (lower.contains("방화벽") || lower.contains("포트") || lower.contains("firewall") ||
                 lower.contains("통신")) {
-            return new ClassificationResult("FIREWALL", TaskUrgency.NORMAL, "키워드 기반 방화벽");
+            return new ClassificationResult("FIREWALL", TaskUrgency.NORMAL, "SECURITY_TEAM", "키워드 기반 방화벽");
         }
 
         if (lower.contains("배포") || lower.contains("릴리스") || lower.contains("deploy") ||
                 lower.contains("cicd")) {
-            return new ClassificationResult("DEPLOY", TaskUrgency.NORMAL, "키워드 기반 배포");
+            return new ClassificationResult("DEPLOY", TaskUrgency.NORMAL, "OPS_TEAM", "키워드 기반 배포");
         }
 
         if (lower.contains("버그") || lower.contains("개발") || lower.contains("기능") ||
                 lower.contains("bug") || lower.contains("feature")) {
-            return new ClassificationResult("DEVELOPMENT", TaskUrgency.NORMAL, "키워드 기반 개발");
+            return new ClassificationResult("DEVELOPMENT", TaskUrgency.NORMAL, "DEV_TEAM", "키워드 기반 개발");
         }
 
-        return new ClassificationResult("GENERAL", TaskUrgency.NORMAL, "기본 분류");
+        return new ClassificationResult("GENERAL", TaskUrgency.NORMAL, "SUPPORT_TEAM", "기본 분류");
     }
 
     private TaskUrgency parseUrgency(String urgency) {
@@ -191,6 +198,7 @@ public class AIClassificationService {
     private record ClassificationResponse(
             String category,
             String urgency,
+            String team,
             String reason
     ) {}
 }

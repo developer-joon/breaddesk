@@ -1,6 +1,7 @@
 package com.breadlab.breaddesk.inquiry.service;
 
 import com.breadlab.breaddesk.ai.AIAnswerService;
+import com.breadlab.breaddesk.ai.AITaskGenerationService;
 import com.breadlab.breaddesk.ai.EscalationService;
 import com.breadlab.breaddesk.channel.service.WebhookOutboundService;
 import com.breadlab.breaddesk.common.exception.ResourceNotFoundException;
@@ -14,6 +15,7 @@ import com.breadlab.breaddesk.task.entity.Task;
 import com.breadlab.breaddesk.task.entity.TaskStatus;
 import com.breadlab.breaddesk.task.repository.TaskRepository;
 import com.breadlab.breaddesk.member.repository.MemberRepository;
+import com.breadlab.breaddesk.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,7 +34,9 @@ public class InquiryService {
     private final InquiryMessageRepository inquiryMessageRepository;
     private final TaskRepository taskRepository;
     private final MemberRepository memberRepository;
+    private final TeamRepository teamRepository;
     private final AIAnswerService aiAnswerService;
+    private final AITaskGenerationService taskGenerationService;
     private final EscalationService escalationService;
     private final WebhookOutboundService webhookOutboundService;
 
@@ -77,8 +81,8 @@ public class InquiryService {
         return toResponse(saved);
     }
 
-    public Page<InquiryResponse> getAllInquiries(String status, String category, Long assigneeId, Long teamId, Pageable pageable) {
-        return inquiryRepository.findWithFilters(status, category, assigneeId, teamId, pageable)
+    public Page<InquiryResponse> getAllInquiries(String status, Long teamId, Pageable pageable) {
+        return inquiryRepository.findWithFilters(status, null, null, teamId, pageable)
                 .map(this::toResponse);
     }
 
@@ -123,6 +127,25 @@ public class InquiryService {
         return toMessageResponse(saved);
     }
 
+    /**
+     * AI 태스크 생성 미리보기
+     */
+    public TaskPreviewResponse generateTaskPreview(Long inquiryId) {
+        Inquiry inquiry = findInquiryOrThrow(inquiryId);
+        var generated = taskGenerationService.generateTaskFromInquiry(inquiry);
+
+        return new TaskPreviewResponse(
+                generated.title(),
+                generated.description(),
+                generated.checklist(),
+                generated.category(),
+                generated.urgency(),
+                inquiry.getSenderName(),
+                inquiry.getSenderEmail(),
+                inquiry.getId()
+        );
+    }
+
     @Transactional
     public InquiryResponse convertToTask(Long inquiryId, ConvertToTaskRequest request) {
         Inquiry inquiry = findInquiryOrThrow(inquiryId);
@@ -144,6 +167,11 @@ public class InquiryService {
         if (request.getAssigneeId() != null) {
             task.setAssignee(memberRepository.findById(request.getAssigneeId())
                     .orElseThrow(() -> new ResourceNotFoundException("Member not found: " + request.getAssigneeId())));
+        }
+
+        // Copy team from inquiry if available
+        if (inquiry.getTeam() != null) {
+            task.setTeam(inquiry.getTeam());
         }
 
         Task savedTask = taskRepository.save(task);
