@@ -16,6 +16,22 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 통계 서비스
+ * 
+ * <p>시스템 전체 통계, AI 성능, 팀원별 현황, 주간 리포트를 제공합니다.</p>
+ * 
+ * <p>주요 기능:</p>
+ * <ul>
+ *   <li>전체 현황 통계 (문의/업무/SLA)</li>
+ *   <li>AI 자동답변 성능 분석</li>
+ *   <li>팀원별 업무 처리 현황</li>
+ *   <li>주간 리포트 자동 생성</li>
+ * </ul>
+ * 
+ * @author BreadDesk Team
+ * @since 0.1.0
+ */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,6 +39,13 @@ public class StatsService {
 
     private final EntityManager em;
 
+    /**
+     * 전체 시스템 현황을 조회합니다.
+     * 
+     * @param from 조회 시작일 (기본값: 30일 전)
+     * @param to 조회 종료일 (기본값: 오늘)
+     * @return 전체 현황 통계 (문의/업무 수, AI 해결률, SLA 준수율 등)
+     */
     public StatsOverviewResponse getOverview(LocalDate from, LocalDate to) {
         LocalDateTime start = from.atStartOfDay();
         LocalDateTime end = to.atTime(LocalTime.MAX);
@@ -84,6 +107,13 @@ public class StatsService {
                 .build();
     }
 
+    /**
+     * AI 자동답변 성능 통계를 조회합니다.
+     * 
+     * @param from 조회 시작일
+     * @param to 조회 종료일
+     * @return AI 답변 건수, 자동해결률, 에스컬레이션율, 신뢰도 분포 등
+     */
     public StatsAIResponse getAIStats(LocalDate from, LocalDate to) {
         LocalDateTime start = from.atStartOfDay();
         LocalDateTime end = to.atTime(LocalTime.MAX);
@@ -118,6 +148,13 @@ public class StatsService {
                 .build();
     }
 
+    /**
+     * 팀원별 업무 처리 현황을 조회합니다.
+     * 
+     * @param from 조회 시작일
+     * @param to 조회 종료일
+     * @return 팀원별 할당 건수, 완료 건수, 평균 처리시간 등 (완료 건수 많은 순)
+     */
     @SuppressWarnings("unchecked")
     public List<StatsTeamMemberResponse> getTeamStats(LocalDate from, LocalDate to) {
         LocalDateTime start = from.atStartOfDay();
@@ -152,6 +189,21 @@ public class StatsService {
         ).collect(Collectors.toList());
     }
 
+    /**
+     * 주간 리포트를 생성합니다.
+     * 
+     * <p>이번 주(월~일) 기준으로 다음 정보를 집계합니다:</p>
+     * <ul>
+     *   <li>신규/해결된 문의 건수</li>
+     *   <li>신규/완료된 업무 건수</li>
+     *   <li>AI 자동해결률</li>
+     *   <li>SLA 준수율</li>
+     *   <li>일별 문의 추이</li>
+     *   <li>우수 담당자 TOP 5</li>
+     * </ul>
+     * 
+     * @return 주간 리포트
+     */
     public WeeklyReportResponse getWeeklyReport() {
         LocalDate now = LocalDate.now();
         LocalDate weekStart = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));

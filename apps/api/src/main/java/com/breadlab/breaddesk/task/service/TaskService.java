@@ -1,6 +1,7 @@
 package com.breadlab.breaddesk.task.service;
 
 import com.breadlab.breaddesk.common.exception.ResourceNotFoundException;
+import com.breadlab.breaddesk.inquiry.repository.InquiryRepository;
 import com.breadlab.breaddesk.member.repository.MemberRepository;
 import com.breadlab.breaddesk.sla.service.SlaTimerService;
 import com.breadlab.breaddesk.task.dto.*;
@@ -29,8 +30,51 @@ public class TaskService {
     private final TaskHoldRepository taskHoldRepository;
     private final TaskTransferRepository taskTransferRepository;
     private final MemberRepository memberRepository;
+    private final InquiryRepository inquiryRepository;
     private final SlaTimerService slaTimerService;
     private final TaskWatcherService watcherService;
+
+    @Transactional
+    public TaskResponse createTaskFromInquiry(Long inquiryId) {
+        // Inquiry 조회 (InquiryRepository 필요)
+        var inquiry = inquiryRepository.findById(inquiryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inquiry not found: " + inquiryId));
+        
+        // 이미 태스크가 있으면 에러
+        if (inquiry.getTask() != null) {
+            throw new IllegalStateException("Inquiry already converted to task");
+        }
+
+        // 문의 내용 기반으로 태스크 생성
+        Task task = Task.builder()
+                .title("문의: " + inquiry.getSenderName() + " - " + inquiry.getMessage().substring(0, Math.min(50, inquiry.getMessage().length())) + "...")
+                .description(inquiry.getMessage())
+                .type("GENERAL")
+                .urgency(TaskUrgency.NORMAL)
+                .status(TaskStatus.WAITING)
+                .requesterName(inquiry.getSenderName())
+                .requesterEmail(inquiry.getSenderEmail())
+                .inquiry(inquiry)
+                .aiSummary(inquiry.getAiResponse() != null ? "AI 초기 답변: " + inquiry.getAiResponse() : null)
+                .createdAt(LocalDateTime.now())
+                .transferCount(0)
+                .slaResponseBreached(false)
+                .slaResolveBreached(false)
+                .build();
+
+        Task saved = taskRepository.save(task);
+        
+        // Inquiry와 양방향 연결
+        inquiry.setTask(saved);
+        inquiry.setStatus(com.breadlab.breaddesk.inquiry.entity.InquiryStatus.ESCALATED);
+        inquiryRepository.save(inquiry);
+        
+        slaTimerService.startSla(saved);
+        saved = taskRepository.save(saved);
+        logAction(saved.getId(), "CREATED_FROM_INQUIRY", null, Map.of("inquiryId", String.valueOf(inquiryId)));
+        
+        return toResponse(saved);
+    }
 
     @Transactional
     public TaskResponse createTask(TaskRequest request) {

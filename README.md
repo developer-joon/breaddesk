@@ -8,12 +8,14 @@
 
 | 구분 | 기술 |
 |------|------|
-| Monorepo | Turborepo + Bun |
-| Frontend | Next.js + TypeScript |
-| Backend | Java 25 + Spring Boot 3.x |
-| Database | PostgreSQL + pgvector |
+| Monorepo | Turborepo + npm workspaces |
+| Frontend | Next.js 15 + TypeScript + React 19 |
+| Backend | Java 25 + Spring Boot 3.x + Gradle |
+| Database | PostgreSQL 17 + Flyway (마이그레이션) |
+| Vector Search | pgvector (임베딩 검색) |
 | AI | LLM 추상화 (Ollama, OpenAI, Claude 교체 가능) |
-| Automation | n8n (멀티채널 통합) |
+| Automation | n8n (멀티채널 통합, 선택 사항) |
+| DevOps | Docker + Kubernetes + GitHub Actions |
 
 ## 프로젝트 구조
 
@@ -31,35 +33,61 @@ breaddesk/
 ## 로컬 개발
 
 ### 준비물
-- JDK 21+
-- Docker Desktop
-- Node.js 22+
+- **JDK 25** (Java 25 LTS 필수)
+- **Docker Desktop** (PostgreSQL 자동 실행용)
+- **Node.js 22+** (프론트엔드 빌드)
 
-### 백엔드 (IntelliJ)
+### 백엔드 (IntelliJ IDEA)
 1. IntelliJ → `Open` → `breaddesk/` 루트 선택
-2. `BreadDeskApplication.java` → ▶️ Run
-3. PostgreSQL, Ollama가 **자동으로 기동됨** (spring-boot-docker-compose)
-4. 앱 종료 시 컨테이너도 **자동 정지**
+2. Gradle 프로젝트 자동 임포트 대기
+3. `apps/api/src/main/java/.../BreadDeskApplication.java` → ▶️ Run
+4. PostgreSQL이 **자동으로 기동됨** (spring-boot-docker-compose)
+5. 앱 종료 시 컨테이너도 **자동 정지**
+6. API 서버: `http://localhost:8080`
+7. Swagger UI: `http://localhost:8080/swagger-ui.html`
 
-### 프론트엔드
+### 프론트엔드 (Next.js)
 ```bash
+npm install                 # 루트에서 전체 의존성 설치
 cd apps/web
-npm install
-npm run dev
+npm run dev                 # 개발 서버 실행
 ```
+- 웹 서버: `http://localhost:3000`
+
+### 데이터베이스
+- **자동 실행**: Spring Boot 실행 시 자동으로 PostgreSQL 컨테이너 기동
+- **수동 실행** (필요 시):
+  ```bash
+  docker-compose up -d postgres
+  ```
+- 접속 정보:
+  - Host: `localhost:5432`
+  - Database: `breaddesk`
+  - User/Password: `breaddesk` / `breaddesk`
+- Flyway 마이그레이션 자동 실행
 
 ## 배포
 
 ### CI/CD 파이프라인
-- **CI** (`.github/workflows/ci.yml`): PR/Push 시 자동 테스트
+- **CI** (`.github/workflows/ci.yml`): PR/Push 시 자동 테스트 및 빌드
 - **CD** (`.github/workflows/cd.yml`): main 머지 시 자동 배포
 
-### 필수 설정
-1. GitHub Secrets에 `KUBECONFIG` 추가 (Base64 인코딩)
-2. K8s 클러스터에 `breaddesk` 네임스페이스 생성
-3. GHCR Pull Secret 설정
+### 프로덕션 환경
+- **도메인**: `https://breaddesk.k6s.app`
+- **인프라**: Kubernetes (K3s 클러스터)
+- **컨테이너 레지스트리**: GitHub Container Registry (ghcr.io)
+- **모니터링**: Prometheus + Grafana (기존 클러스터)
+- **로깅**: Loki + Promtail + Grafana
 
-자세한 내용은 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) 참고.
+### 필수 설정
+1. GitHub Secrets 설정:
+   - `KUBECONFIG`: K8s 클러스터 접속 정보 (Base64 인코딩)
+2. K8s 클러스터 준비:
+   - Namespace: `breaddesk`
+   - GHCR Pull Secret 설정
+   - Ingress 설정 (breaddesk.k6s.app)
+
+자세한 내용은 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) 및 [DEVOPS_SETUP_SUMMARY.md](DEVOPS_SETUP_SUMMARY.md) 참고.
 
 ## 모니터링 & 로깅
 

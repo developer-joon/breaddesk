@@ -48,11 +48,10 @@ export async function addInquiryMessage(
 
 export async function convertInquiryToTask(
   id: number,
-  req: ConvertToTaskRequest,
-): Promise<InquiryResponse> {
-  const { data } = await api.post<ApiResponse<InquiryResponse>>(
-    `/inquiries/${id}/convert-to-task`,
-    req,
+): Promise<any> {
+  // 백엔드 엔드포인트: POST /api/v1/tasks/from-inquiry/{inquiryId}
+  const { data } = await api.post<ApiResponse<any>>(
+    `/tasks/from-inquiry/${id}`,
   );
   return data.data;
 }

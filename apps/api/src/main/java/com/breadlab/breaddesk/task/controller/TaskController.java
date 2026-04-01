@@ -38,6 +38,13 @@ public class TaskController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
+    @Operation(summary = "문의에서 태스크 생성", description = "문의를 태스크로 원클릭 전환")
+    @PostMapping("/from-inquiry/{inquiryId}")
+    public ResponseEntity<ApiResponse<TaskResponse>> createTaskFromInquiry(@PathVariable Long inquiryId) {
+        TaskResponse response = taskService.createTaskFromInquiry(inquiryId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<Page<TaskResponse>>> getAllTasks(Pageable pageable) {
         Page<TaskResponse> responses = taskService.getAllTasks(pageable);

@@ -187,21 +187,16 @@ export default function InquiriesPage() {
   };
 
   const handleConvertToTask = async () => {
-    if (!selectedInquiry || !convertTaskTitle.trim()) {
-      toast.error('업무 제목을 입력하세요');
+    if (!selectedInquiry) {
+      toast.error('문의를 선택하세요');
       return;
     }
 
     setIsConverting(true);
     try {
-      await convertInquiryToTask(selectedInquiry.id, {
-        title: convertTaskTitle,
-        description: selectedInquiry.message,
-        urgency: 'NORMAL',
-      });
+      await convertInquiryToTask(selectedInquiry.id);
       toast.success('업무로 전환되었습니다');
       setShowConvertModal(false);
-      setConvertTaskTitle('');
       fetchInquiries();
       router.push('/tasks');
     } catch (err) {
