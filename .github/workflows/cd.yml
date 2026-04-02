@@ -80,41 +80,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
-    name: Deploy to Kubernetes
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: 'v1.28.0'
-      
-      - name: Configure kubectl
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-      
-      - name: Update API deployment
-        run: |
-          kubectl set image deployment/breaddesk-api \
-            breaddesk-api=${{ env.IMAGE_PREFIX }}/breaddesk-api:${{ needs.build-and-push.outputs.image-tag }} \
-            -n openclaw
-          kubectl rollout status deployment/breaddesk-api -n openclaw --timeout=5m
-      
-      - name: Update Web deployment
-        run: |
-          kubectl set image deployment/breaddesk-web \
-            breaddesk-web=${{ env.IMAGE_PREFIX }}/breaddesk-web:${{ needs.build-and-push.outputs.image-tag }} \
-            -n openclaw
-          kubectl rollout status deployment/breaddesk-web -n openclaw --timeout=5m
-      
-      - name: Verify deployment
-        run: |
-          kubectl get pods -n openclaw
-          kubectl get services -n openclaw
+  # 배포는 서버에서 수동 실행 (보안상 KUBECONFIG을 GitHub에 노출하지 않음)
+  # 이미지 push 후 서버에서:
+  #   kubectl set image deploy/breaddesk-api -n openclaw breaddesk-api=ghcr.io/developer-joon/breaddesk-api:latest
+  #   kubectl set image deploy/breaddesk-web -n openclaw breaddesk-web=ghcr.io/developer-joon/breaddesk-web:latest
