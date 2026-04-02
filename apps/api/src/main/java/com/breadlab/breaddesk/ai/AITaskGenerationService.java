@@ -230,7 +230,7 @@ public class AITaskGenerationService {
         };
     }
 
-    private record GeneratedTask(
+    record GeneratedTask(
             String title,
             String description,
             List<String> checklist

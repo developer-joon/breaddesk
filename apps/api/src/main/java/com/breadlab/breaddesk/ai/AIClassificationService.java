@@ -195,7 +195,7 @@ public class AIClassificationService {
         };
     }
 
-    private record ClassificationResponse(
+    record ClassificationResponse(
             String category,
             String urgency,
             String team,
