@@ -30,7 +30,7 @@ export function SLASettings() {
     if (!rule) return;
 
     try {
-      await updateSlaRule(urgency, {
+      await updateSlaRule(rule.id, {
         responseTimeHours: field === 'responseTimeHours' ? Number(value) : rule.responseTimeHours,
         resolveTimeHours: field === 'resolveTimeHours' ? Number(value) : rule.resolveTimeHours,
         enabled: field === 'enabled' ? value : rule.enabled,

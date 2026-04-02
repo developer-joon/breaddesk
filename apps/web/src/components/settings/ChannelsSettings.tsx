@@ -80,11 +80,7 @@ export function ChannelsSettings() {
   const handleTest = async (id: number) => {
     try {
       const result = await channelService.test(id);
-      if (result.success) {
-        toast.success(result.message || '연결 테스트 성공');
-      } else {
-        toast.error(result.message || '연결 테스트 실패');
-      }
+      toast.success(result || '연결 테스트 성공');
     } catch (error) {
       console.error('Test failed:', error);
       toast.error('테스트에 실패했습니다');
