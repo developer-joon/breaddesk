@@ -82,7 +82,15 @@ public class InquiryService {
     }
 
     public Page<InquiryResponse> getAllInquiries(String status, Long teamId, Pageable pageable) {
-        return inquiryRepository.findWithFilters(status, teamId, pageable)
+        InquiryStatus statusEnum = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                statusEnum = InquiryStatus.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid status value: {}", status);
+            }
+        }
+        return inquiryRepository.findWithFilters(statusEnum, teamId, pageable)
                 .map(this::toResponse);
     }
 

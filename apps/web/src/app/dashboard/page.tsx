@@ -125,11 +125,15 @@ export default function DashboardPage() {
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="text-3xl mb-2">⏱️</div>
                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {slaStats.avgResponseMinutes !== null ? (slaStats.avgResponseMinutes / 60).toFixed(1) : '-'}h
+                      {slaStats.avgResponseMinutes !== null && slaStats.avgResponseMinutes >= 0 
+                        ? (slaStats.avgResponseMinutes / 60).toFixed(1) + 'h' 
+                        : 'N/A'}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">평균 응답 시간</div>
                     <div className="text-xs text-gray-400 mt-0.5">
-                      해결: {slaStats.avgResolveMinutes !== null ? (slaStats.avgResolveMinutes / 60).toFixed(1) : '-'}h
+                      해결: {slaStats.avgResolveMinutes !== null && slaStats.avgResolveMinutes >= 0
+                        ? (slaStats.avgResolveMinutes / 60).toFixed(1) + 'h'
+                        : 'N/A'}
                     </div>
                   </div>
                 </div>

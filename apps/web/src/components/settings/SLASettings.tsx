@@ -105,7 +105,8 @@ export function SLASettings() {
                 <td className="px-6 py-4">
                   <input
                     type="number"
-                    value={rule.responseTimeHours}
+                    value={rule.responseTimeHours || ''}
+                    placeholder="미설정"
                     onChange={(e) =>
                       handleUpdate(rule.urgency, 'responseTimeHours', e.target.value)
                     }
@@ -117,7 +118,8 @@ export function SLASettings() {
                 <td className="px-6 py-4">
                   <input
                     type="number"
-                    value={rule.resolveTimeHours}
+                    value={rule.resolveTimeHours || ''}
+                    placeholder="미설정"
                     onChange={(e) =>
                       handleUpdate(rule.urgency, 'resolveTimeHours', e.target.value)
                     }

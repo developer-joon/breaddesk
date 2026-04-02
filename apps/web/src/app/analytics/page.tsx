@@ -103,7 +103,7 @@ export default function AnalyticsPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="text-sm text-gray-600 mb-1">자동 해결률</div>
               <div className="text-3xl font-bold text-blue-600">
-                {aiPerformance?.autoResolveRate.toFixed(1)}%
+                {aiPerformance?.autoResolveRate != null ? aiPerformance.autoResolveRate.toFixed(1) : '0'}%
               </div>
             </div>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

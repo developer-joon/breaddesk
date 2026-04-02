@@ -33,10 +33,10 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     List<Inquiry> searchByKeyword(@Param("keyword") String keyword);
 
     @Query("SELECT i FROM Inquiry i WHERE "
-            + "(:status IS NULL OR i.status = CAST(:status AS com.breadlab.breaddesk.inquiry.entity.InquiryStatus)) "
+            + "(:status IS NULL OR i.status = :status) "
             + "AND (:teamId IS NULL OR i.team.id = :teamId)")
     Page<Inquiry> findWithFilters(
-            @Param("status") String status,
+            @Param("status") InquiryStatus status,
             @Param("teamId") Long teamId,
             Pageable pageable);
     
