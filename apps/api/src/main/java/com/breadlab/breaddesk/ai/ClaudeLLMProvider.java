@@ -16,8 +16,6 @@ import java.util.Map;
  * 임베딩은 Voyage AI 또는 다른 provider로 위임 (Claude는 임베딩 미제공)
  */
 @Slf4j
-@Component
-@ConditionalOnProperty(name = "breaddesk.llm.provider", havingValue = "claude")
 public class ClaudeLLMProvider implements LLMProvider {
 
     private final WebClient webClient;

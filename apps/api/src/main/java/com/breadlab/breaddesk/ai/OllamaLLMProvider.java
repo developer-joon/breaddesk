@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Slf4j
-@Component
 public class OllamaLLMProvider implements LLMProvider {
 
     private final WebClient webClient;

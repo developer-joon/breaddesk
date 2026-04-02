@@ -15,8 +15,6 @@ import java.util.Map;
  * OpenAI API Provider (GPT-4, GPT-3.5, text-embedding-3-small 등)
  */
 @Slf4j
-@Component
-@ConditionalOnProperty(name = "breaddesk.llm.provider", havingValue = "openai")
 public class OpenAILLMProvider implements LLMProvider {
 
     private final WebClient webClient;
