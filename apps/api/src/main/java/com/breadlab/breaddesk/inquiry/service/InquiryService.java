@@ -82,7 +82,12 @@ public class InquiryService {
     }
 
     public Page<InquiryResponse> getAllInquiries(String status, Long teamId, Pageable pageable) {
-        return inquiryRepository.findWithFilters(status, null, null, teamId, pageable)
+        return inquiryRepository.findWithFilters(status, teamId, pageable)
+                .map(this::toResponse);
+    }
+
+    public Page<InquiryResponse> getAllInquiries(Pageable pageable) {
+        return inquiryRepository.findAll(pageable)
                 .map(this::toResponse);
     }
 

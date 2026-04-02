@@ -112,6 +112,11 @@ public class TaskService {
                 .map(this::toResponse);
     }
 
+    public Page<TaskResponse> getAllTasks(Pageable pageable) {
+        return taskRepository.findAll(pageable)
+                .map(this::toResponse);
+    }
+
     public TaskResponse getTaskById(Long id) {
         Task task = findTaskOrThrow(id);
         return toResponse(task);
