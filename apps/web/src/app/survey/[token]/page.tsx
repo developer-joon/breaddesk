@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 
 export default function SurveyPage() {
   const params = useParams();
-  const token = params.token as string;
+  const token = params?.token as string;
   
   const [survey, setSurvey] = useState<CsatSurvey | null>(null);
   const [loading, setLoading] = useState(true);

@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client';
+import { api } from '@/lib/api';
 import type { ApiResponse } from '@/types';
 
 export interface CsatSurvey {
@@ -29,14 +29,14 @@ export interface CsatStats {
 
 export const csatService = {
   getSurvey: async (token: string): Promise<CsatSurvey> => {
-    const response = await apiClient.get<ApiResponse<CsatSurvey>>(
+    const response = await api.get<ApiResponse<CsatSurvey>>(
       `/csat/survey/${token}`
     );
     return response.data.data;
   },
 
   submitSurvey: async (token: string, data: CsatResponse): Promise<void> => {
-    await apiClient.post(`/csat/survey/${token}`, data);
+    await api.post(`/csat/survey/${token}`, data);
   },
 
   getStats: async (startDate?: string, endDate?: string): Promise<CsatStats> => {
@@ -44,7 +44,7 @@ export const csatService = {
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
     
-    const response = await apiClient.get<ApiResponse<CsatStats>>(
+    const response = await api.get<ApiResponse<CsatStats>>(
       `/csat/stats?${params}`
     );
     return response.data.data;

@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client';
+import { api } from '@/lib/api';
 import type { ApiResponse, AIStats, TeamStats, WeeklyReport } from '@/types';
 
 export interface AIPerformance {
@@ -29,7 +29,7 @@ export const analyticsService = {
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
     
-    const response = await apiClient.get<ApiResponse<AIPerformance>>(
+    const response = await api.get<ApiResponse<AIPerformance>>(
       `/analytics/ai-performance?${params}`
     );
     return response.data.data;
@@ -43,7 +43,7 @@ export const analyticsService = {
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
     
-    const response = await apiClient.get<ApiResponse<AgentProductivity>>(
+    const response = await api.get<ApiResponse<AgentProductivity>>(
       `/analytics/agent-productivity?${params}`
     );
     return response.data.data;
@@ -51,7 +51,7 @@ export const analyticsService = {
 
   getWeeklyReport: async (weekStart?: string): Promise<WeeklyReport> => {
     const params = weekStart ? `?weekStart=${weekStart}` : '';
-    const response = await apiClient.get<ApiResponse<WeeklyReport>>(
+    const response = await api.get<ApiResponse<WeeklyReport>>(
       `/stats/weekly-report${params}`
     );
     return response.data.data;
@@ -62,7 +62,7 @@ export const analyticsService = {
     if (startDate) params.set('startDate', startDate);
     if (endDate) params.set('endDate', endDate);
     
-    const response = await apiClient.get(
+    const response = await api.get(
       `/analytics/export/${type}?${params}`,
       { responseType: 'blob' }
     );

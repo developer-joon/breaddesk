@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 
 export default function CustomerPortalPage() {
   const params = useParams();
-  const token = params.token as string;
+  const token = params?.token as string;
   
   const [inquiry, setInquiry] = useState<PortalInquiry | null>(null);
   const [loading, setLoading] = useState(true);

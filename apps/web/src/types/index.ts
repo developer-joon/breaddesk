@@ -62,6 +62,7 @@ export interface PasswordChangeRequest {
 // ─── Inquiry ──────────────────────────────────────────────
 export type InquiryStatus = 'OPEN' | 'AI_ANSWERED' | 'ESCALATED' | 'RESOLVED' | 'CLOSED';
 export type InquiryMessageRole = 'USER' | 'AI' | 'AGENT';
+export type Sentiment = 'ANGRY' | 'NEUTRAL' | 'POSITIVE';
 
 export interface InquiryMessageResponse {
   id: number;
@@ -111,6 +112,15 @@ export interface ConvertToTaskRequest {
   type?: string;
   urgency?: TaskUrgency;
   assigneeId?: number;
+  teamId?: number;
+}
+
+export interface TaskPreviewResponse {
+  title: string;
+  description: string;
+  checklist: string[];
+  urgency?: string;
+  category?: string;
 }
 
 // Legacy types used in existing pages (kept for compat)
@@ -510,6 +520,25 @@ export interface TeamMemberStats {
 
 export type TeamStats = TeamMemberStats[];
 
+// ─── Teams ────────────────────────────────────────────────
+export interface TeamMemberResponse {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  role: string;
+  joinedAt: string;
+}
+
+export interface TeamResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  members: TeamMemberResponse[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface WeeklyReport {
   weekStart: string;
   weekEnd: string;
@@ -558,6 +587,8 @@ export interface ChannelResponse {
   id: number;
   name: string;
   type: string;
+  webhookUrl?: string;
+  hasAuthToken?: boolean;
   config?: Record<string, string>;
   enabled: boolean;
   createdAt: string;

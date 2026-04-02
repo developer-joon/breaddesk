@@ -14,10 +14,9 @@ import {
   getChannels,
   updateChannel,
   testChannel,
-  type ChannelConfigResponse,
 } from '@/services/channels';
 import api from '@/lib/api';
-import type { User, ApiResponse } from '@/types';
+import type { User, ApiResponse, ChannelResponse } from '@/types';
 import toast from 'react-hot-toast';
 
 interface SlaRuleResponse {
@@ -242,12 +241,12 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels' | 'features' | 'integrations' | 'teams'>('sla');
   const [slaRules, setSlaRules] = useState<SlaRuleResponse[]>([]);
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
-  const [channels, setChannels] = useState<ChannelConfigResponse[]>([]);
+  const [channels, setChannels] = useState<ChannelResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Channel edit modal state
-  const [editingChannel, setEditingChannel] = useState<ChannelConfigResponse | null>(null);
+  const [editingChannel, setEditingChannel] = useState<ChannelResponse | null>(null);
   const [editWebhookUrl, setEditWebhookUrl] = useState('');
   const [editAuthToken, setEditAuthToken] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -296,22 +295,22 @@ export default function SettingsPage() {
     loadSettings();
   }, [loadSettings]);
 
-  const handleToggleChannel = async (channel: ChannelConfigResponse) => {
+  const handleToggleChannel = async (channel: ChannelResponse) => {
     try {
       await updateChannel(channel.id, {
-        channelType: channel.channelType,
-        isActive: !channel.isActive,
+        channelType: channel.type,
+        isActive: !channel.enabled,
       });
       setChannels((prev) =>
-        prev.map((c) => (c.id === channel.id ? { ...c, isActive: !c.isActive } : c)),
+        prev.map((c) => (c.id === channel.id ? { ...c, enabled: !c.enabled } : c)),
       );
-      toast.success(`${CHANNEL_LABELS[channel.channelType] || channel.channelType} ${!channel.isActive ? '활성화' : '비활성화'}됨`);
+      toast.success(`${CHANNEL_LABELS[channel.type] || channel.type} ${!channel.enabled ? '활성화' : '비활성화'}됨`);
     } catch {
       toast.error('채널 상태 변경에 실패했습니다.');
     }
   };
 
-  const handleEditChannel = (channel: ChannelConfigResponse) => {
+  const handleEditChannel = (channel: ChannelResponse) => {
     setEditingChannel(channel);
     setEditWebhookUrl(channel.webhookUrl || '');
     setEditAuthToken('');
@@ -322,7 +321,7 @@ export default function SettingsPage() {
     setIsSaving(true);
     try {
       const request: Record<string, unknown> = {
-        channelType: editingChannel.channelType,
+        channelType: editingChannel.type,
         webhookUrl: editWebhookUrl || null,
       };
       if (editAuthToken) {
@@ -339,7 +338,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleTestWebhook = async (channel: ChannelConfigResponse) => {
+  const handleTestWebhook = async (channel: ChannelResponse) => {
     setIsTesting(channel.id);
     try {
       const result = await testChannel(channel.id);
@@ -736,13 +735,13 @@ export default function SettingsPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <span className="text-2xl">
-                                {CHANNEL_ICONS[channel.channelType] || '🔗'}
+                                {CHANNEL_ICONS[channel.type] || '🔗'}
                               </span>
                               <span className="text-lg font-medium">
-                                {CHANNEL_LABELS[channel.channelType] || channel.channelType}
+                                {CHANNEL_LABELS[channel.type] || channel.type}
                               </span>
-                              <Badge variant={channel.isActive ? 'success' : 'default'}>
-                                {channel.isActive ? '활성' : '비활성'}
+                              <Badge variant={channel.enabled ? 'success' : 'default'}>
+                                {channel.enabled ? '활성' : '비활성'}
                               </Badge>
                               {channel.hasAuthToken && (
                                 <Badge variant="info">🔑 토큰 설정됨</Badge>
@@ -776,12 +775,12 @@ export default function SettingsPage() {
                             <button
                               onClick={() => handleToggleChannel(channel)}
                               className={`px-3 py-1.5 text-sm rounded-md ${
-                                channel.isActive
+                                channel.enabled
                                   ? 'bg-red-50 text-red-600 border border-red-300 hover:bg-red-100'
                                   : 'bg-green-50 text-green-600 border border-green-300 hover:bg-green-100'
                               }`}
                             >
-                              {channel.isActive ? '비활성화' : '활성화'}
+                              {channel.enabled ? '비활성화' : '활성화'}
                             </button>
                           </div>
                         </div>
@@ -957,7 +956,7 @@ export default function SettingsPage() {
       {editingChannel && (
         <Modal
           isOpen={!!editingChannel}
-          title={`${CHANNEL_LABELS[editingChannel.channelType] || editingChannel.channelType} 설정`}
+          title={`${CHANNEL_LABELS[editingChannel.type] || editingChannel.type} 설정`}
           onClose={() => setEditingChannel(null)}
         >
           <div className="space-y-4">

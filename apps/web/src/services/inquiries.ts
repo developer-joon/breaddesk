@@ -62,12 +62,21 @@ export async function addInquiryMessage(
   return data.data;
 }
 
+export async function generateTaskPreview(id: number): Promise<any> {
+  const { data } = await api.get<ApiResponse<any>>(
+    `/inquiries/${id}/generate-task-preview`,
+  );
+  return data.data;
+}
+
 export async function convertInquiryToTask(
   id: number,
+  request?: ConvertToTaskRequest,
 ): Promise<any> {
   // 백엔드 엔드포인트: POST /api/v1/tasks/from-inquiry/{inquiryId}
   const { data } = await api.post<ApiResponse<any>>(
     `/tasks/from-inquiry/${id}`,
+    request,
   );
   return data.data;
 }
