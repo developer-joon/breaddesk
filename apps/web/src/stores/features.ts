@@ -32,6 +32,8 @@ export const useFeaturesStore = create<FeaturesState>((set, get) => ({
 
   isFeatureEnabled: (feature: keyof FeatureFlags) => {
     const { features } = get();
-    return features?.[feature] ?? false;
+    // API 실패 시 기본값: kanbanTasks, internalNotes는 true
+    const defaults: Partial<FeatureFlags> = { kanbanTasks: true, internalNotes: true };
+    return features?.[feature] ?? defaults[feature] ?? false;
   },
 }));
