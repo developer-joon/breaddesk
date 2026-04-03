@@ -111,11 +111,29 @@ export default function LoginPage() {
         <div className="mt-6 text-center">
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               setEmail('demo@breaddesk.com');
               setPassword('demo1234');
+              // Auto-submit after a brief delay to ensure state updates
+              setTimeout(async () => {
+                setIsLoading(true);
+                setError('');
+                try {
+                  await login({ email: 'demo@breaddesk.com', password: 'demo1234' });
+                  toast.success('로그인 성공!');
+                  router.push('/dashboard');
+                } catch (err: unknown) {
+                  const message =
+                    err instanceof Error ? err.message : '로그인 실패. 이메일과 비밀번호를 확인해주세요.';
+                  setError(message);
+                  toast.error(message);
+                } finally {
+                  setIsLoading(false);
+                }
+              }, 100);
             }}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline"
+            disabled={isLoading}
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline disabled:opacity-50 disabled:cursor-not-allowed"
           >
             데모 계정으로 체험하기
           </button>

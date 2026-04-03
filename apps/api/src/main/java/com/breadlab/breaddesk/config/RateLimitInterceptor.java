@@ -13,14 +13,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Simple in-memory rate limiter using sliding window.
- * - Login endpoints: 10 requests per minute
+ * - Login endpoints: 20 requests per minute
  * - General API: 100 requests per minute
  */
 @Slf4j
 @Component
 public class RateLimitInterceptor implements HandlerInterceptor {
 
-    private static final int LOGIN_LIMIT = 10;
+    private static final int LOGIN_LIMIT = 20;
     private static final int GENERAL_LIMIT = 100;
     private static final long WINDOW_MS = 60_000; // 1 minute
 
