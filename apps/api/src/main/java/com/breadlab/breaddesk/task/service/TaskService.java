@@ -108,7 +108,15 @@ public class TaskService {
     }
 
     public Page<TaskResponse> getAllTasks(String status, Long assigneeId, String priority, Long teamId, String dueDateFrom, String dueDateTo, Pageable pageable) {
-        return taskRepository.findWithFilters(status, priority, assigneeId, teamId, dueDateFrom, dueDateTo, pageable)
+        TaskStatus taskStatus = null;
+        TaskUrgency taskUrgency = null;
+        try {
+            if (status != null && !status.isBlank()) taskStatus = TaskStatus.valueOf(status);
+        } catch (IllegalArgumentException ignored) {}
+        try {
+            if (priority != null && !priority.isBlank()) taskUrgency = TaskUrgency.valueOf(priority);
+        } catch (IllegalArgumentException ignored) {}
+        return taskRepository.search(taskStatus, null, taskUrgency, assigneeId, pageable)
                 .map(this::toResponse);
     }
 

@@ -46,8 +46,16 @@ export default function MyPage() {
 
       // Try fetching personal notes
       try {
-        const { data } = await api.get<ApiResponse<PersonalNoteResponse[]>>('/personal-notes');
-        if (data.success) setNotes(data.data);
+        const { data } = await api.get<ApiResponse<any>>('/personal-notes');
+        if (data.success) {
+          // API가 Page 객체 또는 배열을 반환할 수 있음
+          const notesData = data.data;
+          if (Array.isArray(notesData)) {
+            setNotes(notesData);
+          } else if (notesData?.content && Array.isArray(notesData.content)) {
+            setNotes(notesData.content);
+          }
+        }
       } catch {
         // Personal notes endpoint might not exist yet
       }
