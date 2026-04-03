@@ -54,7 +54,7 @@ export default function InquiriesPage() {
     setError(null);
     try {
       const result = await getInquiries({ page, size: 20 });
-      setInquiries(result.content);
+      setInquiries(result?.content ?? []);
       setTotalPages(result.totalPages);
     } catch (err) {
       console.error('Failed to fetch inquiries:', err);

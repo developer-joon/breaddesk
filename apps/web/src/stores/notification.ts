@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getNotifications, getUnreadCount, markAsRead as apiMarkAsRead, markAllAsRead as apiMarkAllAsRead } from '@/services/notifications';
 
 export interface Notification {
   id: number | string;
@@ -20,39 +21,29 @@ interface NotificationState {
   markAllAsRead: () => void;
   removeNotification: (id: number | string) => void;
   setNotifications: (notifications: Notification[]) => void;
+  fetchNotifications: () => Promise<void>;
   startPolling: () => void;
   stopPolling: () => void;
 }
 
 let pollingInterval: NodeJS.Timeout | null = null;
 
-// Mock notifications for now - 나중에 실제 API로 교체
-const mockNotifications: Notification[] = [
-  {
-    id: 1,
-    title: '새 문의가 도착했습니다',
-    message: '고객님이 제품 문의를 남겼습니다.',
-    time: '5분 전',
-    unread: true,
-    type: 'info',
-  },
-  {
-    id: 2,
-    title: 'SLA 위반 경고',
-    message: '문의 #1234의 응답 시간이 임박했습니다.',
-    time: '1시간 전',
-    unread: true,
-    type: 'warning',
-  },
-  {
-    id: 3,
-    title: '업무가 완료되었습니다',
-    message: '김담당자가 업무 #5678을 완료했습니다.',
-    time: '2시간 전',
-    unread: false,
-    type: 'success',
-  },
-];
+function formatTime(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return '방금 전';
+    if (diffMin < 60) return `${diffMin}분 전`;
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return `${diffHour}시간 전`;
+    const diffDay = Math.floor(diffHour / 24);
+    return `${diffDay}일 전`;
+  } catch {
+    return dateStr;
+  }
+}
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
@@ -74,7 +65,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }));
   },
 
-  markAsRead: (id) => {
+  markAsRead: async (id) => {
+    try {
+      await apiMarkAsRead(Number(id));
+    } catch {
+      // API 실패해도 UI는 업데이트
+    }
     set((state) => ({
       notifications: state.notifications.map((n) =>
         n.id === id ? { ...n, unread: false } : n
@@ -83,7 +79,12 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     }));
   },
 
-  markAllAsRead: () => {
+  markAllAsRead: async () => {
+    try {
+      await apiMarkAllAsRead();
+    } catch {
+      // API 실패해도 UI는 업데이트
+    }
     set((state) => ({
       notifications: state.notifications.map((n) => ({ ...n, unread: false })),
       unreadCount: 0,
@@ -111,24 +112,45 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     });
   },
 
+  fetchNotifications: async () => {
+    try {
+      const [pageResult, count] = await Promise.allSettled([
+        getNotifications(0, 10),
+        getUnreadCount(),
+      ]);
+
+      if (pageResult.status === 'fulfilled' && pageResult.value?.content) {
+        const mapped: Notification[] = pageResult.value.content.map((n: any) => ({
+          id: n.id,
+          title: n.title ?? n.message ?? '알림',
+          message: n.message,
+          time: formatTime(n.createdAt),
+          unread: !n.read,
+          type: n.type?.toLowerCase() ?? 'info',
+        }));
+        set({ notifications: mapped, lastFetchTime: Date.now() });
+      }
+
+      if (count.status === 'fulfilled') {
+        set({ unreadCount: count.value ?? 0 });
+      }
+    } catch {
+      // 실패 시 기존 상태 유지
+    }
+  },
+
   startPolling: () => {
     const state = get();
     if (state.isPolling) return;
 
     set({ isPolling: true });
 
-    // Initial fetch
-    get().setNotifications(mockNotifications);
+    // Initial fetch from API
+    get().fetchNotifications();
 
     // Poll every 30 seconds
     pollingInterval = setInterval(() => {
-      // 실제 환경에서는 여기서 API 호출
-      // const response = await fetch('/api/notifications');
-      // const data = await response.json();
-      // get().setNotifications(data);
-      
-      // For now, just simulate with mock data
-      console.log('[NotificationStore] Polling notifications...');
+      get().fetchNotifications();
     }, 30000);
   },
 

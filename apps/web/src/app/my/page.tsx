@@ -38,10 +38,10 @@ export default function MyPage() {
       ]);
 
       if (tasksResult.status === 'fulfilled') {
-        setTasks(tasksResult.value.content);
+        setTasks(tasksResult.value?.content ?? []);
       }
       if (notifResult.status === 'fulfilled') {
-        setNotifications(notifResult.value.content);
+        setNotifications(notifResult.value?.content ?? []);
       }
 
       // Try fetching personal notes

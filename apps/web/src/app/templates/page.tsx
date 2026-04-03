@@ -36,7 +36,7 @@ export default function TemplatesPage() {
     setError(null);
     try {
       const result = await getTemplates(0, 50, filterCategory);
-      setTemplates(result.content);
+      setTemplates(result?.content ?? []);
     } catch (err) {
       console.error('Failed to fetch templates:', err);
       setError('템플릿 목록을 불러오지 못했습니다.');
