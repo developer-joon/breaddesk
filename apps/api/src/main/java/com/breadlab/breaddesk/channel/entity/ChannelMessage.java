@@ -2,6 +2,8 @@ package com.breadlab.breaddesk.channel.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.time.LocalDateTime;
 
 /**
@@ -30,9 +32,11 @@ public class ChannelMessage {
     @Column(nullable = false, columnDefinition = "text")
     private String content;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "sender_info", columnDefinition = "jsonb")
     private String senderInfo; // JSON: { "name": "...", "email": "...", "userId": "..." }
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "channel_metadata", columnDefinition = "jsonb")
     private String channelMetadata; // Channel-specific metadata
 

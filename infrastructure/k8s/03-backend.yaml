@@ -17,7 +17,7 @@ spec:
       - name: ghcr-secret
       containers:
       - name: breaddesk-api
-        image: ghcr.io/botjoonwoo/breaddesk-api:latest
+        image: ghcr.io/developer-joon/breaddesk-api:latest
         ports:
         - containerPort: 8080
         env:

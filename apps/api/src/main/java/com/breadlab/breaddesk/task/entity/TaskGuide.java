@@ -15,6 +15,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Getter
 @Setter
@@ -33,12 +35,15 @@ public class TaskGuide {
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "checklist_json", columnDefinition = "jsonb")
     private String checklistJson;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "related_docs_json", columnDefinition = "jsonb")
     private String relatedDocsJson;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "similar_tasks_json", columnDefinition = "jsonb")
     private String similarTasksJson;
 
