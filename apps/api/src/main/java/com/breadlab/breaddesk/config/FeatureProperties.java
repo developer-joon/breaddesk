@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "breaddesk.features")
 public class FeatureProperties {
-    private boolean kanbanTasks = false;
+    private boolean kanbanTasks = true;
     private boolean internalNotes = true;
     private boolean aiAssignment = false;
     private boolean jiraIntegration = false;

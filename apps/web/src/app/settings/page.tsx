@@ -586,11 +586,11 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-6 text-sm text-gray-600">
                               <div>
                                 <span className="font-medium">응답 시간:</span>{' '}
-                                {rule.responseTimeHours}시간
+                                {rule.responseTimeHours ? `${rule.responseTimeHours}시간` : '미설정'}
                               </div>
                               <div>
                                 <span className="font-medium">해결 시간:</span>{' '}
-                                {rule.resolveTimeHours}시간
+                                {rule.resolveTimeHours ? `${rule.resolveTimeHours}시간` : '미설정'}
                               </div>
                             </div>
                           </div>
