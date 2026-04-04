@@ -292,13 +292,13 @@ export default function InquiriesPage() {
         {error && <ErrorMessage message={error} onRetry={fetchInquiries} />}
 
         {!isLoading && !error && (
-          <div className="flex-1 grid lg:grid-cols-3 gap-4 overflow-hidden">
+          <div className="grid lg:grid-cols-3 gap-4" style={{ minHeight: 'calc(100vh - 200px)' }}>
             {/* Inquiry List */}
-            <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                 <h2 className="font-semibold">문의 목록 ({inquiries.length})</h2>
               </div>
-              <div className="overflow-y-auto flex-1">
+              <div className="overflow-y-auto flex-1 min-h-0">
                 {inquiries.length === 0 ? (
                   <EmptyState icon="💬" title="문의가 없습니다" />
                 ) : (
