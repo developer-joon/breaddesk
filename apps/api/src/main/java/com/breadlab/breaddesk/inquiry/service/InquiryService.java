@@ -4,6 +4,8 @@ import com.breadlab.breaddesk.ai.AIAnswerService;
 import com.breadlab.breaddesk.ai.AITaskGenerationService;
 import com.breadlab.breaddesk.ai.EscalationService;
 import com.breadlab.breaddesk.audit.service.AuditLogService;
+import com.breadlab.breaddesk.automation.entity.TriggerType;
+import com.breadlab.breaddesk.automation.service.AutomationRuleService;
 import com.breadlab.breaddesk.channel.service.WebhookOutboundService;
 import com.breadlab.breaddesk.common.exception.ResourceNotFoundException;
 import com.breadlab.breaddesk.csat.CsatService;
@@ -45,6 +47,7 @@ public class InquiryService {
     private final NotificationEventPublisher notificationEventPublisher;
     private final CsatService csatService;
     private final AuditLogService auditLogService;
+    private final AutomationRuleService automationRuleService;
 
     @Transactional
     public InquiryResponse createInquiry(InquiryRequest request) {
@@ -70,6 +73,15 @@ public class InquiryService {
                 saved.getSenderName(),
                 saved.getMessage()
         );
+
+        // Execute automation rules BEFORE AI
+        try {
+            automationRuleService.executeRulesForInquiry(saved, TriggerType.INQUIRY_CREATED);
+            // Reload in case automation changed status
+            saved = inquiryRepository.findById(saved.getId()).orElse(saved);
+        } catch (Exception e) {
+            log.error("Automation rule execution failed for inquiry #{}: {}", saved.getId(), e.getMessage(), e);
+        }
 
         // AI 자동 답변 시도
         try {
@@ -137,6 +149,14 @@ public class InquiryService {
                 request.getStatus().name(),
                 inquiry.getSenderName()
         );
+        
+        // Execute automation rules for status change
+        try {
+            automationRuleService.executeRulesForInquiry(inquiry, TriggerType.INQUIRY_STATUS_CHANGED);
+        } catch (Exception e) {
+            log.error("Automation rule execution failed for status change on inquiry #{}: {}", 
+                    id, e.getMessage(), e);
+        }
         
         if (request.getStatus() == InquiryStatus.RESOLVED || request.getStatus() == InquiryStatus.CLOSED) {
             inquiry.setResolvedAt(LocalDateTime.now());

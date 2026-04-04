@@ -4,6 +4,7 @@ import com.breadlab.breaddesk.inquiry.entity.Inquiry;
 import com.breadlab.breaddesk.inquiry.entity.InquiryStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -32,6 +33,7 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     @Query("SELECT i FROM Inquiry i WHERE i.message LIKE %:keyword% OR i.senderName LIKE %:keyword%")
     List<Inquiry> searchByKeyword(@Param("keyword") String keyword);
 
+    @EntityGraph(attributePaths = {"task", "team"})
     @Query("SELECT i FROM Inquiry i WHERE "
             + "(:status IS NULL OR i.status = :status) "
             + "AND (:teamId IS NULL OR i.team.id = :teamId)")

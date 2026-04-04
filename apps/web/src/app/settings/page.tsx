@@ -11,6 +11,7 @@ import { useFeaturesStore } from '@/stores/features';
 import { getMembers, createMember, updateMember, deleteMember } from '@/services/members';
 import { TeamsManagement } from '@/components/settings/TeamsManagement';
 import { AISettings } from '@/components/settings/AISettings';
+import { AutomationRulesManagement } from '@/components/settings/AutomationRulesManagement';
 import {
   getChannels,
   updateChannel,
@@ -239,7 +240,7 @@ function JiraIntegrationCard() {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels' | 'features' | 'integrations' | 'teams' | 'ai'>('sla');
+  const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels' | 'features' | 'integrations' | 'teams' | 'ai' | 'automation'>('sla');
   const [slaRules, setSlaRules] = useState<SlaRuleResponse[]>([]);
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [channels, setChannels] = useState<ChannelResponse[]>([]);
@@ -554,6 +555,16 @@ export default function SettingsPage() {
               >
                 🤖 AI 설정
               </button>
+              <button
+                onClick={() => setActiveTab('automation')}
+                className={`px-6 py-3 font-medium transition-colors ${
+                  activeTab === 'automation'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                ⚡ 자동화
+              </button>
             </div>
           </div>
 
@@ -857,6 +868,11 @@ export default function SettingsPage() {
             {/* AI Settings Tab */}
             {!isLoading && !error && activeTab === 'ai' && (
               <AISettings />
+            )}
+
+            {/* Automation Tab */}
+            {!isLoading && !error && activeTab === 'automation' && (
+              <AutomationRulesManagement />
             )}
           </div>
         </div>

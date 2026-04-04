@@ -18,6 +18,7 @@ import {
 } from '@/services/inquiries';
 import { exportInquiries } from '@/services/export';
 import { aiService } from '@/services/ai';
+import { uploadAttachment, getAttachments } from '@/services/attachments';
 import type { InquiryResponse, InquiryMessageResponse, InquiryStatus, SimilarInquiryResponse } from '@/types';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -29,6 +30,8 @@ export default function InquiriesPage() {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -97,25 +100,51 @@ export default function InquiriesPage() {
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setSelectedFiles(Array.from(e.target.files));
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(files => files.filter((_, i) => i !== index));
+  };
+
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedInquiry) return;
+    if ((!newMessage.trim() && selectedFiles.length === 0) || !selectedInquiry) return;
 
     setIsSending(true);
     try {
-      const msg = await addInquiryMessage(selectedInquiry.id, {
-        role: 'AGENT',
-        message: newMessage,
-      });
-      setSelectedInquiry({
-        ...selectedInquiry,
-        messages: [...(selectedInquiry.messages || []), msg],
-      });
+      // Upload attachments first
+      if (selectedFiles.length > 0) {
+        setIsUploading(true);
+        for (const file of selectedFiles) {
+          await uploadAttachment(file, 'inquiry', selectedInquiry.id);
+        }
+        setIsUploading(false);
+        toast.success('파일 업로드 완료');
+      }
+
+      // Send message if any
+      if (newMessage.trim()) {
+        const msg = await addInquiryMessage(selectedInquiry.id, {
+          role: 'AGENT',
+          message: newMessage,
+        });
+        setSelectedInquiry({
+          ...selectedInquiry,
+          messages: [...(selectedInquiry.messages || []), msg],
+        });
+      }
+      
       setNewMessage('');
-      toast.success('메시지 전송 완료');
+      setSelectedFiles([]);
+      toast.success('전송 완료');
     } catch (err) {
-      toast.error('메시지 전송에 실패했습니다.');
+      toast.error('전송에 실패했습니다.');
     } finally {
       setIsSending(false);
+      setIsUploading(false);
     }
   };
 
@@ -608,23 +637,50 @@ export default function InquiriesPage() {
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                        placeholder="메시지를 입력하세요..."
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        disabled={isSending}
-                      />
-                      <button
-                        onClick={handleSendMessage}
-                        disabled={isSending || !newMessage.trim()}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                      >
-                        {isSending ? '...' : '전송'}
-                      </button>
+                    <div className="space-y-2">
+                      {selectedFiles.length > 0 && (
+                        <div className="flex flex-wrap gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          {selectedFiles.map((file, index) => (
+                            <div key={index} className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-700 rounded-full text-sm">
+                              <span>📎 {file.name}</span>
+                              <button
+                                onClick={() => handleRemoveFile(index)}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <label className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer">
+                          📎
+                          <input
+                            type="file"
+                            multiple
+                            onChange={handleFileSelect}
+                            className="hidden"
+                            disabled={isSending}
+                          />
+                        </label>
+                        <input
+                          type="text"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                          placeholder="메시지를 입력하세요..."
+                          className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                          disabled={isSending}
+                        />
+                        <button
+                          onClick={handleSendMessage}
+                          disabled={isSending || (!newMessage.trim() && selectedFiles.length === 0)}
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          {isUploading ? '업로드 중...' : isSending ? '전송 중...' : '전송'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </>
