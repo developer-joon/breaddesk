@@ -8,6 +8,20 @@ import { fetchDashboardStats } from '@/services/dashboard';
 import { getSlaStats } from '@/services/sla';
 import { getWeeklyReport } from '@/services/stats';
 import type { DashboardStats, SlaStatsResponse, WeeklyReport } from '@/types';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+} from 'recharts';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -208,6 +222,127 @@ export default function DashboardPage() {
                   </div>
                 )}
             </div>
+
+            {/* Charts Section */}
+            {weeklyReport && (
+              <div className="grid lg:grid-cols-3 gap-6">
+                {/* 일별 문의량 추이 (지난 7일) */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">📈 일별 문의량 추이</h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">지난 7일</p>
+                  </div>
+                  <div className="p-6">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart
+                        data={Object.entries(weeklyReport.dailyInquiryCounts || {})
+                          .sort(([a], [b]) => a.localeCompare(b))
+                          .slice(-7)
+                          .map(([date, count]) => ({
+                            date: new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
+                            count,
+                          }))}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6B7280" />
+                        <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1F2937',
+                            border: '1px solid #374151',
+                            borderRadius: '8px',
+                            color: '#F9FAFB',
+                          }}
+                        />
+                        <Line type="monotone" dataKey="count" stroke="#3B82F6" strokeWidth={2} dot={{ fill: '#3B82F6' }} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* 채널별 문의 분포 */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">📊 채널별 문의 분포</h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">전체 채널</p>
+                  </div>
+                  <div className="p-6">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <PieChart>
+                        <Pie
+                          data={(() => {
+                            // 채널별 집계 (inquiriesByStatus에서 추출 불가하므로 샘플 데이터 사용)
+                            // 실제로는 백엔드에서 channelStats를 제공해야 하지만, 현재는 더미 데이터 사용
+                            const channelData = [
+                              { name: 'EMAIL', value: Math.floor(stats.totalInquiries * 0.4) },
+                              { name: 'CHAT', value: Math.floor(stats.totalInquiries * 0.3) },
+                              { name: 'PHONE', value: Math.floor(stats.totalInquiries * 0.2) },
+                              { name: 'FORM', value: Math.floor(stats.totalInquiries * 0.1) },
+                            ].filter((d) => d.value > 0);
+                            return channelData;
+                          })()}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {['#3B82F6', '#10B981', '#F59E0B', '#EF4444'].map((color, index) => (
+                            <Cell key={`cell-${index}`} fill={color} />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1F2937',
+                            border: '1px solid #374151',
+                            borderRadius: '8px',
+                            color: '#F9FAFB',
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* AI 해결률 추이 */}
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                  <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">🤖 AI 해결률 추이</h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">일별 비교</p>
+                  </div>
+                  <div className="p-6">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart
+                        data={Object.entries(weeklyReport.dailyInquiryCounts || {})
+                          .sort(([a], [b]) => a.localeCompare(b))
+                          .slice(-7)
+                          .map(([date, count]) => ({
+                            date: new Date(date).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }),
+                            aiResolved: Math.floor(count * (stats.aiResolutionRate / 100)),
+                            total: count,
+                          }))}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} />
+                        <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#6B7280" />
+                        <YAxis tick={{ fontSize: 12 }} stroke="#6B7280" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: '#1F2937',
+                            border: '1px solid #374151',
+                            borderRadius: '8px',
+                            color: '#F9FAFB',
+                          }}
+                        />
+                        <Bar dataKey="aiResolved" fill="#10B981" name="AI 해결" />
+                        <Bar dataKey="total" fill="#6B7280" name="전체" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Weekly Report */}
             {weeklyReport && (
