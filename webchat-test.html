@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BreadDesk 웹챗 위젯 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #3B82F6;
+        }
+        .info-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🍞 BreadDesk 웹챗 위젯 테스트</h1>
+    
+    <div class="info-box">
+        <h2>위젯 임베드 방법</h2>
+        <p>아래 스크립트 태그를 웹사이트의 <code>&lt;body&gt;</code> 끝에 추가하세요:</p>
+        <pre>&lt;script src="https://breaddesk.k6s.app/webchat-widget.js" data-server="https://breaddesk.k6s.app"&gt;&lt;/script&gt;</pre>
+    </div>
+    
+    <div class="info-box">
+        <h2>기능</h2>
+        <ul>
+            <li>화면 우하단에 🍞 플로팅 버튼이 표시됩니다</li>
+            <li>클릭하면 채팅창이 열립니다</li>
+            <li>이름/이메일 입력 후 채팅을 시작할 수 있습니다 (선택사항)</li>
+            <li>메시지를 보내면 AI가 자동으로 답변합니다</li>
+            <li>상담원이 답변하면 30초마다 폴링하여 가져옵니다</li>
+            <li>세션은 sessionStorage에 저장되어 새로고침해도 유지됩니다</li>
+        </ul>
+    </div>
+    
+    <div class="info-box">
+        <h2>API 엔드포인트</h2>
+        <ul>
+            <li><code>POST /api/v1/webchat/sessions</code> - 세션 생성</li>
+            <li><code>POST /api/v1/webchat/sessions/{sessionId}/messages</code> - 메시지 전송</li>
+            <li><code>GET /api/v1/webchat/sessions/{sessionId}/messages</code> - 메시지 히스토리</li>
+        </ul>
+    </div>
+    
+    <div class="info-box">
+        <p><strong>현재 페이지에서 테스트:</strong> 화면 우하단의 🍞 버튼을 클릭해보세요!</p>
+    </div>
+    
+    <!-- 웹챗 위젯 임베드 -->
+    <script src="https://breaddesk.k6s.app/webchat-widget.js" data-server="https://breaddesk.k6s.app"></script>
+</body>
+</html>
