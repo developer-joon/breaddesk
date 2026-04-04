@@ -14,6 +14,7 @@ interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
   isPolling: boolean;
+  isSSEConnected: boolean;
   lastFetchTime: number | null;
   
   addNotification: (notification: Omit<Notification, 'id' | 'time' | 'unread'>) => void;
@@ -24,9 +25,12 @@ interface NotificationState {
   fetchNotifications: () => Promise<void>;
   startPolling: () => void;
   stopPolling: () => void;
+  startSSE: () => void;
+  stopSSE: () => void;
 }
 
 let pollingInterval: NodeJS.Timeout | null = null;
+let eventSource: EventSource | null = null;
 
 function formatTime(dateStr: string): string {
   try {
@@ -49,6 +53,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
   isPolling: false,
+  isSSEConnected: false,
   lastFetchTime: null,
 
   addNotification: (notification) => {
@@ -160,5 +165,84 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       pollingInterval = null;
     }
     set({ isPolling: false });
+  },
+
+  startSSE: () => {
+    const state = get();
+    if (state.isSSEConnected || eventSource) return;
+
+    // Initial fetch from API
+    get().fetchNotifications();
+
+    // Try to establish SSE connection
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      eventSource = new EventSource(`${apiUrl}/api/v1/notifications/stream`, {
+        withCredentials: true,
+      });
+
+      eventSource.addEventListener('connected', () => {
+        console.log('[SSE] Connected to notification stream');
+        set({ isSSEConnected: true });
+      });
+
+      eventSource.addEventListener('notification', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('[SSE] Notification received:', data);
+          
+          const notification: Notification = {
+            id: data.entityId || Date.now(),
+            title: data.title,
+            message: data.message,
+            time: '방금 전',
+            unread: true,
+            type: data.type?.toLowerCase().includes('warning') ? 'warning' 
+                  : data.type?.toLowerCase().includes('error') ? 'error'
+                  : 'info',
+          };
+
+          set((state) => ({
+            notifications: [notification, ...state.notifications],
+            unreadCount: state.unreadCount + 1,
+          }));
+        } catch (err) {
+          console.error('[SSE] Failed to parse notification:', err);
+        }
+      });
+
+      eventSource.addEventListener('heartbeat', () => {
+        console.log('[SSE] Heartbeat received');
+      });
+
+      eventSource.onerror = (error) => {
+        console.error('[SSE] Connection error:', error);
+        set({ isSSEConnected: false });
+        eventSource?.close();
+        eventSource = null;
+
+        // Fallback to polling after 5 seconds
+        setTimeout(() => {
+          const currentState = get();
+          if (!currentState.isSSEConnected && !currentState.isPolling) {
+            console.log('[SSE] Falling back to polling');
+            get().startPolling();
+          }
+        }, 5000);
+      };
+
+    } catch (err) {
+      console.error('[SSE] Failed to establish connection:', err);
+      // Fallback to polling
+      get().startPolling();
+    }
+  },
+
+  stopSSE: () => {
+    if (eventSource) {
+      eventSource.close();
+      eventSource = null;
+    }
+    set({ isSSEConnected: false });
   },
 }));

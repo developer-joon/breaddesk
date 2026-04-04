@@ -11,6 +11,7 @@ import com.breadlab.breaddesk.inquiry.entity.InquiryMessage;
 import com.breadlab.breaddesk.inquiry.entity.InquiryStatus;
 import com.breadlab.breaddesk.inquiry.repository.InquiryMessageRepository;
 import com.breadlab.breaddesk.inquiry.repository.InquiryRepository;
+import com.breadlab.breaddesk.notification.NotificationEventPublisher;
 import com.breadlab.breaddesk.task.entity.Task;
 import com.breadlab.breaddesk.task.entity.TaskStatus;
 import com.breadlab.breaddesk.task.repository.TaskRepository;
@@ -39,6 +40,7 @@ public class InquiryService {
     private final AITaskGenerationService taskGenerationService;
     private final EscalationService escalationService;
     private final WebhookOutboundService webhookOutboundService;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     @Transactional
     public InquiryResponse createInquiry(InquiryRequest request) {
@@ -53,6 +55,13 @@ public class InquiryService {
                 .build();
 
         Inquiry saved = inquiryRepository.save(inquiry);
+
+        // Publish SSE notification for new inquiry
+        notificationEventPublisher.publishNewInquiry(
+                saved.getId(),
+                saved.getSenderName(),
+                saved.getMessage()
+        );
 
         // AI 자동 답변 시도
         try {
@@ -108,6 +117,13 @@ public class InquiryService {
     public InquiryResponse updateInquiryStatus(Long id, InquiryStatusUpdateRequest request) {
         Inquiry inquiry = findInquiryOrThrow(id);
         inquiry.setStatus(request.getStatus());
+        
+        // Publish SSE notification for status change
+        notificationEventPublisher.publishInquiryStatusChange(
+                id,
+                request.getStatus().name(),
+                inquiry.getSenderName()
+        );
         
         if (request.getStatus() == InquiryStatus.RESOLVED || request.getStatus() == InquiryStatus.CLOSED) {
             inquiry.setResolvedAt(LocalDateTime.now());

@@ -18,7 +18,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuthStore();
   const { theme, setTheme, resolvedTheme } = useThemeStore();
-  const { unreadCount, startPolling, stopPolling } = useNotificationStore();
+  const { unreadCount, startSSE, stopSSE, startPolling, stopPolling, isSSEConnected } = useNotificationStore();
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
@@ -26,13 +26,14 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    // Start polling when component mounts
-    startPolling();
+    // Try SSE first, fallback to polling on error
+    startSSE();
     return () => {
-      // Stop polling when component unmounts
+      // Stop SSE/polling when component unmounts
+      stopSSE();
       stopPolling();
     };
-  }, [startPolling, stopPolling]);
+  }, [startSSE, stopSSE, stopPolling]);
 
   // Debounced search
   useEffect(() => {

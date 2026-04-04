@@ -3,6 +3,7 @@ package com.breadlab.breaddesk.sla.service;
 import com.breadlab.breaddesk.member.entity.Member;
 import com.breadlab.breaddesk.member.entity.MemberRole;
 import com.breadlab.breaddesk.member.repository.MemberRepository;
+import com.breadlab.breaddesk.notification.NotificationEventPublisher;
 import com.breadlab.breaddesk.notification.service.NotificationService;
 import com.breadlab.breaddesk.task.entity.Task;
 import com.breadlab.breaddesk.task.entity.TaskStatus;
@@ -27,6 +28,7 @@ public class SlaCheckScheduler {
     private final TaskRepository taskRepository;
     private final NotificationService notificationService;
     private final MemberRepository memberRepository;
+    private final NotificationEventPublisher notificationEventPublisher;
 
     @Scheduled(fixedRateString = "${breaddesk.sla.scheduler.interval-ms:60000}")
     @Transactional
@@ -87,21 +89,29 @@ public class SlaCheckScheduler {
     private void sendWarningNotification(Task task, String slaType, long remainingMinutes) {
         if (task.getAssignee() == null) return;
 
+        String message = String.format("%s 기한 80%% 경과 (남은 시간: %d분)", slaType, remainingMinutes);
+        
         notificationService.createNotification(
                 task.getAssignee().getId(),
                 "SLA_WARNING",
                 String.format("[SLA 경고] %s", task.getTitle()),
-                String.format("%s 기한 80%% 경과 (남은 시간: %d분)", slaType, remainingMinutes),
+                message,
                 "/tasks/" + task.getId());
+        
+        // Publish SSE event for real-time notification
+        Long inquiryId = (task.getInquiry() != null) ? task.getInquiry().getId() : task.getId();
+        notificationEventPublisher.publishSlaWarning(inquiryId, message);
     }
 
     private void sendBreachNotification(Task task, String slaType) {
+        String breachMessage = String.format("%s SLA가 위반되었습니다.", slaType);
+        
         if (task.getAssignee() != null) {
             notificationService.createNotification(
                     task.getAssignee().getId(),
                     "SLA_BREACHED",
                     String.format("[SLA 위반] %s", task.getTitle()),
-                    String.format("%s SLA가 위반되었습니다.", slaType),
+                    breachMessage,
                     "/tasks/" + task.getId());
         }
 
@@ -116,5 +126,10 @@ public class SlaCheckScheduler {
                             task.getAssignee() != null ? task.getAssignee().getName() : "미배정"),
                     "/tasks/" + task.getId());
         }
+        
+        // Publish SSE event for real-time SLA breach notification
+        Long inquiryId = (task.getInquiry() != null) ? task.getInquiry().getId() : task.getId();
+        notificationEventPublisher.publishSlaWarning(inquiryId, 
+                String.format("⚠️ 업무 #%d: %s", task.getId(), breachMessage));
     }
 }

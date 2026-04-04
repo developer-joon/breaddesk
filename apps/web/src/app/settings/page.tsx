@@ -10,6 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useFeaturesStore } from '@/stores/features';
 import { getMembers, createMember, updateMember, deleteMember } from '@/services/members';
 import { TeamsManagement } from '@/components/settings/TeamsManagement';
+import { AISettings } from '@/components/settings/AISettings';
 import {
   getChannels,
   updateChannel,
@@ -238,7 +239,7 @@ function JiraIntegrationCard() {
 }
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels' | 'features' | 'integrations' | 'teams'>('sla');
+  const [activeTab, setActiveTab] = useState<'sla' | 'team' | 'channels' | 'features' | 'integrations' | 'teams' | 'ai'>('sla');
   const [slaRules, setSlaRules] = useState<SlaRuleResponse[]>([]);
   const [teamMembers, setTeamMembers] = useState<User[]>([]);
   const [channels, setChannels] = useState<ChannelResponse[]>([]);
@@ -543,6 +544,16 @@ export default function SettingsPage() {
               >
                 🏢 팀 관리
               </button>
+              <button
+                onClick={() => setActiveTab('ai')}
+                className={`px-6 py-3 font-medium transition-colors ${
+                  activeTab === 'ai'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                🤖 AI 설정
+              </button>
             </div>
           </div>
 
@@ -841,6 +852,11 @@ export default function SettingsPage() {
             {/* Teams Tab */}
             {!isLoading && !error && activeTab === 'teams' && (
               <TeamsManagement />
+            )}
+
+            {/* AI Settings Tab */}
+            {!isLoading && !error && activeTab === 'ai' && (
+              <AISettings />
             )}
           </div>
         </div>
