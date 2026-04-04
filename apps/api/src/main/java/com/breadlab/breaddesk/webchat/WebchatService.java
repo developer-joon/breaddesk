@@ -53,8 +53,9 @@ public class WebchatService {
      */
     @Transactional
     public WebchatMessageResponse sendMessage(String sessionId, WebchatMessageRequest request) {
-        // sessionId로 기존 문의 조회 (channelMeta에 sessionId 저장)
-        List<Inquiry> existingInquiries = inquiryRepository.findByChannelAndChannelMeta("WEBCHAT", sessionId);
+        // sessionId로 기존 문의 조회 (channelMeta에 JSON으로 저장)
+        String channelMetaJson = "{\"sessionId\":\"" + sessionId + "\"}";
+        List<Inquiry> existingInquiries = inquiryRepository.findByChannelAndChannelMeta("WEBCHAT", channelMetaJson);
         
         Inquiry inquiry;
         InquiryMessage userMessage;
@@ -63,7 +64,7 @@ public class WebchatService {
             // 첫 메시지 → 새 Inquiry 생성
             inquiry = Inquiry.builder()
                     .channel("WEBCHAT")
-                    .channelMeta(sessionId)
+                    .channelMeta(channelMetaJson)
                     .senderName("웹챗 사용자") // 기본값, 나중에 업데이트 가능
                     .senderEmail(null)
                     .message(request.getMessage())
@@ -118,7 +119,8 @@ public class WebchatService {
      * 웹챗 메시지 히스토리 조회
      */
     public List<WebchatMessageResponse> getMessages(String sessionId) {
-        List<Inquiry> inquiries = inquiryRepository.findByChannelAndChannelMeta("WEBCHAT", sessionId);
+        String channelMetaJson = "{\"sessionId\":\"" + sessionId + "\"}";
+        List<Inquiry> inquiries = inquiryRepository.findByChannelAndChannelMeta("WEBCHAT", channelMetaJson);
         
         if (inquiries.isEmpty()) {
             return List.of();
