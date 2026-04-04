@@ -238,7 +238,7 @@ export default function TasksPage() {
         {error && <ErrorMessage message={error} onRetry={loadKanban} />}
 
         {!isLoading && !error && (
-          <div className="flex-1 overflow-x-auto custom-scrollbar">
+          <div className="flex-1 overflow-x-auto overflow-y-hidden">
             <KanbanBoard
               kanbanData={kanbanData}
               onTaskClick={setSelectedTask}

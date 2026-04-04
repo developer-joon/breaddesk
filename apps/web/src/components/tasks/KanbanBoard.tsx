@@ -104,7 +104,7 @@ export function KanbanBoard({ kanbanData, onTaskClick, onStatusChange }: KanbanB
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 h-full pb-4" style={{ minWidth: '1000px' }}>
+      <div className="flex gap-4 h-full pb-4 overflow-x-auto snap-x snap-mandatory" style={{ minWidth: 'max-content' }}>
         {COLUMNS.map((column) => {
           const columnTasks = getTasksByStatus(column.status);
           return (
@@ -228,7 +228,14 @@ function DraggableTaskCard({
         </div>
       )}
       <div className="flex items-center justify-between text-xs text-gray-500">
-        {task.assigneeId && <span>👤 #{task.assigneeId}</span>}
+        <div className="flex items-center gap-1">
+          {task.assigneeId && (
+            <div className="flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+              <span>👤</span>
+              <span className="font-medium text-blue-700 dark:text-blue-300">담당자 #{task.assigneeId}</span>
+            </div>
+          )}
+        </div>
         {task.dueDate && <span>⏰ {task.dueDate}</span>}
       </div>
       {(task.slaResponseBreached || task.slaResolveBreached) && (

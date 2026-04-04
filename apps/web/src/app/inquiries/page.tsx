@@ -49,6 +49,14 @@ export default function InquiriesPage() {
   const [isLoadingAISuggestion, setIsLoadingAISuggestion] = useState(false);
   const [showRewriteMenu, setShowRewriteMenu] = useState(false);
 
+  // 필터 상태
+  const [filterStatus, setFilterStatus] = useState<InquiryStatus | 'ALL'>('ALL');
+  const [filterChannel, setFilterChannel] = useState<string>('ALL');
+  const [searchKeyword, setSearchKeyword] = useState('');
+  
+  // 모바일 뷰 상태
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
+
   const fetchInquiries = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -70,6 +78,7 @@ export default function InquiriesPage() {
 
   const handleSelectInquiry = async (inquiry: InquiryResponse) => {
     setSimilarInquiries([]);
+    setShowMobileDetail(true);
     try {
       const detail = await getInquiryById(inquiry.id);
       setSelectedInquiry(detail);
@@ -292,17 +301,71 @@ export default function InquiriesPage() {
         {error && <ErrorMessage message={error} onRetry={fetchInquiries} />}
 
         {!isLoading && !error && (
-          <div className="grid lg:grid-cols-3 gap-4 flex-1 min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
             {/* Inquiry List */}
-            <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-[calc(100vh-230px)]">
+            <div className={`lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-[calc(100vh-230px)] lg:h-[calc(100vh-230px)] ${showMobileDetail ? 'hidden lg:flex' : 'flex'}`}>
               <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-                <h2 className="font-semibold">문의 목록 ({inquiries.length})</h2>
+                <h2 className="font-semibold mb-3">문의 목록 ({inquiries.filter((inq) => {
+                  const statusMatch = filterStatus === 'ALL' || inq.status === filterStatus;
+                  const channelMatch = filterChannel === 'ALL' || inq.channel.toUpperCase() === filterChannel.toUpperCase();
+                  const keywordMatch = searchKeyword.trim() === '' ||
+                    inq.senderName.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                    inq.message.toLowerCase().includes(searchKeyword.toLowerCase());
+                  return statusMatch && channelMatch && keywordMatch;
+                }).length})</h2>
+                
+                {/* 필터 */}
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={searchKeyword}
+                    onChange={(e) => setSearchKeyword(e.target.value)}
+                    placeholder="🔍 발신자 / 메시지 검색..."
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div className="flex gap-2">
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value as InquiryStatus | 'ALL')}
+                      className="flex-1 px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="ALL">전체 상태</option>
+                      <option value="OPEN">접수</option>
+                      <option value="AI_ANSWERED">AI답변</option>
+                      <option value="ESCALATED">에스컬레이션</option>
+                      <option value="RESOLVED">해결</option>
+                      <option value="CLOSED">종료</option>
+                    </select>
+                    <select
+                      value={filterChannel}
+                      onChange={(e) => setFilterChannel(e.target.value)}
+                      className="flex-1 px-2 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="ALL">전체 채널</option>
+                      <option value="MANUAL">수동</option>
+                      <option value="CHAT">CHAT</option>
+                      <option value="WEBCHAT">WEBCHAT</option>
+                      <option value="EMAIL">EMAIL</option>
+                      <option value="PHONE">PHONE</option>
+                      <option value="FORM">FORM</option>
+                    </select>
+                  </div>
+                </div>
               </div>
               <div className="overflow-y-auto flex-1 min-h-0">
                 {inquiries.length === 0 ? (
                   <EmptyState icon="💬" title="문의가 없습니다" />
                 ) : (
-                  inquiries.map((inquiry) => (
+                  inquiries
+                    .filter((inq) => {
+                      const statusMatch = filterStatus === 'ALL' || inq.status === filterStatus;
+                      const channelMatch = filterChannel === 'ALL' || inq.channel.toUpperCase() === filterChannel.toUpperCase();
+                      const keywordMatch = searchKeyword.trim() === '' ||
+                        inq.senderName.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+                        inq.message.toLowerCase().includes(searchKeyword.toLowerCase());
+                      return statusMatch && channelMatch && keywordMatch;
+                    })
+                    .map((inquiry) => (
                     <div
                       key={inquiry.id}
                       onClick={() => handleSelectInquiry(inquiry)}
@@ -354,11 +417,18 @@ export default function InquiriesPage() {
             </div>
 
             {/* Chat Panel */}
-            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+            <div className={`lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col ${showMobileDetail ? 'flex' : 'hidden lg:flex'}`}>
               {selectedInquiry ? (
                 <>
                   {/* Header */}
                   <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                    {/* 모바일 뒤로가기 버튼 */}
+                    <button
+                      onClick={() => setShowMobileDetail(false)}
+                      className="lg:hidden mr-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                    >
+                      ← 목록
+                    </button>
                     <div>
                       <h2 className="font-semibold">{selectedInquiry.senderName}</h2>
                       <p className="text-sm text-gray-600 dark:text-gray-400">

@@ -46,13 +46,15 @@ export function TaskDetailModal({ task, onClose, onUpdate }: TaskDetailModalProp
   const [newRelationId, setNewRelationId] = useState('');
   const [allMembers, setAllMembers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedAssigneeId, setSelectedAssigneeId] = useState<number | null>(null);
 
   useEffect(() => {
     loadWatchingStatus();
     loadRelations();
     loadInternalComments();
     loadMembers();
-  }, [task.id]);
+    setSelectedAssigneeId(task.assigneeId || null);
+  }, [task.id, task.assigneeId]);
 
   const loadWatchingStatus = async () => {
     try {
@@ -187,6 +189,17 @@ export function TaskDetailModal({ task, onClose, onUpdate }: TaskDetailModalProp
     }
   };
 
+  const handleAssigneeChange = async (memberId: number | null) => {
+    try {
+      await updateTask(task.id, { ...task, assigneeId: memberId || undefined });
+      setSelectedAssigneeId(memberId);
+      toast.success(memberId ? '담당자가 할당되었습니다' : '담당자가 해제되었습니다');
+      onUpdate();
+    } catch (err) {
+      toast.error('담당자 변경에 실패했습니다');
+    }
+  };
+
   return (
     <Modal isOpen onClose={onClose} title={`업무 상세 #${task.id}`} size="xl">
       <div className="p-6">
@@ -251,13 +264,33 @@ export function TaskDetailModal({ task, onClose, onUpdate }: TaskDetailModalProp
         {/* Task Info */}
         <div className="mb-6">
           <h2 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">{task.title}</h2>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap mb-4">
             <Badge variant={task.urgency === 'CRITICAL' ? 'danger' : 'info'}>
               {task.urgency}
             </Badge>
             <Badge>{task.status}</Badge>
-            {task.assigneeId && <Badge variant="success">담당자 할당됨</Badge>}
+            {selectedAssigneeId && <Badge variant="success">담당자 할당됨</Badge>}
           </div>
+
+          {/* 담당자 배정 */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              👤 담당자
+            </label>
+            <select
+              value={selectedAssigneeId || ''}
+              onChange={(e) => handleAssigneeChange(e.target.value ? parseInt(e.target.value) : null)}
+              className="w-full md:w-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">미배정</option>
+              {allMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.name} ({member.email})
+                </option>
+              ))}
+            </select>
+          </div>
+
           {task.description && (
             <p className="mt-4 text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
               {task.description}
