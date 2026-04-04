@@ -3,8 +3,10 @@ package com.breadlab.breaddesk.inquiry.service;
 import com.breadlab.breaddesk.ai.AIAnswerService;
 import com.breadlab.breaddesk.ai.AITaskGenerationService;
 import com.breadlab.breaddesk.ai.EscalationService;
+import com.breadlab.breaddesk.audit.service.AuditLogService;
 import com.breadlab.breaddesk.channel.service.WebhookOutboundService;
 import com.breadlab.breaddesk.common.exception.ResourceNotFoundException;
+import com.breadlab.breaddesk.csat.CsatService;
 import com.breadlab.breaddesk.inquiry.dto.*;
 import com.breadlab.breaddesk.inquiry.entity.Inquiry;
 import com.breadlab.breaddesk.inquiry.entity.InquiryMessage;
@@ -41,6 +43,8 @@ public class InquiryService {
     private final EscalationService escalationService;
     private final WebhookOutboundService webhookOutboundService;
     private final NotificationEventPublisher notificationEventPublisher;
+    private final CsatService csatService;
+    private final AuditLogService auditLogService;
 
     @Transactional
     public InquiryResponse createInquiry(InquiryRequest request) {
@@ -55,6 +59,10 @@ public class InquiryService {
                 .build();
 
         Inquiry saved = inquiryRepository.save(inquiry);
+
+        // Audit log
+        auditLogService.log(null, "INQUIRY_CREATED", "INQUIRY", saved.getId(), 
+            "New inquiry from " + saved.getSenderName());
 
         // Publish SSE notification for new inquiry
         notificationEventPublisher.publishNewInquiry(
@@ -116,7 +124,12 @@ public class InquiryService {
     @Transactional
     public InquiryResponse updateInquiryStatus(Long id, InquiryStatusUpdateRequest request) {
         Inquiry inquiry = findInquiryOrThrow(id);
+        InquiryStatus oldStatus = inquiry.getStatus();
         inquiry.setStatus(request.getStatus());
+        
+        // Audit log
+        auditLogService.log(null, "INQUIRY_STATUS_CHANGED", "INQUIRY", id, 
+            oldStatus + " -> " + request.getStatus());
         
         // Publish SSE notification for status change
         notificationEventPublisher.publishInquiryStatusChange(
@@ -135,6 +148,15 @@ public class InquiryService {
                 webhookOutboundService.sendResponse(inquiry, response, resolvedBy);
             } catch (Exception e) {
                 log.error("Outbound webhook failed for inquiry #{}: {}", id, e.getMessage());
+            }
+
+            // Create and send CSAT survey
+            try {
+                var survey = csatService.createSurvey(id);
+                log.info("CSAT survey created for inquiry #{}: /survey/{}", id, survey.getToken());
+                // n8n will pick up the survey URL from logs or a separate webhook
+            } catch (Exception e) {
+                log.error("Failed to create CSAT survey for inquiry #{}: {}", id, e.getMessage());
             }
         }
         
