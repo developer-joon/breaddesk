@@ -2,11 +2,18 @@ import { create } from 'zustand';
 import api from '@/lib/api';
 import type { User, LoginRequest, ApiResponse, TokenResponse } from '@/types';
 
+interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
+  register: (credentials: RegisterRequest) => Promise<void>;
   logout: () => void;
   checkAuth: () => void;
 }
@@ -43,6 +50,27 @@ export const useAuthStore = create<AuthState>((set) => ({
       id: (payload?.sub as string) ?? credentials.email,
       email: (payload?.sub as string) ?? credentials.email,
       name: (payload?.name as string) ?? credentials.email.split('@')[0],
+      role: ((payload?.role as string) ?? 'AGENT') as User['role'],
+    };
+
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user, isAuthenticated: true, isLoading: false });
+  },
+
+  register: async (credentials: RegisterRequest) => {
+    const response = await api.post<ApiResponse<TokenResponse>>('/auth/register', credentials);
+    const { accessToken, refreshToken } = response.data.data;
+
+    // Persist tokens
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+
+    // Derive basic user info from JWT claims
+    const payload = decodeJwtPayload(accessToken);
+    const user: User = {
+      id: (payload?.sub as string) ?? credentials.email,
+      email: (payload?.sub as string) ?? credentials.email,
+      name: (payload?.name as string) ?? credentials.name,
       role: ((payload?.role as string) ?? 'AGENT') as User['role'],
     };
 

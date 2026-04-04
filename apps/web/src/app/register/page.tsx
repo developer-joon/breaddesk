@@ -6,11 +6,13 @@ import { useAuthStore } from '@/stores/auth';
 import toast, { Toaster } from 'react-hot-toast';
 import Link from 'next/link';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
-  const { login, isAuthenticated, checkAuth } = useAuthStore();
+  const { register: registerUser, isAuthenticated, checkAuth } = useAuthStore();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -29,13 +31,29 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
+    // 비밀번호 확인
+    if (password !== confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.');
+      toast.error('비밀번호가 일치하지 않습니다.');
+      setIsLoading(false);
+      return;
+    }
+
+    // 비밀번호 길이 체크
+    if (password.length < 6) {
+      setError('비밀번호는 최소 6자 이상이어야 합니다.');
+      toast.error('비밀번호는 최소 6자 이상이어야 합니다.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await login({ email, password });
-      toast.success('로그인 성공!');
+      await registerUser({ name, email, password });
+      toast.success('회원가입 성공! 자동 로그인되었습니다.');
       router.push('/dashboard');
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : '로그인 실패. 이메일과 비밀번호를 확인해주세요.';
+        err instanceof Error ? err.message : '회원가입에 실패했습니다. 다시 시도해주세요.';
       setError(message);
       toast.error(message);
     } finally {
@@ -49,8 +67,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <span className="text-6xl">🍞</span>
-          <h1 className="text-2xl font-bold mt-4 text-gray-900 dark:text-white">BreadDesk</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">통합 고객지원 플랫폼</p>
+          <h1 className="text-2xl font-bold mt-4 text-gray-900 dark:text-white">BreadDesk 회원가입</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">새로운 계정을 만들어보세요</p>
         </div>
 
         {/* Error */}
@@ -60,8 +78,23 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Login Form */}
+        {/* Register Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              이름
+            </label>
+            <input
+              type="text"
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              placeholder="홍길동"
+            />
+          </div>
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               이메일
@@ -92,6 +125,21 @@ export default function LoginPage() {
             />
           </div>
 
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              비밀번호 확인
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              placeholder="••••••••"
+            />
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}
@@ -100,54 +148,22 @@ export default function LoginPage() {
             {isLoading ? (
               <>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                로그인 중...
+                회원가입 중...
               </>
             ) : (
-              '로그인'
+              '회원가입'
             )}
           </button>
         </form>
 
         {/* Footer */}
-        <div className="mt-6 text-center space-y-3">
-          <button
-            type="button"
-            onClick={async () => {
-              setEmail('demo@breaddesk.com');
-              setPassword('demo1234');
-              // Auto-submit after a brief delay to ensure state updates
-              setTimeout(async () => {
-                setIsLoading(true);
-                setError('');
-                try {
-                  await login({ email: 'demo@breaddesk.com', password: 'demo1234' });
-                  toast.success('로그인 성공!');
-                  router.push('/dashboard');
-                } catch (err: unknown) {
-                  const message =
-                    err instanceof Error ? err.message : '로그인 실패. 이메일과 비밀번호를 확인해주세요.';
-                  setError(message);
-                  toast.error(message);
-                } finally {
-                  setIsLoading(false);
-                }
-              }, 100);
-            }}
-            disabled={isLoading}
-            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            데모 계정으로 체험하기
-          </button>
-          <p className="text-xs text-gray-500 dark:text-gray-500">demo@breaddesk.com / demo1234</p>
-          
-          <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              계정이 없으신가요?{' '}
-              <Link href="/register" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline font-medium">
-                회원가입
-              </Link>
-            </p>
-          </div>
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            이미 계정이 있으신가요?{' '}
+            <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline">
+              로그인
+            </Link>
+          </p>
         </div>
       </div>
       <Toaster position="top-right" />
