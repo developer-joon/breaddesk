@@ -13,22 +13,48 @@ import java.util.Map;
 @Service
 public class EmbeddingService {
 
-    private final WebClient webClient;
-    private final String model;
+    private final WebClient ollamaClient;
+    private final WebClient openaiClient;
+    private final String provider;
+    private final String localModel;
+    private final String openaiModel;
+    private final String openaiApiKey;
 
     public EmbeddingService(
+            @Value("${breaddesk.embedding.provider:local}") String provider,
             @Value("${breaddesk.llm.ollama.url:http://localhost:11434}") String ollamaUrl,
-            @Value("${breaddesk.embedding.local.model:all-minilm:l6-v2}") String model) {
-        this.webClient = WebClient.builder().baseUrl(ollamaUrl).build();
-        this.model = model;
+            @Value("${breaddesk.embedding.local.model:all-minilm:l6-v2}") String localModel,
+            @Value("${breaddesk.embedding.openai.model:text-embedding-3-small}") String openaiModel,
+            @Value("${OPENAI_API_KEY:}") String openaiApiKey) {
+        this.provider = provider;
+        this.localModel = localModel;
+        this.openaiModel = openaiModel;
+        this.openaiApiKey = openaiApiKey;
+        
+        this.ollamaClient = WebClient.builder().baseUrl(ollamaUrl).build();
+        this.openaiClient = WebClient.builder()
+                .baseUrl("https://api.openai.com")
+                .defaultHeader("Authorization", "Bearer " + openaiApiKey)
+                .defaultHeader("Content-Type", "application/json")
+                .build();
+        
+        log.info("EmbeddingService initialized with provider: {}", provider);
     }
 
     @SuppressWarnings("unchecked")
     public float[] embed(String text) {
+        if ("openai".equalsIgnoreCase(provider)) {
+            return embedWithOpenAI(text);
+        }
+        return embedWithOllama(text);
+    }
+
+    @SuppressWarnings("unchecked")
+    private float[] embedWithOllama(String text) {
         try {
-            Map<String, Object> response = webClient.post()
+            Map<String, Object> response = ollamaClient.post()
                     .uri("/api/embeddings")
-                    .bodyValue(Map.of("model", model, "prompt", text))
+                    .bodyValue(Map.of("model", localModel, "prompt", text))
                     .retrieve()
                     .bodyToMono(Map.class)
                     .block();
@@ -42,7 +68,39 @@ public class EmbeddingService {
                 return result;
             }
         } catch (Exception e) {
-            log.warn("임베딩 생성 실패: {}", e.getMessage());
+            log.warn("Ollama 임베딩 생성 실패: {}", e.getMessage());
+        }
+        return new float[0];
+    }
+
+    @SuppressWarnings("unchecked")
+    private float[] embedWithOpenAI(String text) {
+        try {
+            Map<String, Object> requestBody = Map.of(
+                "input", text,
+                "model", openaiModel
+            );
+            
+            Map<String, Object> response = openaiClient.post()
+                    .uri("/v1/embeddings")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+
+            if (response != null && response.containsKey("data")) {
+                List<Map<String, Object>> data = (List<Map<String, Object>>) response.get("data");
+                if (!data.isEmpty()) {
+                    List<Double> embedding = (List<Double>) data.get(0).get("embedding");
+                    float[] result = new float[embedding.size()];
+                    for (int i = 0; i < embedding.size(); i++) {
+                        result[i] = embedding.get(i).floatValue();
+                    }
+                    return result;
+                }
+            }
+        } catch (Exception e) {
+            log.error("OpenAI 임베딩 생성 실패: {}", e.getMessage(), e);
         }
         return new float[0];
     }

@@ -193,9 +193,16 @@ function DraggableTaskCard({
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
         opacity: isDragging ? 0.5 : 1,
-        cursor: 'grab',
+        cursor: isDragging ? 'grabbing' : 'grab',
       }
     : { cursor: 'grab' };
+
+  const handleClick = (e: React.MouseEvent) => {
+    // 드래그 중이 아닐 때만 클릭 이벤트 처리
+    if (!isDragging) {
+      onClick();
+    }
+  };
 
   return (
     <div
@@ -203,7 +210,7 @@ function DraggableTaskCard({
       style={style}
       {...listeners}
       {...attributes}
-      onClick={onClick}
+      onClick={handleClick}
       className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow select-none"
     >
       <div className="flex items-center gap-2 mb-2">

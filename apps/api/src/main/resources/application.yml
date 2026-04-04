@@ -61,9 +61,11 @@ breaddesk:
     claude:
       model: ${CLAUDE_MODEL:claude-sonnet-4-5-20250514}
   embedding:
-    provider: ${EMBEDDING_PROVIDER:local}
+    provider: ${EMBEDDING_PROVIDER:openai}
     local:
       model: all-MiniLM-L6-v2
+    openai:
+      model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
   vector:
     provider: ${VECTOR_PROVIDER:pgvector}
   webhook:
