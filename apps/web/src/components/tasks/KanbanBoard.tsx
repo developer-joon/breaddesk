@@ -208,12 +208,12 @@ function DraggableTaskCard({
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
       {...attributes}
       onClick={handleClick}
-      className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow select-none"
+      className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer"
     >
       <div className="flex items-center gap-2 mb-2">
+        <span {...listeners} className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600" title="드래그하여 이동">⠿</span>
         <Badge variant={getUrgencyBadgeVariant(task.urgency)}>
           {getUrgencyLabel(task.urgency)}
         </Badge>
