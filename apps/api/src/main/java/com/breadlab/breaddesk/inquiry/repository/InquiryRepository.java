@@ -41,4 +41,6 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
             Pageable pageable);
     
     List<Inquiry> findAllByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    
+    List<Inquiry> findByChannelAndChannelMeta(String channel, String channelMeta);
 }

@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/inquiries").permitAll()
                         .requestMatchers("/api/v1/webhooks/**").permitAll()
+                        .requestMatchers("/api/v1/webchat/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/v1/features").permitAll()
                         .anyRequest()
@@ -56,7 +57,16 @@ public class SecurityConfig {
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Webhook-Token"));
         configuration.setAllowCredentials(true);
+        
+        // 웹챗 위젯용 CORS 설정 (외부 도메인에서 호출 가능)
+        CorsConfiguration webchatConfig = new CorsConfiguration();
+        webchatConfig.setAllowedOriginPatterns(List.of("*"));
+        webchatConfig.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+        webchatConfig.setAllowedHeaders(List.of("*"));
+        webchatConfig.setAllowCredentials(false);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/v1/webchat/**", webchatConfig);
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
