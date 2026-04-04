@@ -76,7 +76,9 @@ logging:
 
 security:
   jwt:
-    secret: ${JWT_SECRET:breaddesk-secret-key-for-jwt-token-signature-min-32-bytes}
+    # 프로덕션에서는 반드시 환경변수 JWT_SECRET 설정 필요
+    # 개발 환경 기본값: UUID 기반 랜덤 시크릿 (매 재시작 시 변경되어 토큰 무효화됨)
+    secret: ${JWT_SECRET:dev-only-change-in-production-f8e7d6c5b4a39281}
     access-token-expiration-minutes: 15
     refresh-token-expiration-days: 7
 
